@@ -1,0 +1,36 @@
+{
+  "tuberia": {
+    "template": "Tubo de {MATERIAL} {CLASS} {DIAMETER_MM} {DIAMETER_IN}, marca {BRAND}, Incluye: {INCLUDES}",
+    "default_system": "HIDRAULICO",
+    "material_map": {
+      "PPR": "polipropileno PPR bicolor",
+      "PVC": "PVC Presión",
+      "CPVC": "CPVC",
+      "COBRE": "Cobre Tipo L",
+      "PEAD": "PEAD liso hidráulico RD-11"
+    },
+    "fallbacks": {
+      "MATERIAL": "(MATERIAL)",
+      "SYSTEM": "(SISTEMA)",
+      "CLASS": "",
+      "DIAMETER_MM": "(MM)",
+      "DIAMETER_IN": "(IN)",
+      "FIG": "(FIG)",
+      "BRAND": "(MARCA)",
+      "INCLUDES": "suministro e instalación"
+    }
+  },
+  "conexion": {
+    "template": "{COMPONENT} de {MATERIAL} {CLASS} {ANGLE} {DIAMETERS}, marca {BRAND}, Incluye: {INCLUDES}",
+    "fallbacks": {
+      "COMPONENT": "(CONEXIÓN)",
+      "MATERIAL": "",
+      "CLASS": "",
+      "ANGLE": "",
+      "DIAMETERS": "(DIÁMETRO)",
+      "FIG": "(FIG)",
+      "BRAND": "(MARCA)",
+      "INCLUDES": "suministro e instalación, mano de obra, pruebas, etiquetas y todo lo necesario para su ejecución"
+    }
+  }
+}

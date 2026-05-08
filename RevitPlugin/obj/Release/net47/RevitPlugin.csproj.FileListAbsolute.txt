@@ -1,0 +1,650 @@
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net47\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\ClosedXML.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\ClosedXML.Parser.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.Framework.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\ExcelNumberFormat.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Microsoft.Bcl.HashCode.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\RBush.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\SixLabors.Fonts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Buffers.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Memory.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Numerics.Vectors.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Algorithms.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ValueTuple.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\Microsoft.Win32.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\netstandard.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.AppContext.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Collections.Concurrent.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Collections.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Collections.NonGeneric.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Collections.Specialized.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ComponentModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ComponentModel.EventBasedAsync.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ComponentModel.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ComponentModel.TypeConverter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Console.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Data.Common.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.Contracts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.Debug.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.FileVersionInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.Process.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.StackTrace.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.TextWriterTraceListener.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.Tools.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.TraceSource.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Diagnostics.Tracing.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Drawing.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Dynamic.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Globalization.Calendars.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Globalization.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Globalization.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.Compression.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.Compression.ZipFile.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.DriveInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Watcher.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.IsolatedStorage.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.MemoryMappedFiles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.Pipes.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.IO.UnmanagedMemoryStream.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Linq.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Linq.Expressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Linq.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Linq.Queryable.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Http.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.NameResolution.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.NetworkInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Ping.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Requests.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Security.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.Sockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.WebHeaderCollection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.WebSockets.Client.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Net.WebSockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.ObjectModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Reflection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Reflection.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Reflection.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Resources.Reader.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Resources.ResourceManager.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Resources.Writer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.VisualC.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Handles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Numerics.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Formatters.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Xml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Claims.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Csp.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.X509Certificates.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.Principal.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Security.SecureString.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Text.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Text.Encoding.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Text.RegularExpressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.Overlapped.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.Tasks.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.Tasks.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.Thread.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.ThreadPool.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Threading.Timer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.ReaderWriter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.XmlDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.XmlSerializer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.XPath.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net47\System.Xml.XPath.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlu.2A760F39.Up2Date
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\ClosedXML.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\ClosedXML.Parser.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.Framework.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\ExcelNumberFormat.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Microsoft.Bcl.HashCode.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\RBush.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\SixLabors.Fonts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Buffers.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Memory.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Numerics.Vectors.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Algorithms.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ValueTuple.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\Microsoft.Win32.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\netstandard.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.AppContext.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Collections.Concurrent.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Collections.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Collections.NonGeneric.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Collections.Specialized.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ComponentModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ComponentModel.EventBasedAsync.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ComponentModel.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ComponentModel.TypeConverter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Console.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Data.Common.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.Contracts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.Debug.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.FileVersionInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.Process.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.StackTrace.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.TextWriterTraceListener.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.Tools.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.TraceSource.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Diagnostics.Tracing.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Drawing.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Dynamic.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Globalization.Calendars.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Globalization.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Globalization.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.Compression.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.Compression.ZipFile.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.DriveInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Watcher.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.IsolatedStorage.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.MemoryMappedFiles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.Pipes.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.IO.UnmanagedMemoryStream.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Linq.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Linq.Expressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Linq.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Linq.Queryable.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Http.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.NameResolution.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.NetworkInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Ping.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Requests.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Security.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.Sockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.WebHeaderCollection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.WebSockets.Client.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Net.WebSockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.ObjectModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Reflection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Reflection.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Reflection.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Resources.Reader.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Resources.ResourceManager.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Resources.Writer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.VisualC.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Handles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Numerics.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Formatters.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Xml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Claims.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Csp.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Cryptography.X509Certificates.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.Principal.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Security.SecureString.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Text.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Text.Encoding.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Text.RegularExpressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.Overlapped.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.Tasks.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.Tasks.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.Thread.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.ThreadPool.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Threading.Timer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.ReaderWriter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.XmlDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.XmlSerializer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.XPath.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net47\System.Xml.XPath.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlu.2A760F39.Up2Date
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net47\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Json\hvac_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\ClosedXML.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\ClosedXML.Parser.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.Framework.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\ExcelNumberFormat.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Microsoft.Bcl.HashCode.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Newtonsoft.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\RBush.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\SixLabors.Fonts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Buffers.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Memory.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Numerics.Vectors.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Algorithms.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ValueTuple.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Microsoft.Win32.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\netstandard.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.AppContext.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Collections.Concurrent.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Collections.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Collections.NonGeneric.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Collections.Specialized.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.EventBasedAsync.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.TypeConverter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Console.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Data.Common.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Contracts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Debug.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.FileVersionInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Process.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.StackTrace.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.TextWriterTraceListener.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Tools.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.TraceSource.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Tracing.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Drawing.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Dynamic.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Globalization.Calendars.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Globalization.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Globalization.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.Compression.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.Compression.ZipFile.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.DriveInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Watcher.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.IsolatedStorage.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.MemoryMappedFiles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.Pipes.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.IO.UnmanagedMemoryStream.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Linq.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Linq.Expressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Linq.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Linq.Queryable.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Http.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.NameResolution.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.NetworkInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Ping.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Requests.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Security.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.Sockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.WebHeaderCollection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.WebSockets.Client.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Net.WebSockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.ObjectModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Reflection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Reflection.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Reflection.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Resources.Reader.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Resources.ResourceManager.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Resources.Writer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.VisualC.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Handles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Numerics.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Formatters.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Xml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Claims.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Csp.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.X509Certificates.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.Principal.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Security.SecureString.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Text.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Text.Encoding.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Text.RegularExpressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.Overlapped.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.Tasks.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.Tasks.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.Thread.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.ThreadPool.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Threading.Timer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.ReaderWriter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.XmlDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.XmlSerializer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.XPath.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\System.Xml.XPath.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlu.2A760F39.Up2Date
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Resources\RutaCritica.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net47\Resources\Descripciones.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Resources\Descripciones.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Resources\RutaCritica.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\ClosedXML.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\ClosedXML.Parser.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\DocumentFormat.OpenXml.Framework.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\ExcelNumberFormat.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Microsoft.Bcl.HashCode.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Newtonsoft.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\RBush.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\SixLabors.Fonts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Buffers.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Memory.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Numerics.Vectors.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.RuntimeInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Algorithms.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ValueTuple.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Microsoft.Win32.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\netstandard.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.AppContext.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Collections.Concurrent.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Collections.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Collections.NonGeneric.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Collections.Specialized.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.EventBasedAsync.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ComponentModel.TypeConverter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Console.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Data.Common.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Contracts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Debug.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.FileVersionInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Process.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.StackTrace.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.TextWriterTraceListener.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Tools.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.TraceSource.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Diagnostics.Tracing.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Drawing.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Dynamic.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Globalization.Calendars.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Globalization.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Globalization.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.Compression.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.Compression.ZipFile.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.DriveInfo.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.FileSystem.Watcher.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.IsolatedStorage.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.MemoryMappedFiles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.Pipes.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.IO.UnmanagedMemoryStream.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Linq.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Linq.Expressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Linq.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Linq.Queryable.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Http.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.NameResolution.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.NetworkInformation.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Ping.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Requests.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Security.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.Sockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.WebHeaderCollection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.WebSockets.Client.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Net.WebSockets.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.ObjectModel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Reflection.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Reflection.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Reflection.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Resources.Reader.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Resources.ResourceManager.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Resources.Writer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.CompilerServices.VisualC.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Handles.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.InteropServices.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Numerics.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Formatters.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Runtime.Serialization.Xml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Claims.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Csp.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.Primitives.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Cryptography.X509Certificates.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.Principal.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Security.SecureString.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Text.Encoding.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Text.Encoding.Extensions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Text.RegularExpressions.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.Overlapped.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.Tasks.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.Tasks.Parallel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.Thread.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.ThreadPool.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Threading.Timer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.ReaderWriter.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.XmlDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.XmlSerializer.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.XPath.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\System.Xml.XPath.XDocument.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlu.2A760F39.Up2Date
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\LearningView.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net47\UI\LearningView.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Json\Templates\hvac_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Json\Templates\mapping.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Json\Templates\unknowns.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net47\Json\Templates\pending_mappings.json

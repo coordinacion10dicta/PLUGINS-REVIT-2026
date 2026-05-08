@@ -1,0 +1,11 @@
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.SharedCode.UsoSelectorForm.resources
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\x64\Debug\net47\RevitPlugin.csproj.CoreCompileInputs.cache

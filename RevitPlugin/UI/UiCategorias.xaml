@@ -1,0 +1,79 @@
+<Window x:Class="MiNamespace.UI.UiCategorias"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Categorías"
+        Height="450" Width="350"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+
+    <Grid Margin="15">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Título -->
+        <TextBlock x:Name="txtTitulo"
+                   FontSize="14"
+                   FontWeight="Bold"
+                   Margin="0,0,0,10"/>
+
+        <!-- 🔍 Combo + botones -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+
+            <ComboBox x:Name="cmbCategorias"
+                      Width="180"
+                      IsEditable="True"
+                      IsTextSearchEnabled="False"
+                      StaysOpenOnEdit="True"
+                      DisplayMemberPath="Nombre"
+                      KeyUp="cmbCategorias_KeyUp"/>
+
+            <Button Content="➕"
+                    Width="30"
+                    Margin="5,0"
+                    Click="BtnAgregar_Click"/>
+
+            <Button Content="➖"
+                    Width="30"
+                    Click="BtnEliminar_Click"/>
+
+        </StackPanel>
+
+        <!-- Lista -->
+        <ListBox x:Name="lstCategorias" Grid.Row="2">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox Content="{Binding Nombre}"
+                              IsChecked="{Binding IsSelected}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Botones -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+
+            <Button Content="Cancelar"
+                    Width="80"
+                    Margin="5"
+                    Click="BtnCancelar_Click"/>
+
+            <Button Content="Guardar"
+                    Width="80"
+                    Margin="5"
+                    Click="BtnGuardar_Click"/>
+
+            <Button Content="Aceptar"
+                    Width="80"
+                    Margin="5"
+                    Click="BtnAceptar_Click"/>
+
+        </StackPanel>
+
+    </Grid>
+</Window>

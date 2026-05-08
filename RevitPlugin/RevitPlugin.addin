@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitPlugin DICTA</Name>
+    <Assembly>RevitPlugin.dll</Assembly>
+    <AddInId>7C6D9D1A-4D25-4B42-8E1E-9E2B4F6E6B11</AddInId>
+    <FullClassName>MiNamespace.MyApp</FullClassName>
+    <VendorId>ADDICT</VendorId>
+    <VendorDescription>Desarrollo de Plugins AC</VendorDescription>
+  </AddIn>
+</RevitAddIns>

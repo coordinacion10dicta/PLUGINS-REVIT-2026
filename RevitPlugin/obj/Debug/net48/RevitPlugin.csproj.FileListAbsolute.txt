@@ -1,0 +1,121 @@
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\bin\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\bin\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\bin\Debug\net48\Images\icon.png
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.SharedCode.UsoSelectorForm.resources
+C:\Users\dicta\Desktop\Proyectos\RevitPlugin\bin\Debug\net48\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Debug\net48\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Debug\net48\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\bin\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos\RevitPlugin\obj\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Debug\net48\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Debug\net48\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Json\Templates\hvac_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Json\Templates\mapping.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Json\Templates\unknowns.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Json\Templates\pending_mappings.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Resources\RutaCritica.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Resources\Descripciones.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\ClosedXML.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\ClosedXML.Parser.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\DocumentFormat.OpenXml.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\DocumentFormat.OpenXml.Framework.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\ExcelNumberFormat.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Microsoft.Bcl.HashCode.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\Newtonsoft.Json.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\RBush.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\SixLabors.Fonts.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\System.Buffers.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\System.Memory.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\System.Numerics.Vectors.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Debug\net48\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\LearningView.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\LearningView.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.SharedCode.TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\RevitPlu.2A760F39.Up2Date

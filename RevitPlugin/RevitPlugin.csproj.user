@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ActiveDebugFramework>net47</ActiveDebugFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="..\SharedCode\TagMainMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="..\SharedCode\TagSelectionWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UI\TagSelectorCielos.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\UiCategorias.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\UiGenerateDescriptions.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

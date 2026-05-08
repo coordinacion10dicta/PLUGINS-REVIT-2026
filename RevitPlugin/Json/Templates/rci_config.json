@@ -1,0 +1,28 @@
+{
+  "tuberia": {
+    "template": "Tubo de {MATERIAL} {CLASS} {DIAMETER_MM} {DIAMETER_IN}, marca {BRAND}, Incluye: {INCLUDES}",
+    "default_system": "RCI",
+    "material_map": {
+      "GALV": "Acero Galvanizado"
+    },
+    "fallbacks": {
+      "MATERIAL": "(MATERIAL RCI)",
+      "SYSTEM": "(SISTEMA)",
+      "CLASS": "",
+      "DIAMETER_MM": "(MM)",
+      "DIAMETER_IN": "(IN)",
+      "FIG": "(FIG)",
+      "BRAND": "(MARCA)",
+      "INCLUDES": "soportería certificada NFPA, accesorios y mano de obra"
+    }
+  },
+  "mechanical": {
+    "template": "Gabinete/Equipo RCI: {DESCRIPTION} marca {BRAND}, modelo {MODEL}. Cumple norma NFPA.",
+    "fallbacks": {
+      "DESCRIPTION": "(EQUIPO RCI)",
+      "BRAND": "(MARCA)",
+      "MODEL": "(MODELO)",
+      "INCLUDES": "instalación certificada"
+    }
+  }
+}

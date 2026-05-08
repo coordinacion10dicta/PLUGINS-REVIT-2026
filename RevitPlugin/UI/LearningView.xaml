@@ -1,0 +1,170 @@
+<Window x:Class="MiNamespace.UI.LearningView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bandeja de revision"
+        Height="620"
+        Width="1280"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Vertical">
+            <TextBlock Text="Bandeja de revision de aprendizaje"
+                       FontSize="18"
+                       FontWeight="Bold" />
+            <TextBlock x:Name="txtSummary"
+                       Margin="0,6,0,10"
+                       Foreground="DimGray"
+                       Text="Pendientes cargados." />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.3*" />
+                <ColumnDefinition Width="1.2*" />
+            </Grid.ColumnDefinitions>
+
+            <DataGrid x:Name="gridPending"
+                      Grid.Column="0"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="False"
+                      SelectionMode="Single"
+                      SelectionChanged="GridPending_SelectionChanged"
+                      Margin="0,0,12,0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Parametro detectado"
+                                        Binding="{Binding Parameter}"
+                                        IsReadOnly="True"
+                                        Width="150" />
+                    <DataGridTextColumn Header="Categoria"
+                                        Binding="{Binding Category}"
+                                        IsReadOnly="True"
+                                        Width="120" />
+                    <DataGridTextColumn Header="Familia"
+                                        Binding="{Binding Family}"
+                                        IsReadOnly="True"
+                                        Width="150" />
+                    <DataGridTextColumn Header="Frecuencia"
+                                        Binding="{Binding Frequency}"
+                                        IsReadOnly="True"
+                                        Width="70" />
+                    <DataGridTextColumn Header="Ejemplo"
+                                        Binding="{Binding ExampleValue}"
+                                        IsReadOnly="True"
+                                        Width="180" />
+                    <DataGridTextColumn Header="Sugerencia"
+                                        Binding="{Binding Suggestion}"
+                                        IsReadOnly="True"
+                                        Width="95" />
+                    <DataGridTextColumn Header="Confianza"
+                                        Binding="{Binding Confidence, StringFormat={}{0:F2}}"
+                                        IsReadOnly="True"
+                                        Width="75" />
+                    <DataGridTextColumn Header="Estado"
+                                        Binding="{Binding State}"
+                                        IsReadOnly="True"
+                                        Width="80" />
+                    <DataGridTextColumn Header="Campo aprobado/editado"
+                                        Binding="{Binding ResolvedField, UpdateSourceTrigger=PropertyChanged}"
+                                        Width="140" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1"
+                    BorderBrush="#D0D0D0"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Detalle"
+                                   FontWeight="Bold"
+                                   FontSize="16" />
+
+                        <TextBlock Text="Primera deteccion"
+                                   Margin="0,14,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="txtFirstDetected"
+                                   Text="-" />
+
+                        <TextBlock Text="Ultima deteccion"
+                                   Margin="0,12,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="txtLastDetected"
+                                   Text="-" />
+
+                        <TextBlock Text="Evidencia"
+                                   Margin="0,12,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="txtEvidence"
+                                   TextWrapping="Wrap"
+                                   Text="-" />
+
+                        <TextBlock Text="Parametros similares"
+                                   Margin="0,12,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="txtSimilarParameters"
+                                   TextWrapping="Wrap"
+                                   Text="-" />
+
+                        <TextBlock Text="Historial de cambios"
+                                   Margin="0,12,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBox x:Name="txtHistory"
+                                 Height="160"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" />
+
+                        <TextBlock Text="Editar campo confirmado"
+                                   Margin="0,12,0,0"
+                                   FontWeight="SemiBold" />
+                        <TextBox x:Name="txtEditField"
+                                 MinWidth="180"
+                                 Margin="0,4,0,0" />
+
+                        <TextBlock x:Name="txtValidation"
+                                   Margin="0,10,0,0"
+                                   Foreground="Firebrick"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <DockPanel Grid.Row="2"
+                   Margin="0,12,0,0">
+            <TextBlock VerticalAlignment="Center"
+                       Foreground="DimGray"
+                       Text="La bandeja solo persiste cambios confirmados por el usuario." />
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        DockPanel.Dock="Right">
+                <Button Content="Refrescar"
+                        Width="90"
+                        Margin="0,0,8,0"
+                        Click="BtnRefresh_Click" />
+                <Button Content="Aprobar"
+                        Width="90"
+                        Margin="0,0,8,0"
+                        Click="BtnApprove_Click" />
+                <Button Content="Editar"
+                        Width="90"
+                        Margin="0,0,8,0"
+                        Click="BtnEdit_Click" />
+                <Button Content="Rechazar"
+                        Width="90"
+                        Margin="0,0,8,0"
+                        Click="BtnReject_Click" />
+                <Button Content="Cerrar"
+                        Width="90"
+                        Click="BtnClose_Click" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

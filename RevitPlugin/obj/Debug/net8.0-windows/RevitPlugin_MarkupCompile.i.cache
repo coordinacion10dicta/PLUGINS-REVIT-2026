@@ -1,0 +1,20 @@
+﻿RevitPlugin
+1.0.0.0
+
+library
+C#
+.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net8.0-windows\
+RevitPlugin
+none
+false
+TRACE;NET8;REVIT2022_OR_LATER;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+
+31496466206
+2-1416813112
+42-393130557
+213-70426807
+CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;
+
+False
+

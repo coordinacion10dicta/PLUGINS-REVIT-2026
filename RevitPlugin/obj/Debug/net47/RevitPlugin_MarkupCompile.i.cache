@@ -1,0 +1,20 @@
+﻿RevitPlugin
+1.0.0.0
+
+library
+C#
+.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Debug\net47\
+RevitPlugin
+none
+false
+TRACE;NET47;REVIT2021_OR_EARLIER;REVIT_LEGACY_ELEMENTID;DEBUG;NETFRAMEWORK;NET47;;NET30_OR_GREATER;NET35_OR_GREATER;NET40_OR_GREATER;NET45_OR_GREATER;NET451_OR_GREATER;NET452_OR_GREATER;NET46_OR_GREATER;NET461_OR_GREATER;NET462_OR_GREATER;NET47_OR_GREATER
+
+31496466206
+2-1416813112
+412009781198
+291799299750
+CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;
+
+True
+

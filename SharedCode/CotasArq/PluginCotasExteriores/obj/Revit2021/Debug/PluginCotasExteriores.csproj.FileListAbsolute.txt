@@ -1,0 +1,15 @@
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\bin\Debug\Revit2021\PluginCotasExteriores.dll
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\bin\Debug\Revit2021\PluginCotasExteriores.pdb
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\View\Styles.baml
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores_MarkupCompile.cache
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores_MarkupCompile.lref
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.g.resources
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.dll
+C:\Users\dicta\Desktop\I+D_ DESARROLLOS\Revit-Plugin-Cotas-Exteriores-main\PluginCotasExteriores\obj\Revit2021\Debug\PluginCotasExteriores.pdb

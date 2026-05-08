@@ -1,0 +1,34 @@
+﻿<Window x:Class="RevitPlugin.UI.TagSelectorCielos"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cielos Rasos"
+        Height="200" Width="300"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="10">
+        <StackPanel>
+
+            <!-- Acción -->
+            <TextBlock Text="Seleccione acción:" Margin="0,0,0,5"/>
+            <ComboBox x:Name="ActionComboBox"
+                      Height="25"
+                      Margin="0,0,0,10"
+                      SelectionChanged="ActionComboBox_SelectionChanged"/>
+
+            <!-- Tag -->
+            <TextBlock x:Name="TagLabel"
+                       Text="Seleccione el tag:"
+                       Margin="0,0,0,5"/>
+
+            <ComboBox x:Name="TagComboBox"
+                      Height="25"/>
+
+            <!-- Botón -->
+            <Button Content="Aceptar"
+                    Height="30"
+                    Margin="0,10,0,0"
+                    Click="Aceptar_Click"/>
+
+        </StackPanel>
+    </Grid>
+</Window>

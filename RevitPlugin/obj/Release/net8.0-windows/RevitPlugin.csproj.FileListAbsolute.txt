@@ -1,0 +1,209 @@
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.deps.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\refint\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\ref\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\bin\Release\net8.0-windows\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - copia\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.deps.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\refint\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2\RevitPlugin\obj\Release\net8.0-windows\ref\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.deps.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\refint\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\ref\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.2\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Json\hvac_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.deps.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\refint\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\obj\Release\net8.0-windows\ref\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Resources\RutaCritica.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos - v2.3\RevitPlugin\bin\Release\net8.0-windows\Resources\Descripciones.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Resources\Descripciones.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Resources\RutaCritica.xlsx
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\cotas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\desc.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\hvac.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\icon.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\info.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\predim.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\tags.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Images\tomas.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.deps.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.AssemblyReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Excel.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Interop.MSProject.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\Interop.Microsoft.Office.Core.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.ResolveComReference.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\Styles.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\SettingsWindow.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\TagSelectorCielos.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiCategorias.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\UiGenerateDescriptions.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin_MarkupCompile.lref
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\CotasArq\View\ExteriorConfigurationWin.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.g.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\TagSelectionWindow.resources
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.GenerateResource.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfoInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.AssemblyInfo.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.csproj.CoreCompileInputs.cache
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\refint\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\RevitPlugin.pdb
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\ref\RevitPlugin.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\LearningView.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net8.0-windows\UI\LearningView.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Json\Templates\hvac_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Json\Templates\mapping.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Json\Templates\unknowns.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net8.0-windows\Json\Templates\pending_mappings.json
