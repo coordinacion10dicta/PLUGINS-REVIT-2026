@@ -7,32 +7,33 @@ namespace MiNamespace.ValidadorParametros
 {
     public static class ParameterValidator
     {
-        private const int MaxIssues = 2000;
+        private const int MaxIssues = 3000;
 
-        public static List<ValidationIssue> Validate(
+        public static ValidationSummary Validate(
             Document doc,
             string disciplina,
             List<DisciplineParameter> parametrosRequeridos)
         {
-            var issues = new List<ValidationIssue>();
+            var summary = new ValidationSummary();
+            var issues = summary.Issues;
 
-            var paramsDisciplina = parametrosRequeridos
+            var reglas = parametrosRequeridos
                 .Where(p => p.Disciplina.Equals(disciplina, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            if (!paramsDisciplina.Any())
-                return issues;
+            if (!reglas.Any()) return summary;
 
             var categoriasFiltro = new HashSet<string>(
-                paramsDisciplina
-                    .Select(p => p.Categoria)
-                    .Where(c => !string.IsNullOrWhiteSpace(c))
-                    .Distinct(StringComparer.OrdinalIgnoreCase),
+                reglas.Select(p => p.Categoria)
+                      .Where(c => !string.IsNullOrWhiteSpace(c))
+                      .Distinct(StringComparer.OrdinalIgnoreCase),
                 StringComparer.OrdinalIgnoreCase);
 
             var elementos = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
                 .ToElements();
+
+            var familiaIds = new HashSet<ElementId>();
 
             foreach (Element elem in elementos)
             {
@@ -40,107 +41,143 @@ namespace MiNamespace.ValidadorParametros
                 if (elem.Category == null) continue;
 
                 string catName = elem.Category.Name;
-
                 if (categoriasFiltro.Count > 0 && !categoriasFiltro.Contains(catName))
                     continue;
 
-                var reglasParaElem = paramsDisciplina
-                    .Where(p => string.IsNullOrWhiteSpace(p.Categoria)
-                             || p.Categoria.Equals(catName, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                var reglasCat = reglas.Where(p =>
+                    string.IsNullOrWhiteSpace(p.Categoria) ||
+                    p.Categoria.Equals(catName, StringComparison.OrdinalIgnoreCase)).ToList();
 
-                if (!reglasParaElem.Any()) continue;
+                if (!reglasCat.Any()) continue;
 
-                var nombresEnElemento = elem.Parameters
-                    .Cast<Parameter>()
-                    .Select(p => p.Definition.Name)
-                    .ToList();
+                summary.TotalElementos++;
 
-                // Detectar duplicados dentro del elemento
-                var duplicados = new HashSet<string>(
-                    nombresEnElemento
-                        .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
-                        .Where(g => g.Count() > 1)
-                        .Select(g => g.Key),
-                    StringComparer.OrdinalIgnoreCase);
+                var fi = elem as FamilyInstance;
+                if (fi?.Symbol?.Family != null)
+                    familiaIds.Add(fi.Symbol.Family.Id);
 
 #if REVIT_LEGACY_ELEMENTID
                 string elemId = elem.Id.IntegerValue.ToString();
 #else
                 string elemId = elem.Id.Value.ToString();
 #endif
-                string familia = (elem as FamilyInstance)?.Symbol?.Family?.Name ?? catName;
-                string tipo = elem.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM)
-                                 ?.AsValueString() ?? string.Empty;
+                string familia  = fi?.Symbol?.Family?.Name ?? catName;
+                string tipoElem = elem.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM)?.AsValueString() ?? "";
 
-                foreach (var regla in reglasParaElem)
+                Element elemType = doc.GetElement(elem.GetTypeId());
+
+                var nombresInstancia = elem.Parameters.Cast<Parameter>()
+                    .Select(p => p.Definition.Name).ToList();
+                var nombresTipo = elemType != null
+                    ? elemType.Parameters.Cast<Parameter>().Select(p => p.Definition.Name).ToList()
+                    : new List<string>();
+
+                var duplicados = new HashSet<string>(
+                    nombresInstancia
+                        .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key),
+                    StringComparer.OrdinalIgnoreCase);
+
+                foreach (var regla in reglasCat)
                 {
-                    bool exacto = nombresEnElemento.Any(n =>
-                        n.Equals(regla.NombreParametro, StringComparison.Ordinal));
-                    bool insensible = nombresEnElemento.Any(n =>
-                        n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
+                    bool esAlcanceTipo  = regla.Alcance?.Equals("Tipo", StringComparison.OrdinalIgnoreCase) == true;
+                    var nombresRef      = esAlcanceTipo ? nombresTipo : nombresInstancia;
+                    var nombresOpuesto  = esAlcanceTipo ? nombresInstancia : nombresTipo;
+
+                    bool exacto        = nombresRef.Any(n => n.Equals(regla.NombreParametro, StringComparison.Ordinal));
+                    bool insensible    = nombresRef.Any(n => n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
+                    bool enScopeOpuesto = nombresOpuesto.Any(n => n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
 
                     if (!insensible)
                     {
-                        if (regla.Requerido)
-                            issues.Add(NewIssue(elemId, familia, tipo, catName, regla.NombreParametro,
+                        if (enScopeOpuesto)
+                        {
+                            string scopeReal = esAlcanceTipo ? "Instancia" : "Tipo";
+                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
+                                TipoProblema.AlcanceIncorrecto,
+                                $"'{regla.NombreParametro}' está en '{scopeReal}' pero la regla pide '{regla.Alcance}'.",
+                                ""));
+                        }
+                        else if (regla.Obligatorio)
+                        {
+                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
                                 TipoProblema.ParametroFaltante,
-                                $"El parámetro '{regla.NombreParametro}' no existe en el elemento.", ""));
+                                $"'{regla.NombreParametro}' no existe en scope '{regla.Alcance}'.",
+                                ""));
+                        }
                         continue;
                     }
 
-                    // Nombre con casing incorrecto
                     if (!exacto)
                     {
-                        string nombreReal = nombresEnElemento
-                            .First(n => n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
-                        issues.Add(NewIssue(elemId, familia, tipo, catName, regla.NombreParametro,
+                        string nombreReal = nombresRef.First(n =>
+                            n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
+                        issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
                             TipoProblema.NombreIncorrecto,
-                            $"Se esperaba '{regla.NombreParametro}' pero se encontró '{nombreReal}'.",
+                            $"Se esperaba '{regla.NombreParametro}', encontrado '{nombreReal}'.",
                             nombreReal));
                     }
 
-                    // Valor vacío en parámetros requeridos
-                    if (regla.Requerido)
+                    if (regla.Obligatorio)
                     {
-                        var param = elem.LookupParameter(regla.NombreParametro)
-                                 ?? elem.Parameters.Cast<Parameter>().FirstOrDefault(p =>
-                                        p.Definition.Name.Equals(regla.NombreParametro,
-                                            StringComparison.OrdinalIgnoreCase));
+                        Element scopeElem = esAlcanceTipo ? elemType : elem;
+                        Parameter param   = scopeElem?.LookupParameter(regla.NombreParametro)
+                                         ?? scopeElem?.Parameters.Cast<Parameter>().FirstOrDefault(p =>
+                                                p.Definition.Name.Equals(regla.NombreParametro,
+                                                    StringComparison.OrdinalIgnoreCase));
 
                         if (param != null && string.IsNullOrWhiteSpace(GetValue(param)))
-                            issues.Add(NewIssue(elemId, familia, tipo, catName, regla.NombreParametro,
+                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
                                 TipoProblema.ValorVacio,
-                                $"El parámetro '{regla.NombreParametro}' está vacío.", ""));
+                                $"'{regla.NombreParametro}' está vacío.", ""));
                     }
                 }
 
-                // Duplicados
                 foreach (string dup in duplicados)
-                {
-                    issues.Add(NewIssue(elemId, familia, tipo, catName, dup,
-                        TipoProblema.Duplicado,
-                        $"El parámetro '{dup}' aparece más de una vez en el elemento.", ""));
-                }
+                    issues.Add(NewDuplicate(elemId, familia, tipoElem, catName, disciplina, dup));
             }
 
-            return issues;
+            summary.TotalFamilias = familiaIds.Count;
+            return summary;
         }
 
-        private static ValidationIssue NewIssue(
-            string id, string familia, string tipo, string cat,
-            string param, TipoProblema problema, string desc, string valor)
+        private static ValidationIssue Nuevo(
+            string id, string familia, string tipo, string cat, string disciplina,
+            DisciplineParameter regla, TipoProblema problema, string desc, string valor)
         {
             return new ValidationIssue
             {
-                ElementId          = id,
-                Familia            = familia,
-                Tipo               = tipo,
-                Categoria          = cat,
-                Parametro          = param,
-                TipoDeProblema     = problema,
+                ElementId           = id,
+                Familia             = familia,
+                TipoElemento        = tipo,
+                Categoria           = cat,
+                Disciplina          = disciplina,
+                Parametro           = regla.NombreParametro,
+                Alcance             = regla.Alcance ?? "Instancia",
+                TipoDeProblema      = problema,
+                Severidad           = regla.Obligatorio ? Severidad.Critico : Severidad.Advertencia,
                 DescripcionProblema = desc,
-                ValorActual        = valor
+                ValorActual         = valor
+            };
+        }
+
+        private static ValidationIssue NewDuplicate(
+            string id, string familia, string tipo, string cat, string disciplina, string paramName)
+        {
+            return new ValidationIssue
+            {
+                ElementId           = id,
+                Familia             = familia,
+                TipoElemento        = tipo,
+                Categoria           = cat,
+                Disciplina          = disciplina,
+                Parametro           = paramName,
+                Alcance             = "Instancia",
+                TipoDeProblema      = TipoProblema.Duplicado,
+                Severidad           = Severidad.Advertencia,
+                DescripcionProblema = $"'{paramName}' aparece más de una vez.",
+                ValorActual         = ""
             };
         }
 
@@ -148,9 +185,9 @@ namespace MiNamespace.ValidadorParametros
         {
             switch (param.StorageType)
             {
-                case StorageType.String:    return param.AsString() ?? "";
-                case StorageType.Double:    return param.AsValueString() ?? "";
-                case StorageType.Integer:   return param.AsInteger().ToString();
+                case StorageType.String:  return param.AsString() ?? "";
+                case StorageType.Double:  return param.AsValueString() ?? "";
+                case StorageType.Integer: return param.AsInteger().ToString();
                 case StorageType.ElementId:
 #if REVIT_LEGACY_ELEMENTID
                     return param.AsElementId()?.IntegerValue.ToString() ?? "";
