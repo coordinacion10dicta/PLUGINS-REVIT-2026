@@ -37,6 +37,7 @@ Resources/            → Descripciones.xlsx, RutaCritica.xlsx, RETIE.ttf
 - `MyCommandPreDim.cs` → Predimensionado desde diccionario CSV/XLSX
 - `MyTAGS_ARQ.cs` → Tags arquitectónicos (puertas, muros con filtro de espesor, iluminación, accesorios)
 - `MyTAGS_CielosRasos.cs` → Tags de cielo raso + dimensionamiento automático
+- `ValidadorParametrosCommand.cs` → Valida parámetros BIM por disciplina (v2.3 redesign: sidebar compliance, KPI cards, scope Tipo/Instancia)
 - `CotasArq/` → Sub-proyecto independiente de cotas exteriores
 
 ## Patrones clave
@@ -46,15 +47,42 @@ Resources/            → Descripciones.xlsx, RutaCritica.xlsx, RETIE.ttf
 - PostBuild deploya DLL + .addin + assets a cada versión de Revit
 
 ## Pendiente / Notas
-- Enfoque actual: GenerateDescriptions.cs y archivos relacionados
-  - RevitPlugin\GenerateDescriptions.cs (principal)
-  - RevitPlugin\Json\Templates\hvac_config.json
-  - RevitPlugin\Json\Templates\hidraulico_config.json
-  - RevitPlugin\Json\Templates\rci_config.json
-  - RevitPlugin\Json\JsonFileManager.cs
-  - RevitPlugin\Learning\* (motor sugerencias mapeo)
-  - RevitPlugin\UI\UiGenerateDescriptions.xaml(.cs)
+
+### Validador de Parámetros (✅ COMPLETADO v2.3)
+Estructura modular en `RevitPlugin/ValidadorParametros/`:
+- `ValidadorParametrosCommand.cs` → IExternalCommand entry point (Transaction.Manual)
+- `ParameterValidator.cs` → Lógica de validación (scope Tipo/Instancia, severidad crítico/advertencia)
+- `ExcelParameterLoader.cs` → Lee `ParametrosRequeridos.xlsx` con ClosedXML (6 columnas: Disciplina, Categoria, Parámetro, Alcance, Obligatorio, Descripcion)
+- `ValidationIssue.cs` → Modelo de datos con TipoProblema (ParametroFaltante, ValorVacio, NombreIncorrecto, Duplicado, AlcanceIncorrecto) y Severidad
+- `DisciplineParameter.cs` → Regla de parámetro requerido
+- `DisciplineComplianceModel.cs` → Modelos para sidebar (DisciplineComplianceModel, CategoryComplianceModel, ValidationSummary)
+- `UI/UiValidadorParametros.xaml(.cs)` → WPF profesional con:
+  - Sidebar: árbol de disciplinas con barra de compliance por categoría
+  - KPI cards: Familias, Faltantes, Duplicados, Compliance %
+  - DataGrid: Alcance, Parametro, Categoria, Familia, Problema, Valor actual, Acción
+  - Filtros: solo críticos, faltantes, Tipo/Instancia, búsqueda libre
+  - Footer Auto Fix con conteo de problemas corregibles
+  - Converters: SeveridadToColorConverter, SeveridadToTextConverter, ComplianceToBarColorConverter
+
+Patrones Validador:
+- ClosedXML para lectura Excel (sin COM Interop)
+- `ICollectionView` para filtrado dinámico (no rebuild de ItemsSource)
+- `new HashSet<T>(collection, comparer)` en lugar de `.ToHashSet()` (compatibilidad .NET 4.7/4.8)
+- `ValidationSummary` con `List<ValidationIssue>` + `TotalElementos`, `TotalFamilias`
+- Scope validation: `Element elemType = doc.GetElement(elem.GetTypeId()); `
+
+### GenerateDescriptions (en curso)
+- RevitPlugin\GenerateDescriptions.cs (principal)
+- RevitPlugin\Json\Templates\hvac_config.json
+- RevitPlugin\Json\Templates\hidraulico_config.json
+- RevitPlugin\Json\Templates\rci_config.json
+- RevitPlugin\Json\JsonFileManager.cs
+- RevitPlugin\Learning\* (motor sugerencias mapeo)
+- RevitPlugin\UI\UiGenerateDescriptions.xaml(.cs)
 - Cambios recientes:
   - Fallback FIG "" → "(FIG)" en los 3 JSONs (para highlight rojo via HighlightNoData)
-  - Limpieza de guiones en materialName (líneas 701, 774) y componentName (línea 803)
-- Build: usar msbuild.exe de VS2022 (dotnet build no soporta COM references)
+  - Limpieza de guiones en materialName y componentName
+
+### Build
+- Usar msbuild.exe de VS2022 (dotnet build no soporta COM references)
+- Multi-target: net47, net48, net8.0-windows con `#if REVIT_LEGACY_ELEMENTID`
