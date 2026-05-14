@@ -46,32 +46,69 @@ Resources/            → Descripciones.xlsx, RutaCritica.xlsx, RETIE.ttf
 - Compilación condicional: `REVIT2021_OR_EARLIER`, `REVIT2022_OR_LATER`, `REVIT_LEGACY_ELEMENTID`
 - PostBuild deploya DLL + .addin + assets a cada versión de Revit
 
-## Pendiente / Notas
+## Validador de Parámetros (✅ COMPLETADO v2.3)
 
-### Validador de Parámetros (✅ COMPLETADO v2.3)
-Estructura modular en `RevitPlugin/ValidadorParametros/`:
+### Estructura del plugin
+Ubicación: `RevitPlugin/ValidadorParametros/`
 - `ValidadorParametrosCommand.cs` → IExternalCommand entry point (Transaction.Manual)
-- `ParameterValidator.cs` → Lógica de validación (scope Tipo/Instancia, severidad crítico/advertencia)
-- `ExcelParameterLoader.cs` → Lee `ParametrosRequeridos.xlsx` con ClosedXML (6 columnas: Disciplina, Categoria, Parámetro, Alcance, Obligatorio, Descripcion)
+- `ParameterValidator.cs` → Lógica core: valida scope Tipo/Instancia, severidad crítico/advertencia, detecta AlcanceIncorrecto
+- `ExcelParameterLoader.cs` → Lee `ParametrosRequeridos.xlsx` con ClosedXML (sin Office instalado)
 - `ValidationIssue.cs` → Modelo de datos con TipoProblema (ParametroFaltante, ValorVacio, NombreIncorrecto, Duplicado, AlcanceIncorrecto) y Severidad
-- `DisciplineParameter.cs` → Regla de parámetro requerido
+- `DisciplineParameter.cs` → Regla de parámetro requerido con Alcance y Obligatorio
 - `DisciplineComplianceModel.cs` → Modelos para sidebar (DisciplineComplianceModel, CategoryComplianceModel, ValidationSummary)
-- `UI/UiValidadorParametros.xaml(.cs)` → WPF profesional con:
-  - Sidebar: árbol de disciplinas con barra de compliance por categoría
+- `UI/UiValidadorParametros.xaml(.cs)` → WPF profesional (1440x760) con:
+  - Sidebar: árbol de disciplinas + barra de compliance por categoría
   - KPI cards: Familias, Faltantes, Duplicados, Compliance %
-  - DataGrid: Alcance, Parametro, Categoria, Familia, Problema, Valor actual, Acción
+  - DataGrid: Severidad, Parámetro, Alcance, Categoría, Familia, Problema, Valor actual, Acción
   - Filtros: solo críticos, faltantes, Tipo/Instancia, búsqueda libre
   - Footer Auto Fix con conteo de problemas corregibles
   - Converters: SeveridadToColorConverter, SeveridadToTextConverter, ComplianceToBarColorConverter
 
-Patrones Validador:
-- ClosedXML para lectura Excel (sin COM Interop)
-- `ICollectionView` para filtrado dinámico (no rebuild de ItemsSource)
-- `new HashSet<T>(collection, comparer)` en lugar de `.ToHashSet()` (compatibilidad .NET 4.7/4.8)
-- `ValidationSummary` con `List<ValidationIssue>` + `TotalElementos`, `TotalFamilias`
-- Scope validation: `Element elemType = doc.GetElement(elem.GetTypeId()); `
+### Archivo de configuración: ParametrosRequeridos.xlsx
+**Ubicación:** DLL folder (ej: `bin/Release/net48/ParametrosRequeridos.xlsx`)
 
-### GenerateDescriptions (en curso)
+**Estructura (6 columnas):**
+| Col | Campo | Tipo | Notas |
+|-----|-------|------|-------|
+| A | **Disciplina** | string | HVAC, Plumbing, Electrical, ARQ, etc. Obligatorio. |
+| B | **Categoria** | string | Categoría Revit (Mechanical Equipment, Doors, Pipes, etc.) o vacío (aplica a todas) |
+| C | **Parámetro** | string | Nombre exacto del parámetro. Obligatorio. Case-sensitive matching. |
+| D | **Alcance** | string | `Tipo` o `Instancia`. Default: `Instancia` si vacío. |
+| E | **Obligatorio** | string | `Sí`, `SÍ`, `YES` o `1` = crítico; cualquier otro valor = advertencia |
+| F | **Descripcion** | string | Descripción informativa del parámetro. Opcional. |
+
+**Reglas de lectura:**
+- Fila 1: Headers (ignorada)
+- Filas vacías o sin Disciplina/Parámetro: ignoradas
+- Alcance vacío → default "Instancia"
+- Obligatorio vacío → default false (advertencia, no crítico)
+
+**Ejemplo:**
+```
+Disciplina | Categoria              | Parámetro      | Alcance    | Obligatorio | Descripcion
+HVAC       | Mechanical Equipment   | PTO_CodigoCosto| Tipo       | Sí          | Código de costo
+HVAC       | Mechanical Equipment   | PTO_Marca      | Instancia  | Sí          | Marca del equipo
+Plumbing   | Pipes                  | PTO_Material   | Tipo       | No          | Material tubería
+ARQ        | Doors                  | PTO_Codigo     | Tipo       | Sí          | Código presupuesto
+```
+
+### Generación de plantilla
+```csharp
+ExcelParameterLoader.CrearPlantilla(@"C:\ParametrosRequeridos.xlsx");
+```
+Genera Excel con:
+- Headers con fondo azul (#1A237E) y texto blanco, bold
+- 11 ejemplos pre-cargados (HVAC, Plumbing, Electrical, ARQ)
+- Dropdowns para Alcance (Tipo/Instancia) y Obligatorio (Sí/No) en filas 2-12+
+
+### Patrones clave
+- ClosedXML para lectura Excel (sin COM Interop)
+- `ICollectionView` para filtrado dinámico de issues (no rebuild de ItemsSource)
+- `new HashSet<T>(collection, comparer)` en lugar de `.ToHashSet()` (compatibilidad .NET 4.7/4.8)
+- Scope validation: `Element elemType = doc.GetElement(elem.GetTypeId());` para distinguir Tipo vs Instancia
+- `ValidationSummary` retorna `List<ValidationIssue>` + `TotalElementos`, `TotalFamilias`
+
+## GenerateDescriptions (en curso)
 - RevitPlugin\GenerateDescriptions.cs (principal)
 - RevitPlugin\Json\Templates\hvac_config.json
 - RevitPlugin\Json\Templates\hidraulico_config.json
@@ -83,6 +120,6 @@ Patrones Validador:
   - Fallback FIG "" → "(FIG)" en los 3 JSONs (para highlight rojo via HighlightNoData)
   - Limpieza de guiones en materialName y componentName
 
-### Build
+## Build
 - Usar msbuild.exe de VS2022 (dotnet build no soporta COM references)
 - Multi-target: net47, net48, net8.0-windows con `#if REVIT_LEGACY_ELEMENTID`
