@@ -134,7 +134,7 @@
                       HeadersVisibility="Column"
                       GridLinesVisibility="Horizontal"
                       SelectionMode="Single"
-                      SelectionChangedEvent="DgResultados_SelectionChanged"
+                      SelectionChanged="DgResultados_SelectionChanged"
                       FontSize="11"
                       ColumnHeaderHeight="28">
 
