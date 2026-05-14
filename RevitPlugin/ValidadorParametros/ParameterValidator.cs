@@ -23,11 +23,12 @@ namespace MiNamespace.ValidadorParametros
             if (!paramsDisciplina.Any())
                 return issues;
 
-            var categoriasFiltro = paramsDisciplina
-                .Select(p => p.Categoria)
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var categoriasFiltro = new HashSet<string>(
+                paramsDisciplina
+                    .Select(p => p.Categoria)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct(StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
 
             var elementos = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
@@ -56,11 +57,12 @@ namespace MiNamespace.ValidadorParametros
                     .ToList();
 
                 // Detectar duplicados dentro del elemento
-                var duplicados = nombresEnElemento
-                    .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var duplicados = new HashSet<string>(
+                    nombresEnElemento
+                        .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key),
+                    StringComparer.OrdinalIgnoreCase);
 
 #if REVIT_LEGACY_ELEMENTID
                 string elemId = elem.Id.IntegerValue.ToString();
