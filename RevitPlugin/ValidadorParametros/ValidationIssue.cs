@@ -7,19 +7,31 @@ namespace MiNamespace.ValidadorParametros
         ParametroFaltante,
         ValorVacio,
         NombreIncorrecto,
-        Duplicado
+        Duplicado,
+        AlcanceIncorrecto   // parameter exists but on wrong scope (Tipo vs Instancia)
+    }
+
+    public enum Severidad
+    {
+        Critico,
+        Advertencia
     }
 
     public class ValidationIssue : INotifyPropertyChanged
     {
-        public string ElementId { get; set; }
-        public string Familia { get; set; }
-        public string Tipo { get; set; }
-        public string Categoria { get; set; }
-        public string Parametro { get; set; }
-        public TipoProblema TipoDeProblema { get; set; }
-        public string DescripcionProblema { get; set; }
-        public string ValorActual { get; set; }
+        public string      ElementId          { get; set; }
+        public string      Familia            { get; set; }
+        public string      TipoElemento       { get; set; }   // element type name
+        public string      Categoria          { get; set; }
+        public string      Disciplina         { get; set; }
+        public string      Parametro          { get; set; }
+        public string      Alcance            { get; set; }   // "Tipo" | "Instancia" (expected)
+        public TipoProblema TipoDeProblema    { get; set; }
+        public Severidad   Severidad          { get; set; }
+        public string      DescripcionProblema { get; set; }
+        public string      ValorActual        { get; set; }
+
+        public bool EsCritico => Severidad == Severidad.Critico;
 
         public string TipoProblemaTexto
         {
@@ -27,11 +39,12 @@ namespace MiNamespace.ValidadorParametros
             {
                 switch (TipoDeProblema)
                 {
-                    case TipoProblema.ParametroFaltante: return "Parámetro Faltante";
-                    case TipoProblema.ValorVacio:         return "Valor Vacío";
-                    case TipoProblema.NombreIncorrecto:   return "Nombre Incorrecto";
-                    case TipoProblema.Duplicado:          return "Duplicado";
-                    default:                              return "Desconocido";
+                    case TipoProblema.ParametroFaltante:  return "Faltante";
+                    case TipoProblema.ValorVacio:          return "Vacío";
+                    case TipoProblema.NombreIncorrecto:    return "Nombre Incorrecto";
+                    case TipoProblema.Duplicado:           return "Duplicado";
+                    case TipoProblema.AlcanceIncorrecto:   return "Alcance Incorrecto";
+                    default:                               return "Desconocido";
                 }
             }
         }
