@@ -437,6 +437,29 @@ namespace MiNamespace
                 // Agregar al panel
                 panel.AddItem(buttonData14);
 
+                // -----------------------------------------------------------------
+                // BOTÓN 15: "Validador de Parámetros"
+                // -----------------------------------------------------------------
+                PushButtonData buttonData15 = new PushButtonData(
+                    "MyButtonInfo15",
+                    "Validador\nParámetros",
+                    dllPath,
+                    "MiNamespace.ValidadorParametros.ValidadorParametrosCommand"
+                );
+
+                string iconPath15 = Path.Combine(exeDirectory, "Images", "tags.png");
+                if (File.Exists(iconPath15))
+                {
+                    BitmapImage largeImage15 = new BitmapImage();
+                    largeImage15.BeginInit();
+                    largeImage15.UriSource = new Uri(iconPath15, UriKind.Absolute);
+                    largeImage15.EndInit();
+                    buttonData15.LargeImage = largeImage15;
+                    buttonData15.Image = largeImage15;
+                }
+
+                buttonData15.ToolTip = "Valida parámetros y familias para garantizar que el modelo esté listo para presupuesto.";
+                panel.AddItem(buttonData15);
 
                 return Result.Succeeded;
             }
