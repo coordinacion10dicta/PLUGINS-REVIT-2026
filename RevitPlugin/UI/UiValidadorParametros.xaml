@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Validador de Parámetros — DICTA"
-        Height="640" Width="980"
-        MinHeight="500" MinWidth="700"
+        Height="700" Width="1200"
+        MinHeight="500" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">
 
@@ -12,7 +12,7 @@
             <Setter Property="Background" Value="#2D6A4F"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Padding" Value="10,6"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
@@ -25,7 +25,8 @@
         <Style x:Key="BtnSecondary" TargetType="Button">
             <Setter Property="Background" Value="#455A64"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
@@ -35,11 +36,11 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="BtnAutoFix" TargetType="Button">
+        <Style x:Key="BtnAction" TargetType="Button">
             <Setter Property="Background" Value="#1565C0"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
@@ -48,29 +49,10 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
-        <!-- Color por tipo de problema -->
-        <Style TargetType="DataGridRow">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding TipoDeProblema}" Value="ParametroFaltante">
-                    <Setter Property="Background" Value="#FFEBEE"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding TipoDeProblema}" Value="ValorVacio">
-                    <Setter Property="Background" Value="#FFF8E1"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding TipoDeProblema}" Value="NombreIncorrecto">
-                    <Setter Property="Background" Value="#FFF3E0"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding TipoDeProblema}" Value="Duplicado">
-                    <Setter Property="Background" Value="#E8EAF6"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -85,7 +67,7 @@
                 <TextBlock Text="Validador de Parámetros"
                            FontSize="18" FontWeight="Bold" Foreground="White"
                            VerticalAlignment="Center"/>
-                <TextBlock Text="  |  Listo para Presupuesto"
+                <TextBlock Text="  |  Edición y Validación"
                            FontSize="12" Foreground="#90CAF9"
                            VerticalAlignment="Center"/>
             </StackPanel>
@@ -98,6 +80,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Archivo de parámetros:" FontWeight="SemiBold"
                        VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -108,8 +91,10 @@
             <Button Grid.Column="2" Content="Examinar..." Style="{StaticResource BtnSecondary}"
                     Margin="6,0,0,0" Click="BtnExaminar_Click"/>
             <Button Grid.Column="3" Content="Crear plantilla" Style="{StaticResource BtnSecondary}"
-                    Margin="4,0,0,0" Click="BtnCrearPlantilla_Click"
-                    ToolTip="Crea ParametrosRequeridos.xlsx con datos de ejemplo en la carpeta del DLL"/>
+                    Margin="4,0,0,0" Click="BtnCrearPlantilla_Click"/>
+            <Button Grid.Column="4" Content="Editar Excel" Style="{StaticResource BtnAction}"
+                    Margin="4,0,0,0" Click="BtnEditarExcel_Click"
+                    ToolTip="Abre el archivo Excel para editar las reglas"/>
         </Grid>
 
         <!-- Fila: Disciplina + Validar -->
@@ -131,42 +116,126 @@
 
         <Separator Grid.Row="3" Margin="0,0,0,8"/>
 
-        <!-- DataGrid de resultados -->
-        <DataGrid Grid.Row="4"
-                  x:Name="dgResultados"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  SelectionMode="Extended"
-                  FontSize="11"
-                  ColumnHeaderHeight="28">
+        <!-- Área principal: Grid izquierda + Panel edición derecha -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="400"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="380" MinWidth="300"/>
+            </Grid.ColumnDefinitions>
 
-            <DataGrid.ColumnHeaderStyle>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#ECEFF1"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="Padding" Value="8,4"/>
-                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                    <Setter Property="BorderBrush" Value="#CFD8DC"/>
-                </Style>
-            </DataGrid.ColumnHeaderStyle>
+            <!-- DataGrid de resultados (izquierda) -->
+            <DataGrid Grid.Column="0"
+                      x:Name="dgResultados"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      SelectionMode="Single"
+                      SelectionChangedEvent="DgResultados_SelectionChanged"
+                      FontSize="11"
+                      ColumnHeaderHeight="28">
 
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID"        Binding="{Binding ElementId}"        Width="70"/>
-                <DataGridTextColumn Header="Familia"   Binding="{Binding Familia}"           Width="150"/>
-                <DataGridTextColumn Header="Tipo"      Binding="{Binding Tipo}"              Width="120"/>
-                <DataGridTextColumn Header="Categoría" Binding="{Binding Categoria}"         Width="130"/>
-                <DataGridTextColumn Header="Parámetro" Binding="{Binding Parametro}"         Width="140"/>
-                <DataGridTextColumn Header="Problema"  Binding="{Binding TipoProblemaTexto}" Width="140"/>
-                <DataGridTextColumn Header="Descripción" Binding="{Binding DescripcionProblema}" Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#ECEFF1"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        <Setter Property="BorderBrush" Value="#CFD8DC"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
 
-        <!-- Leyenda y resumen -->
-        <Border Grid.Row="5" Background="#ECEFF1" CornerRadius="4" Padding="10,7" Margin="0,8,0,8">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"        Binding="{Binding ElementId}"        Width="60"/>
+                    <DataGridTextColumn Header="Familia"   Binding="{Binding Familia}"           Width="120"/>
+                    <DataGridTextColumn Header="Parámetro" Binding="{Binding Parametro}"         Width="130"/>
+                    <DataGridTextColumn Header="Problema"  Binding="{Binding TipoProblemaTexto}" Width="110"/>
+                    <DataGridTextColumn Header="Descripción" Binding="{Binding DescripcionProblema}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Separador vertical -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch" Background="#E0E0E0" Cursor="SizeWE"/>
+
+            <!-- Panel de edición (derecha) -->
+            <Border Grid.Column="2" Background="#F9F9F9" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Título panel -->
+                    <TextBlock Grid.Row="0" Text="EDITAR PARÁMETROS"
+                               FontWeight="Bold" FontSize="12"
+                               Foreground="#1A237E" Margin="0,0,0,10"/>
+
+                    <!-- Info del elemento seleccionado -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                        <TextBlock Text="Elemento:"  FontWeight="SemiBold" FontSize="10" Foreground="#666"/>
+                        <TextBlock x:Name="lblElementoInfo" FontSize="11" TextWrapping="Wrap" Foreground="#333"/>
+                    </StackPanel>
+
+                    <!-- ListBox de parámetros editables -->
+                    <ListBox Grid.Row="2" x:Name="lstParametros"
+                             BorderBrush="#D0D0D0" BorderThickness="1" Padding="0"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="8,6" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11"/>
+                                            <TextBox x:Name="txtValue" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                     Padding="4,2" FontSize="10" Margin="0,4,0,0"
+                                                     Tag="{Binding Name}"/>
+                                            <TextBlock Foreground="#999" FontSize="9" Margin="0,2,0,0">
+                                                <Run Text="Tipo: "/>
+                                                <Run Text="{Binding StorageType}"/>
+                                                <Run Text=" | "/>
+                                                <Run Text="{Binding IsInstance, StringFormat='{0:Instancia/Tipo}'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Botones de acción -->
+                    <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,10,0,0" Gap="6">
+                        <Button Content="💾 Guardar cambios" Style="{StaticResource BtnPrimary}"
+                                Click="BtnGuardarCambios_Click" FontSize="11"/>
+                        <Button x:Name="btnAplicarSimilares" Content="↗️ Aplicar a similares" Style="{StaticResource BtnAction}"
+                                Click="BtnAplicarSimilares_Click" FontSize="11" IsEnabled="False"
+                                ToolTip="Copia este valor a otros elementos de la misma familia"/>
+                        <Button Content="➕ Agregar parámetro" Style="{StaticResource BtnSecondary}"
+                                Click="BtnAgregarParametro_Click" FontSize="11"
+                                ToolTip="Crea el parámetro si no existe"/>
+                    </StackPanel>
+
+                    <!-- Mensaje de estado -->
+                    <TextBlock Grid.Row="4" x:Name="lblStatusPanel"
+                               Foreground="#666" FontSize="10" TextWrapping="Wrap"
+                               Margin="0,8,0,0" Text="Selecciona un elemento para editar"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Resumen y pie -->
+        <Border Grid.Row="5" Background="#ECEFF1" CornerRadius="4" Padding="10,7" Margin="0,8,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -174,30 +243,13 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" x:Name="lblResumen"
                            Text="Ejecute la validación para ver los resultados."
-                           FontSize="12" VerticalAlignment="Center"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Margin="0,0,4,0"><Run Text="■" Foreground="#EF9A9A"/><Run Text=" Faltante"/></TextBlock>
-                    <TextBlock Margin="8,0,4,0"><Run Text="■" Foreground="#FFE082"/><Run Text=" Vacío"/></TextBlock>
-                    <TextBlock Margin="8,0,4,0"><Run Text="■" Foreground="#FFCC80"/><Run Text=" Nombre incorrecto"/></TextBlock>
-                    <TextBlock Margin="8,0,0,0"><Run Text="■" Foreground="#9FA8DA"/><Run Text=" Duplicado"/></TextBlock>
-                </StackPanel>
+                           FontSize="11" VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="⚡  AUTO FIX (en desarrollo)"
+                        Style="{StaticResource BtnAction}"
+                        Click="BtnAutoFix_Click"
+                        ToolTip="Corrección automática de parámetros"/>
             </Grid>
         </Border>
-
-        <!-- Pie: status + Auto Fix -->
-        <Grid Grid.Row="6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" x:Name="lblStatus"
-                       FontSize="11" Foreground="#757575"
-                       VerticalAlignment="Center"/>
-            <Button Grid.Column="1"
-                    Content="⚡  EJECUTAR AUTO FIX"
-                    Style="{StaticResource BtnAutoFix}"
-                    ToolTip="Corrección automática de parámetros (función en desarrollo)"
-                    Click="BtnAutoFix_Click"/>
-        </Grid>
     </Grid>
 </Window>
