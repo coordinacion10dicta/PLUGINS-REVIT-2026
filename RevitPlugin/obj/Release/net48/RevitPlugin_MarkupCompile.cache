@@ -8,13 +8,13 @@ C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Rele
 RevitPlugin
 none
 false
-TRACE;NET48;REVIT2022_OR_LATER;REVIT_LEGACY_ELEMENTID;RELEASE;NETFRAMEWORK;NET48;
+TRACE;NET48;REVIT2022_OR_LATER;RELEASE;NETFRAMEWORK;NET48;
 
-7-1573202692
-121015973168
-53-1068315427
-43-67331972
-CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;
+81077505516
+14109109657
+69-38697733
+50-1097827552
+CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;UI\UiValidadorParametros.xaml;
 
 False
 

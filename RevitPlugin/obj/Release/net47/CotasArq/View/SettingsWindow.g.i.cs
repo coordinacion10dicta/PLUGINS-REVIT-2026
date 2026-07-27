@@ -109,7 +109,7 @@ namespace PluginCotasExteriores.View {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/RevitPlugin;component/cotasarq/view/settingswindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/RevitPlugin;V1.0.0.0;component/cotasarq/view/settingswindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\CotasArq\View\SettingsWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

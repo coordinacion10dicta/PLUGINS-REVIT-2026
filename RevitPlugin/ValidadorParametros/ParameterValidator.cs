@@ -15,7 +15,6 @@ namespace MiNamespace.ValidadorParametros
             List<DisciplineParameter> parametrosRequeridos)
         {
             var summary = new ValidationSummary();
-            var issues = summary.Issues;
 
             var reglas = parametrosRequeridos
                 .Where(p => p.Disciplina.Equals(disciplina, StringComparison.OrdinalIgnoreCase))
@@ -23,128 +22,156 @@ namespace MiNamespace.ValidadorParametros
 
             if (!reglas.Any()) return summary;
 
-            var categoriasFiltro = new HashSet<string>(
-                reglas.Select(p => p.Categoria)
-                      .Where(c => !string.IsNullOrWhiteSpace(c))
-                      .Distinct(StringComparer.OrdinalIgnoreCase),
-                StringComparer.OrdinalIgnoreCase);
-
-            var elementos = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType()
-                .ToElements();
+            var reglasPorCategoria = reglas
+                .Where(r => !string.IsNullOrWhiteSpace(r.Categoria))
+                .GroupBy(r => r.Categoria, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
             var familiaIds = new HashSet<ElementId>();
 
-            foreach (Element elem in elementos)
+            foreach (var kvp in reglasPorCategoria)
             {
-                if (issues.Count >= MaxIssues) break;
-                if (elem.Category == null) continue;
+                if (summary.Issues.Count >= MaxIssues) break;
 
-                string catName = elem.Category.Name;
-                if (categoriasFiltro.Count > 0 && !categoriasFiltro.Contains(catName))
-                    continue;
+                string categoria = kvp.Key;
+                var reglasCat   = kvp.Value;
 
-                var reglasCat = reglas.Where(p =>
-                    string.IsNullOrWhiteSpace(p.Categoria) ||
-                    p.Categoria.Equals(catName, StringComparison.OrdinalIgnoreCase)).ToList();
+                BuiltInCategory bic = MapToBuiltInCategory(categoria);
+                if (bic == BuiltInCategory.INVALID) continue;
 
-                if (!reglasCat.Any()) continue;
-
-                summary.TotalElementos++;
-
-                var fi = elem as FamilyInstance;
-                if (fi?.Symbol?.Family != null)
-                    familiaIds.Add(fi.Symbol.Family.Id);
-
-#if REVIT_LEGACY_ELEMENTID
-                string elemId = elem.Id.IntegerValue.ToString();
-#else
-                string elemId = elem.Id.Value.ToString();
-#endif
-                string familia  = fi?.Symbol?.Family?.Name ?? catName;
-                string tipoElem = elem.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM)?.AsValueString() ?? "";
-
-                Element elemType = doc.GetElement(elem.GetTypeId());
-
-                var nombresInstancia = elem.Parameters.Cast<Parameter>()
-                    .Select(p => p.Definition.Name).ToList();
-                var nombresTipo = elemType != null
-                    ? elemType.Parameters.Cast<Parameter>().Select(p => p.Definition.Name).ToList()
-                    : new List<string>();
-
-                var duplicados = new HashSet<string>(
-                    nombresInstancia
-                        .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
-                        .Where(g => g.Count() > 1)
-                        .Select(g => g.Key),
-                    StringComparer.OrdinalIgnoreCase);
-
-                foreach (var regla in reglasCat)
+                ICollection<ElementId> elemIds;
+                try
                 {
-                    bool esAlcanceTipo  = regla.Alcance?.Equals("Tipo", StringComparison.OrdinalIgnoreCase) == true;
-                    var nombresRef      = esAlcanceTipo ? nombresTipo : nombresInstancia;
-                    var nombresOpuesto  = esAlcanceTipo ? nombresInstancia : nombresTipo;
-
-                    bool exacto        = nombresRef.Any(n => n.Equals(regla.NombreParametro, StringComparison.Ordinal));
-                    bool insensible    = nombresRef.Any(n => n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
-                    bool enScopeOpuesto = nombresOpuesto.Any(n => n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
-
-                    if (!insensible)
-                    {
-                        if (enScopeOpuesto)
-                        {
-                            string scopeReal = esAlcanceTipo ? "Instancia" : "Tipo";
-                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
-                                TipoProblema.AlcanceIncorrecto,
-                                $"'{regla.NombreParametro}' está en '{scopeReal}' pero la regla pide '{regla.Alcance}'.",
-                                ""));
-                        }
-                        else if (regla.Obligatorio)
-                        {
-                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
-                                TipoProblema.ParametroFaltante,
-                                $"'{regla.NombreParametro}' no existe en scope '{regla.Alcance}'.",
-                                ""));
-                        }
-                        continue;
-                    }
-
-                    if (!exacto)
-                    {
-                        string nombreReal = nombresRef.First(n =>
-                            n.Equals(regla.NombreParametro, StringComparison.OrdinalIgnoreCase));
-                        issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
-                            TipoProblema.NombreIncorrecto,
-                            $"Se esperaba '{regla.NombreParametro}', encontrado '{nombreReal}'.",
-                            nombreReal));
-                    }
-
-                    if (regla.Obligatorio)
-                    {
-                        Element scopeElem = esAlcanceTipo ? elemType : elem;
-                        Parameter param   = scopeElem?.LookupParameter(regla.NombreParametro)
-                                         ?? scopeElem?.Parameters.Cast<Parameter>().FirstOrDefault(p =>
-                                                p.Definition.Name.Equals(regla.NombreParametro,
-                                                    StringComparison.OrdinalIgnoreCase));
-
-                        if (param != null && string.IsNullOrWhiteSpace(GetValue(param)))
-                            issues.Add(Nuevo(elemId, familia, tipoElem, catName, disciplina, regla,
-                                TipoProblema.ValorVacio,
-                                $"'{regla.NombreParametro}' está vacío.", ""));
-                    }
+                    elemIds = new FilteredElementCollector(doc)
+                        .OfCategory(bic)
+                        .WhereElementIsNotElementType()
+                        .ToElementIds();
+                }
+                catch
+                {
+                    continue;
                 }
 
-                foreach (string dup in duplicados)
-                    issues.Add(NewDuplicate(elemId, familia, tipoElem, catName, disciplina, dup));
+                foreach (ElementId eid in elemIds)
+                {
+                    if (summary.Issues.Count >= MaxIssues) break;
+
+                    Element elem = null;
+                    try { elem = doc.GetElement(eid); }
+                    catch { continue; }
+
+                    if (elem == null) continue;
+                    if (!elem.IsValidObject) continue;
+
+                    try { summary.TotalElementos++; }
+                    catch { }
+
+                    string elemIdStr = null;
+                    string familia   = null;
+
+#if REVIT_LEGACY_ELEMENTID
+                    try { elemIdStr = elem.Id.IntegerValue.ToString(); }
+                    catch { elemIdStr = eid.IntegerValue.ToString(); }
+#else
+                    try { elemIdStr = elem.Id.Value.ToString(); }
+                    catch { elemIdStr = eid.Value.ToString(); }
+#endif
+
+                    try
+                    {
+                        var fi = elem as FamilyInstance;
+                        if (fi != null && fi.Symbol != null && fi.Symbol.Family != null)
+                        {
+                            familia = fi.Symbol.Family.Name;
+                            familiaIds.Add(fi.Symbol.Family.Id);
+                        }
+                        else { familia = categoria; }
+                    }
+                    catch { familia = categoria; }
+
+                    string tipoElem = "";
+                    try { tipoElem = elem.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM)?.AsValueString() ?? ""; }
+                    catch { }
+
+                    foreach (var regla in reglasCat)
+                    {
+                        try
+                        {
+                            ValidarRegla(summary.Issues, elem, elemIdStr, familia, tipoElem, categoria, disciplina, regla);
+                        }
+                        catch { }
+                    }
+                }
             }
 
             summary.TotalFamilias = familiaIds.Count;
             return summary;
         }
 
-        private static ValidationIssue Nuevo(
+        private static void ValidarRegla(
+            List<ValidationIssue> issues,
+            Element elem,
+            string elemId, string familia, string tipoElem,
+            string catName, string disciplina,
+            DisciplineParameter regla)
+        {
+            if (issues.Count >= MaxIssues) return;
+
+            Parameter param = null;
+            try { param = elem.LookupParameter(regla.NombreParametro); }
+            catch { return; }
+
+            if (param == null)
+            {
+                if (regla.Obligatorio)
+                {
+                    issues.Add(CrearIssue(elemId, familia, tipoElem, catName, disciplina, regla,
+                        TipoProblema.ParametroFaltante,
+                        $"'{regla.NombreParametro}' no existe."));
+                }
+                return;
+            }
+
+            if (!regla.Obligatorio) return;
+
+            if (param.IsReadOnly) return;
+
+            string valor = "";
+            try { valor = GetValueString(param); }
+            catch { }
+
+            if (string.IsNullOrWhiteSpace(valor))
+            {
+                issues.Add(CrearIssue(elemId, familia, tipoElem, catName, disciplina, regla,
+                    TipoProblema.ValorVacio,
+                    $"'{regla.NombreParametro}' está vacío.", valor));
+            }
+        }
+
+        private static string GetValueString(Parameter p)
+        {
+            try
+            {
+                switch (p.StorageType)
+                {
+                    case StorageType.String:    return p.AsString() ?? "";
+                    case StorageType.Double:    return p.AsValueString() ?? "";
+                    case StorageType.Integer:   return p.AsInteger().ToString();
+                    case StorageType.ElementId:
+#if REVIT_LEGACY_ELEMENTID
+                        return p.AsElementId()?.IntegerValue.ToString() ?? "";
+#else
+                        return p.AsElementId()?.Value.ToString() ?? "";
+#endif
+                    default: return "";
+                }
+            }
+            catch { return ""; }
+        }
+
+        private static ValidationIssue CrearIssue(
             string id, string familia, string tipo, string cat, string disciplina,
-            DisciplineParameter regla, TipoProblema problema, string desc, string valor)
+            DisciplineParameter regla, TipoProblema problema, string desc, string valor = "")
         {
             return new ValidationIssue
             {
@@ -154,7 +181,7 @@ namespace MiNamespace.ValidadorParametros
                 Categoria           = cat,
                 Disciplina          = disciplina,
                 Parametro           = regla.NombreParametro,
-                Alcance             = regla.Alcance ?? "Instancia",
+                Alcance             = "Instancia",
                 TipoDeProblema      = problema,
                 Severidad           = regla.Obligatorio ? Severidad.Critico : Severidad.Advertencia,
                 DescripcionProblema = desc,
@@ -162,39 +189,42 @@ namespace MiNamespace.ValidadorParametros
             };
         }
 
-        private static ValidationIssue NewDuplicate(
-            string id, string familia, string tipo, string cat, string disciplina, string paramName)
+        private static BuiltInCategory MapToBuiltInCategory(string categoryName)
         {
-            return new ValidationIssue
+            switch (categoryName)
             {
-                ElementId           = id,
-                Familia             = familia,
-                TipoElemento        = tipo,
-                Categoria           = cat,
-                Disciplina          = disciplina,
-                Parametro           = paramName,
-                Alcance             = "Instancia",
-                TipoDeProblema      = TipoProblema.Duplicado,
-                Severidad           = Severidad.Advertencia,
-                DescripcionProblema = $"'{paramName}' aparece más de una vez.",
-                ValorActual         = ""
-            };
-        }
-
-        private static string GetValue(Parameter param)
-        {
-            switch (param.StorageType)
-            {
-                case StorageType.String:  return param.AsString() ?? "";
-                case StorageType.Double:  return param.AsValueString() ?? "";
-                case StorageType.Integer: return param.AsInteger().ToString();
-                case StorageType.ElementId:
-#if REVIT_LEGACY_ELEMENTID
-                    return param.AsElementId()?.IntegerValue.ToString() ?? "";
-#else
-                    return param.AsElementId()?.Value.ToString() ?? "";
-#endif
-                default: return "";
+                case "Pipes":                 return BuiltInCategory.OST_PipeCurves;
+                case "Pipe Fittings":         return BuiltInCategory.OST_PipeFitting;
+                case "Pipe Accessories":      return BuiltInCategory.OST_PipeAccessory;
+                case "Pipe Insulations":      return BuiltInCategory.OST_PipeInsulations;
+                case "Pipe Systems":          return BuiltInCategory.OST_PipingSystem;
+                case "Plumbing Fixtures":     return BuiltInCategory.OST_PipeCurves; // closest valid
+                case "Flex Pipes":            return BuiltInCategory.OST_FlexPipeCurves;
+                case "Sprinklers":            return BuiltInCategory.OST_Sprinklers;
+                case "Ducts":                 return BuiltInCategory.OST_DuctCurves;
+                case "Duct Fittings":         return BuiltInCategory.OST_DuctFitting;
+                case "Duct Accessories":       return BuiltInCategory.OST_DuctAccessory;
+                case "Duct Insulations":      return BuiltInCategory.OST_DuctInsulations;
+                case "Duct Systems":          return BuiltInCategory.OST_DuctSystem;
+                case "Flex Ducts":            return BuiltInCategory.OST_FlexDuctCurves;
+                case "Air Terminals":          return BuiltInCategory.OST_DuctTerminal;
+                case "Mechanical Equipment":  return BuiltInCategory.OST_MechanicalEquipment;
+                case "Electrical Equipment":  return BuiltInCategory.OST_ElectricalEquipment;
+                case "Electrical Fixtures":   return BuiltInCategory.OST_ElectricalFixtures;
+                case "Conduits":              return BuiltInCategory.OST_Conduit;
+                case "Conduit Fittings":      return BuiltInCategory.OST_ConduitFitting;
+                case "Cable Trays":           return BuiltInCategory.OST_CableTray;
+                case "Cable Tray Fittings":   return BuiltInCategory.OST_CableTrayFitting;
+                case "Electrical Circuits":   return BuiltInCategory.OST_ElectricalCircuit;
+                case "Lighting Fixtures":     return BuiltInCategory.OST_LightingFixtures;
+                case "Lighting Devices":      return BuiltInCategory.OST_LightingDevices;
+                case "Communication Devices": return BuiltInCategory.OST_CommunicationDevices;
+                case "Data Devices":          return BuiltInCategory.OST_DataDevices;
+                case "Nurse Call Devices":    return BuiltInCategory.OST_NurseCallDevices;
+                case "Telephone Devices":     return BuiltInCategory.OST_TelephoneDevices;
+                case "Security Devices":      return BuiltInCategory.OST_SecurityDevices;
+                case "Fire Alarm Devices":    return BuiltInCategory.OST_FireAlarmDevices;
+                default:                      return BuiltInCategory.INVALID;
             }
         }
     }

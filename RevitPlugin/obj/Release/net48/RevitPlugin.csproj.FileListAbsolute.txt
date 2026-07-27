@@ -264,3 +264,14 @@ C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Rele
 C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Json\Templates\mapping.json
 C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Json\Templates\unknowns.json
 C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Json\Templates\pending_mappings.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net48\RevitPlugin.sourcelink.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net48\UI\UiValidadorParametros.baml
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net48\UI\UiValidadorParametros.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Release\net48\GeneratedInternalTypeHelper.g.cs
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Images\parametros.png
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\ValidadorParametros\disciplinas_config.json
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\EPPlus.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\EPPlus.Interfaces.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\EPPlus.System.Drawing.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\bin\Release\net48\Resources\RETIE.ttf

@@ -10,11 +10,11 @@ none
 false
 TRACE;NET8;REVIT2022_OR_LATER;RELEASE;NET;NET8_0;NETCOREAPP
 
-7-1573202692
-121015973168
-54-1581876254
-221214066717
-CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;
+81077505516
+14109109657
+70-552258560
+233-1727468232
+CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;UI\UiValidadorParametros.xaml;
 
 False
 

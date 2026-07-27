@@ -1,20 +1,20 @@
 ﻿RevitPlugin
-
+1.0.0.0
 
 library
 C#
 .cs
-C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\
+c:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\RevitPlugin\obj\Debug\net48\
 RevitPlugin
 none
 false
-TRACE;NET48;REVIT2022_OR_LATER;REVIT_LEGACY_ELEMENTID;DEBUG;NETFRAMEWORK;NET48;
+TRACE;NET48;REVIT2022_OR_LATER;DEBUG;NETFRAMEWORK;NET48;NET30_OR_GREATER;NET35_OR_GREATER;NET40_OR_GREATER;NET45_OR_GREATER;NET451_OR_GREATER;NET452_OR_GREATER;NET46_OR_GREATER;NET461_OR_GREATER;NET462_OR_GREATER;NET47_OR_GREATER;NET471_OR_GREATER;NET472_OR_GREATER;NET48_OR_GREATER
 
-7-1573202692
-121015973168
-53-1068315427
-43-1006428242
-CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;
+81077505516
+14109109657
+71-1039466647
+46166037071
+CotasArq\View\ExteriorConfigurationWin.xaml;CotasArq\View\SettingsWindow.xaml;CotasArq\View\Styles.xaml;UI\LearningView.xaml;UI\TagSelectorCielos.xaml;UI\UiCategorias.xaml;UI\UiGenerateDescriptions.xaml;UI\UiValidadorParametros.xaml;
 
-False
+True
 

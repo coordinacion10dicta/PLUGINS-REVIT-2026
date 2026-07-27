@@ -15,7 +15,7 @@
       "CLASS": "",
       "DIAMETER_MM": "(MM)",
       "DIAMETER_IN": "(IN)",
-      "FIG": "(FIG)",
+      "FIG": "FIG",
       "BRAND": "(MARCA)",
       "INCLUDES": "suministro e instalación"
     }
@@ -28,7 +28,7 @@
       "CLASS": "",
       "ANGLE": "",
       "DIAMETERS": "(DIÁMETRO)",
-      "FIG": "(FIG)",
+      "FIG": "",
       "BRAND": "(MARCA)",
       "INCLUDES": "suministro e instalación, mano de obra, pruebas, etiquetas y todo lo necesario para su ejecución"
     }

@@ -1,0 +1,48 @@
+{
+  "disciplinas": [
+    {
+      "nombre": "HVAC",
+      "categorias": [
+        { "nombre": "Mechanical Equipment", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Air Terminals", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Ducts", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Duct Fittings", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Duct Accessories", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Duct Insulations", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Duct Systems", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Flex Ducts", "parametros": [], "keywords": [], "plantilla": [] }
+      ]
+    },
+    {
+      "nombre": "Hidráulico",
+      "categorias": [
+        { "nombre": "Pipes", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Pipe Fittings", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Pipe Accessories", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Pipe Insulations", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Plumbing Fixtures", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Sprinklers", "parametros": [], "keywords": [], "plantilla": [] }
+      ]
+    },
+    {
+      "nombre": "Eléctrico",
+      "categorias": [
+        { "nombre": "Electrical Equipment", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Electrical Fixtures", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Conduits", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Conduit Fittings", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Cable Trays", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Lighting Fixtures", "parametros": [], "keywords": [], "plantilla": [] }
+      ]
+    },
+    {
+      "nombre": "Electrónico",
+      "categorias": [
+        { "nombre": "Communication Devices", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Data Devices", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Fire Alarm Devices", "parametros": [], "keywords": [], "plantilla": [] },
+        { "nombre": "Security Devices", "parametros": [], "keywords": [], "plantilla": [] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build
+bin/
+obj/
+
+# NuGet
+packages/
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Claude
+.claude/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini

@@ -8,14 +8,14 @@
       "PPR": "polipropileno PPR bicolor"
     },
     "fallbacks": {
-      "MATERIAL": "(MATERIAL)",
-      "SYSTEM": "(SISTEMA)",
-      "CLASS": "",
-      "DIAMETER_MM": "(MM)",
-      "DIAMETER_IN": "(IN)",
-      "FIG": "(FIG)",
-      "BRAND": "(MARCA)",
-      "INCLUDES": "accesorios, soportería, instalación, pruebas y mano de obra"
+        "MATERIAL": "(MATERIAL)",
+        "SYSTEM": "(SISTEMA)",
+        "CLASS": "",
+        "DIAMETER_MM": "(MM)",
+        "DIAMETER_IN": "(IN)",
+        "FIG": "(FIG)",
+        "BRAND": "(MARCA)",
+        "INCLUDES": "conexiones (codos, tees, coples, reducciones, etc), soportería, acarreos, instalación, pruebas, mano de obra, equipo y herramienta."
     }
   },
   "ducto": {
@@ -44,6 +44,19 @@
       "BRAND": "(NO MARCA)",
       "MODEL": "(NO MODELO)",
       "INCLUDES": "suministro, instalación, mano de obra"
+    }
+  },
+  "conexion": {
+    "template": "{COMPONENT} de {MATERIAL} {CLASS} {ANGLE} {DIAMETERS}, marca {BRAND}, Incluye: {INCLUDES}",
+    "fallbacks": {
+        "COMPONENT": "(CONEXIÓN)",
+        "MATERIAL": "",
+        "CLASS": "",
+        "ANGLE": "",
+        "DIAMETERS": "(DIÁMETRO)",
+        "FIG": "",
+        "BRAND": "(MARCA)",
+        "INCLUDES": "suministro e instalación, mano de obra, pruebas, etiquetas y todo lo necesario para su ejecución."
     }
   }
 }

@@ -8,26 +8,38 @@ namespace MiNamespace.ValidadorParametros
     // Edita parámetros en Revit: establece valores, crea parámetros, aplica a similares.
     public static class ParameterEditor
     {
-        // Obtiene lista de parámetros con valores para edición
+        // Obtiene lista de parámetros con valores para edición.
+        // NOTA: OriginalParameter NO se captura como referencia (pierde validez al cerrar family doc).
+        // Se almacena el nombre y se re-busca al guardar.
         public static List<ParameterEditModel> GetEditableParameters(Element element)
         {
             var result = new List<ParameterEditModel>();
 
-            foreach (Parameter param in element.Parameters)
-            {
-                string name = param.Definition.Name;
-                string value = GetParameterValue(param);
-                bool isInstance = InstanceParameterHelper.IsInstanceParameter(element, name);
+            if (element == null || !element.IsValidObject) return result;
 
-                result.Add(new ParameterEditModel
+            try
+            {
+                foreach (Parameter p in element.Parameters)
                 {
-                    Name = name,
-                    Value = value,
-                    IsInstance = isInstance,
-                    StorageType = param.StorageType,
-                    OriginalParameter = param
-                });
+                    try
+                    {
+                        string name = p.Definition.Name;
+                        string value = GetParameterValue(p);
+                        bool isInstance = InstanceParameterHelper.IsInstanceParameter(element, name);
+
+                        result.Add(new ParameterEditModel
+                        {
+                            Name = name,
+                            Value = value,
+                            IsInstance = isInstance,
+                            StorageType = p.StorageType,
+                            OriginalParameter = null
+                        });
+                    }
+                    catch { }
+                }
             }
+            catch { }
 
             return result.OrderBy(p => p.Name).ToList();
         }
@@ -72,7 +84,7 @@ namespace MiNamespace.ValidadorParametros
 
         // Crea un parámetro en la familia (si es FamilyInstance)
         public static bool TryAddInstanceParameter(Document doc, Element element,
-            string paramName, ParameterType paramType = ParameterType.Text)
+            string paramName)
         {
             try
             {
@@ -87,7 +99,7 @@ namespace MiNamespace.ValidadorParametros
 
                 // Crear en documento (no en familia, que requeriría edición de familia)
                 // Esto agrega el parámetro de proyecto si no existe
-                ParameterElement paramElem = doc.GetElement(element.GetParameters(paramName).FirstOrDefault()?.Id ?? ElementId.InvalidElementId);
+                ParameterElement paramElem = doc.GetElement(element.GetParameters(paramName).FirstOrDefault()?.Id ?? ElementId.InvalidElementId) as ParameterElement;
                 if (paramElem != null) return true;
 
                 // En Revit, agregar parámetros es complejo. Aquí solo indicamos que se intenta.
@@ -103,10 +115,10 @@ namespace MiNamespace.ValidadorParametros
         public static int ApplyToSimilarElements(Document doc, Element sourceElement,
             string parameterName, string newValue)
         {
-            if (sourceElement is not FamilyInstance sourceFi)
+            if (!(sourceElement is FamilyInstance sourceFi))
                 return 0;
 
-            Family sourceFamily = sourceFi.Symbol.Family;
+            Family sourceFamily = sourceFi.Symbol?.Family;
             if (sourceFamily == null) return 0;
 
             if (!InstanceParameterHelper.IsInstanceParameter(sourceElement, parameterName))
@@ -116,6 +128,8 @@ namespace MiNamespace.ValidadorParametros
             if (sourceParam == null || sourceParam.IsReadOnly)
                 return 0;
 
+            var sourceFamilyId = sourceFamily.Id;
+
             using (Transaction tx = new Transaction(doc, $"Aplicar {parameterName}"))
             {
                 tx.Start();
@@ -124,7 +138,16 @@ namespace MiNamespace.ValidadorParametros
                 var similarElements = new FilteredElementCollector(doc)
                     .OfClass(typeof(FamilyInstance))
                     .Cast<FamilyInstance>()
-                    .Where(fi => fi.Symbol?.Family?.Id == sourceFamily.Id && fi.Id != sourceElement.Id)
+                    .Where(fi =>
+                    {
+                        var famId = fi.Symbol?.Family?.Id;
+                        if (famId == null) return false;
+#if REVIT_LEGACY_ELEMENTID
+                        return famId.IntegerValue == sourceFamilyId.IntegerValue && fi.Id != sourceElement.Id;
+#else
+                        return famId.Value == sourceFamilyId.Value && fi.Id != sourceElement.Id;
+#endif
+                    })
                     .ToList();
 
                 foreach (FamilyInstance elem in similarElements)
@@ -142,7 +165,8 @@ namespace MiNamespace.ValidadorParametros
             }
         }
 
-        // Guarda cambios de parámetros a Revit
+        // Guarda cambios de parámetros a Revit.
+        // Changes se guarda por nombre — no requiere OriginalParameter.
         public static bool SaveParameterChanges(Document doc, Element element,
             Dictionary<string, string> changes)
         {
@@ -156,9 +180,28 @@ namespace MiNamespace.ValidadorParametros
 
                     foreach (var kvp in changes)
                     {
-                        Parameter param = element.LookupParameter(kvp.Key)
-                                       ?? element.Parameters.Cast<Parameter>()
-                                           .FirstOrDefault(p => p.Definition.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
+                        Parameter param = null;
+                        try { param = element.LookupParameter(kvp.Key); } catch { }
+
+                        if (param == null)
+                        {
+                            try
+                            {
+                                foreach (Parameter p in element.Parameters)
+                                {
+                                    try
+                                    {
+                                        if (p.Definition.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            param = p;
+                                            break;
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                            catch { }
+                        }
 
                         if (param != null && !param.IsReadOnly)
                         {

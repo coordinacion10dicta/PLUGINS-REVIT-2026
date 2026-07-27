@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RevitPlugin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7078a79c4eadde89039d39a2bf1b99419dee196d")]
 [assembly: System.Reflection.AssemblyProductAttribute("RevitPlugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RevitPlugin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

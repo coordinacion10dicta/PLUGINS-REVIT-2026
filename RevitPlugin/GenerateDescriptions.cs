@@ -738,14 +738,15 @@ namespace MiNamespace
                     figValue = ""; // No obligatorio para otros
                 }
 
-                // 4. Lógica especial para INCLUDES
+                // 4. INCLUDES controlado completamente desde config.json (sin sobrescrituras)
                 string includes = (cfg.fallbacks != null && cfg.fallbacks.ContainsKey("INCLUDES")) ? cfg.fallbacks["INCLUDES"] : "instalación y mano de obra";
-                if (material.IndexOf("PPR", StringComparison.OrdinalIgnoreCase) >= 0)
-                    includes = "suministro e instalación";
-                else if (material.IndexOf("ACERO", StringComparison.OrdinalIgnoreCase) >= 0 || material.IndexOf("FIERRO", StringComparison.OrdinalIgnoreCase) >= 0)
-                    includes = "materiales, acarreos, cortes, soldadura, mano de obra, pruebas, equipo y herramienta";
-                else if (material.IndexOf("PEAD", StringComparison.OrdinalIgnoreCase) >= 0)
-                    includes = "suministro, instalación, uniones por medio de termofisión, mano de obra, equipo y herramienta";
+                // Sobrescrituras comentadas para respetar config.json en todas las disciplinas
+                //if (material.IndexOf("PPR", StringComparison.OrdinalIgnoreCase) >= 0)
+                //    includes = "suministro e instalación";
+                //else if (material.IndexOf("ACERO", StringComparison.OrdinalIgnoreCase) >= 0 || material.IndexOf("FIERRO", StringComparison.OrdinalIgnoreCase) >= 0)
+                //    includes = "materiales, acarreos, cortes, soldadura, mano de obra, pruebas, equipo y herramienta";
+                //else if (material.IndexOf("PEAD", StringComparison.OrdinalIgnoreCase) >= 0)
+                //    includes = "suministro, instalación, uniones por medio de termofisión, mano de obra, equipo y herramienta";
 
                 var values = new Dictionary<string, string>
                 {
@@ -794,7 +795,7 @@ namespace MiNamespace
                 if (!string.IsNullOrWhiteSpace(materialName) && !string.IsNullOrWhiteSpace(componentName))
                 {
                     string escapedMat = System.Text.RegularExpressions.Regex.Escape(materialName);
-                    
+
                     // 1. Caso en medio: " - pvc - " -> " - "
                     string patternMiddle = $@"\s*[-–—/]\s*{escapedMat}\s*[-–—/]\s*";
                     componentName = System.Text.RegularExpressions.Regex.Replace(componentName, patternMiddle, " - ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
@@ -807,7 +808,7 @@ namespace MiNamespace
                     if (!string.IsNullOrWhiteSpace(material))
                     {
                         string escapedRawMat = System.Text.RegularExpressions.Regex.Escape(material);
-                        
+
                         string patternMiddleRaw = $@"\s*[-–—/]\s*{escapedRawMat}\s*[-–—/]\s*";
                         componentName = System.Text.RegularExpressions.Regex.Replace(componentName, patternMiddleRaw, " - ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
@@ -819,6 +820,8 @@ namespace MiNamespace
                     componentName = componentName.Replace(" - ", " ").Replace("-", " ").Replace("–", " ").Replace("—", " ").Trim();
                 }
 
+                string conexionIncludes = (cfg.fallbacks != null && cfg.fallbacks.ContainsKey("INCLUDES")) ? cfg.fallbacks["INCLUDES"] : "instalación y mano de obra";
+
                 var values = new Dictionary<string, string>
                 {
                     { "COMPONENT", componentName },
@@ -828,7 +831,7 @@ namespace MiNamespace
                     { "DIAMETERS", GetDiametrosConexion(e) },
                     { "FIG", ReadParameterValue(ResolveParameter(e, "Referencia comercial", "Referencia", "Modelo")?.Parameter) },
                     { "BRAND", GetBrandMechanical(e) },
-                    { "INCLUDES", "" }
+                    { "INCLUDES", conexionIncludes }
                 };
                 return ApplyTemplate(cfg.template, values, cfg.fallbacks);
             }

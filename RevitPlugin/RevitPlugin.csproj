@@ -71,7 +71,7 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
-    <DefineConstants>$(DefineConstants);NET48;REVIT2022_OR_LATER;REVIT_LEGACY_ELEMENTID</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET48;REVIT2022_OR_LATER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
@@ -116,60 +116,27 @@
 
   <!-- Archivos de SharedCode -->
   <ItemGroup>
-    <Compile Include="..\SharedCode\MyApp.cs"><Link>SharedCode\MyApp.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_ELE.cs"><Link>SharedCode\MyTAGS_ELE.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_ILU.cs"><Link>SharedCode\MyTAGS_ILU.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_Tomas.cs"><Link>SharedCode\MyTAGS_Tomas.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_Alumbrado.cs"><Link>SharedCode\MyTAGS_Alumbrado.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyCommandPreDim.cs"><Link>SharedCode\MyCommandPreDim.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyAraña.cs"><Link>SharedCode\MyAraña.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_SIPRA.cs"><Link>SharedCode\MyTAGS_SIPRA.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_HVAC.cs"><Link>SharedCode\MyTAGS_HVAC.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_HVAC2.cs"><Link>SharedCode\MyTAGS_HVAC2.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_HVAC_RC.cs"><Link>SharedCode\MyTAGS_HVAC_RC.cs</Link></Compile>
-    <Compile Include="..\SharedCode\MyTAGS_Coor.cs"><Link>SharedCode\MyTAGS_Coor.cs</Link></Compile>
-    <Compile Include="..\SharedCode\TagMainMenu.cs"><Link>SharedCode\TagMainMenu.cs</Link></Compile>
-    <Compile Include="..\SharedCode\TagSelectionWindow.cs"><Link>SharedCode\TagSelectionWindow.cs</Link></Compile>
-
-    <EmbeddedResource Include="..\SharedCode\TagSelectionWindow.resx">
-      <Link>SharedCode\TagSelectionWindow.resx</Link>
+    <Compile Include="..\SharedCode\*.cs">
+      <Link>SharedCode\%(Filename)%(Extension)</Link>
+    </Compile>
+    <EmbeddedResource Include="..\SharedCode\*.resx">
+      <Link>SharedCode\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>
 
 	<!--Carpeta Resources-->
-  <!-- Recurso incrustado: RutaCritica.xlsx -->
   <ItemGroup>
-    <!-- Quitar entrada por defecto generada por el SDK -->
-    <None Remove="..\Resource\RutaCritica.xlsx" />
+    <None Remove="..\Resources\**\*.*" />
+    <None Remove="..\Resource\**\*.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Incluir el archivo Excel como EmbeddedResource -->
-    <EmbeddedResource Include="..\Resources\RutaCritica.xlsx">
-      <!-- Mostrarlo dentro del proyecto en carpeta virtual Resources -->
-      <Link>Resources\RutaCritica.xlsx</Link>
-      <!-- Nombre lógico dentro del assembly -->
-      <LogicalName>RevitPlugin.Resources.RutaCritica.xlsx</LogicalName>
+    <EmbeddedResource Include="..\Resources\**\*.*">
+      <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <LogicalName>RevitPlugin.Resources.%(Filename)%(Extension)</LogicalName>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-
-	<!--Excel Descripciones-->
-	<ItemGroup>
-		<!-- Quitar entrada por defecto generada por el SDK -->
-		<None Remove="..\Resource\Descripciones.xlsx" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<!-- Incluir el archivo Excel Descripciones como EmbeddedResource -->
-		<EmbeddedResource Include="..\Resources\Descripciones.xlsx">
-			<!-- Mostrarlo dentro del proyecto en carpeta virtual Resources -->
-			<Link>Resources\Descripciones.xlsx</Link>
-			<!-- Nombre lógico dentro del assembly -->
-			<LogicalName>RevitPlugin.Resources.Descripciones.xlsx</LogicalName>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</EmbeddedResource>
-	</ItemGroup>
 	
 
   <!-- Recursos de imágenes -->
@@ -189,6 +156,10 @@
   <!-- Excluir AssemblyInfo de CotasArq para evitar duplicado con el generado por el SDK -->
   <ItemGroup>
     <Compile Remove="CotasArq\Properties\AssemblyInfo.cs" />
+    <Compile Remove="GenerateDescriptions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="..\Resources\ESPE.ILU.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Json\Templates\hvac_config.json">
@@ -203,13 +174,25 @@
     <Content Include="Json\Templates\pending_mappings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="ValidadorParametros\disciplinas_config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="GenerateDescriptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="EPPlus" Version="6.2.10" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="..\Resources\RETIE.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Message Text="Desplegando RevitPlugin [$(TargetFramework)]..." Importance="high" />
@@ -223,26 +206,26 @@
 
     <!-- net47 → Revit 2020 -->
     <MakeDir Condition="'$(TargetFramework)' == 'net47'" Directories="$(AppData)\Autodesk\Revit\Addins\2020;$(AppData)\Autodesk\Revit\Addins\2020\Images;$(AppData)\Autodesk\Revit\Addins\2020\Resources;$(AppData)\Autodesk\Revit\Addins\2020\Json\Templates" />
-    <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net47' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020\Images" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="@(_Resources)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020\Resources" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net47'" SourceFiles="@(_JsonTemplates)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2020\Json\Templates" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
 
     <!-- net48 → Revit 2021, 2022, 2023, 2024 -->
     <MakeDir Condition="'$(TargetFramework)' == 'net48'" Directories="$(AppData)\Autodesk\Revit\Addins\2021;$(AppData)\Autodesk\Revit\Addins\2021\Images;$(AppData)\Autodesk\Revit\Addins\2021\Resources;$(AppData)\Autodesk\Revit\Addins\2021\Json\Templates;$(AppData)\Autodesk\Revit\Addins\2022;$(AppData)\Autodesk\Revit\Addins\2022\Images;$(AppData)\Autodesk\Revit\Addins\2022\Resources;$(AppData)\Autodesk\Revit\Addins\2022\Json\Templates;$(AppData)\Autodesk\Revit\Addins\2023;$(AppData)\Autodesk\Revit\Addins\2023\Images;$(AppData)\Autodesk\Revit\Addins\2023\Resources;$(AppData)\Autodesk\Revit\Addins\2023\Json\Templates;$(AppData)\Autodesk\Revit\Addins\2024;$(AppData)\Autodesk\Revit\Addins\2024\Images;$(AppData)\Autodesk\Revit\Addins\2024\Resources;$(AppData)\Autodesk\Revit\Addins\2024\Json\Templates" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2024" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2024" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net48' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021" OverwriteReadOnlyFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net48' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022" OverwriteReadOnlyFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net48' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023" OverwriteReadOnlyFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net48' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2024" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021\Images" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022\Images" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023\Images" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2024\Images" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2024\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Resources)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2021\Resources" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Resources)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2022\Resources" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net48'" SourceFiles="@(_Resources)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2023\Resources" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
@@ -254,9 +237,9 @@
 
     <!-- net8.0-windows → Revit 2025 -->
     <MakeDir Condition="'$(TargetFramework)' == 'net8.0-windows'" Directories="$(AppData)\Autodesk\Revit\Addins\2025;$(AppData)\Autodesk\Revit\Addins\2025\Images;$(AppData)\Autodesk\Revit\Addins\2025\Resources;$(AppData)\Autodesk\Revit\Addins\2025\Json\Templates" />
-    <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="$(TargetPath)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('$(ProjectDir)RevitPlugin.addin')" SourceFiles="$(ProjectDir)RevitPlugin.addin" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025" OverwriteReadOnlyFiles="true" />
-    <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025\Images" OverwriteReadOnlyFiles="true" />
+    <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="@(_Images)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025\Images" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="@(_Resources)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025\Resources" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Copy Condition="'$(TargetFramework)' == 'net8.0-windows'" SourceFiles="@(_JsonTemplates)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\2025\Json\Templates" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
   </Target>

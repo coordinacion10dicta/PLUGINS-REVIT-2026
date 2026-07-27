@@ -77,7 +77,7 @@ namespace MiNamespace.UI {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/RevitPlugin;component/ui/uicategorias.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/RevitPlugin;V1.0.0.0;component/ui/uicategorias.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UI\UiCategorias.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

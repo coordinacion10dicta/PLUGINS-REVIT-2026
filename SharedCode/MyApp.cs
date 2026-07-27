@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
+using DocumentFormat.OpenXml;
 
 namespace MiNamespace
 {
@@ -12,7 +13,7 @@ namespace MiNamespace
         {
             try
             {
-                // 1. Nombre de la pestaña que quieres (ya existente o se creará)
+                // 1. Nombre de la pestaña Oque quieres (ya existente o se creará)
                 string tabName = "DICTA";
 
                 // 2. Intentar crear la pestaña "DICTA" (si ya existe, se ignora el error)
@@ -447,7 +448,7 @@ namespace MiNamespace
                     "MiNamespace.ValidadorParametros.ValidadorParametrosCommand"
                 );
 
-                string iconPath15 = Path.Combine(exeDirectory, "Images", "tags.png");
+                string iconPath15 = Path.Combine(exeDirectory, "Images", "parametros.png");
                 if (File.Exists(iconPath15))
                 {
                     BitmapImage largeImage15 = new BitmapImage();
@@ -461,6 +462,58 @@ namespace MiNamespace
                 buttonData15.ToolTip = "Valida parámetros y familias para garantizar que el modelo esté listo para presupuesto.";
                 panel.AddItem(buttonData15);
 
+                // -----------------------------------------------------------------
+                // BOTÓN 16: "ESP.ILU"
+                // -----------------------------------------------------------------
+                PushButtonData buttonData16 = new PushButtonData(
+                    "MyButtonInfo16",                     // Nombre interno (único)
+                    "ESP.ILU",                            // Texto en la cinta
+                    dllPath,                              // Ruta de la DLL
+                    "MiNamespace.MyTAGS_ESP_ILU"          // Clase IExternalCommand asociada
+                );
+
+                // Cargar imagen
+                string iconPath16 = Path.Combine(exeDirectory, "Images", "tags.png");
+
+                if (File.Exists(iconPath16))
+                {
+                    BitmapImage largeImage16 = new BitmapImage();
+                    largeImage16.BeginInit();
+                    largeImage16.UriSource = new Uri(iconPath16, UriKind.Absolute);
+                    largeImage16.EndInit();
+
+                    buttonData16.LargeImage = largeImage16;
+                    buttonData16.Image = largeImage16;
+                }
+
+                buttonData16.ToolTip = "Exporta especificaciones técnicas de luminarias a Excel.";
+                panel.AddItem(buttonData16);
+
+                // -----------------------------------------------------------------
+                // BOTÓN 17: "ORG.EJES"
+                // -----------------------------------------------------------------
+                PushButtonData buttonData17 = new PushButtonData(
+                    "MyButtonInfo17",                     // Nombre interno (único)
+                    "ORG.EJES",                            // Texto en la cinta
+                    dllPath,                              // Ruta de la DLL
+                    "MiNamespace.MyTAGS_ORG_EJES"          // Clase IExternalCommand asociadae
+                );
+
+                string iconPath17 = Path.Combine(exeDirectory, "Images", "ejes.png");
+                if (File.Exists(iconPath17))
+                {
+                    BitmapImage largeImage17 = new BitmapImage();
+                    largeImage17.BeginInit();
+                    largeImage17.UriSource = new Uri(iconPath17, UriKind.Absolute);
+                    largeImage17.EndInit();
+
+                    buttonData17.LargeImage = largeImage17;
+                    buttonData17.Image = largeImage17;
+                }
+
+                buttonData17.ToolTip = "Organiza los ejes en la vista actual.";
+                panel.AddItem(buttonData17);
+
                 return Result.Succeeded;
             }
             catch (Exception ex)
@@ -469,10 +522,6 @@ namespace MiNamespace
                 return Result.Failed;
             }
         }
-
-                
-
-
         public Result OnShutdown(UIControlledApplication application)
         {
             return Result.Succeeded;

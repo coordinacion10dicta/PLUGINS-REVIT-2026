@@ -125,7 +125,7 @@ namespace MiNamespace.UI {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/RevitPlugin;component/ui/learningview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/RevitPlugin;V1.0.0.0;component/ui/learningview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\UI\LearningView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
