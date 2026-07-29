@@ -13,7 +13,9 @@ namespace MiNamespace
         public string StartVertical { get; private set; }
         public string SequenceVertical { get; private set; }
         public bool IsVerticalAscending { get; private set; }
-        
+
+        public bool UseSpecificSelection { get; private set; }
+
         private TextBox txtStartHorizontal;
         private TextBox txtSequenceHorizontal;
         private ComboBox cmbDirHorizontal;
@@ -21,6 +23,9 @@ namespace MiNamespace
         private TextBox txtStartVertical;
         private TextBox txtSequenceVertical;
         private ComboBox cmbDirVertical;
+        private CheckBox chkSpecificSelection;
+
+        // Cancel Button
 
         private Button btnOk;
         private Button btnCancel;
@@ -62,18 +67,20 @@ namespace MiNamespace
             lblInfo.ForeColor = HasPreSelectedGrids ? Color.Green : Color.DimGray;
             this.Controls.Add(lblInfo);
 
-            // Headers
+            // Cabecera
             int startY = 60;
-            this.Controls.Add(new Label { Text = "Inicio", Location = new Point(100, startY), AutoSize = true, ForeColor = Color.Gray });
+            this.Controls.Add(new Label { Text = "Prefijo", Location = new Point(100, startY), AutoSize = true, ForeColor = Color.Gray });
             this.Controls.Add(new Label { Text = "Secuencia", Location = new Point(170, startY), AutoSize = true, ForeColor = Color.Gray });
             this.Controls.Add(new Label { Text = "Dirección", Location = new Point(260, startY), AutoSize = true, ForeColor = Color.Gray });
 
             Label lblHint = new Label();
             lblHint.Text = "Deja la secuencia vacía para omitir un eje.";
-            lblHint.Location = new Point(100, startY + 14);
-            lblHint.AutoSize = true;
+            lblHint.Location = new Point(100, startY + 18);
+            lblHint.Size = new Size(300, 16);
+            lblHint.TextAlign = ContentAlignment.MiddleCenter;
             lblHint.Font = new Font("Segoe UI", 7.5F, FontStyle.Italic);
             lblHint.ForeColor = Color.DimGray;
+
             this.Controls.Add(lblHint);
 
             // Horizontal
@@ -88,7 +95,7 @@ namespace MiNamespace
             this.Controls.Add(txtSequenceHorizontal);
 
             cmbDirHorizontal = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(260, horizY), Width = 170 };
-            cmbDirHorizontal.Items.AddRange(new string[] { "Izquierda a Derecha →", "Derecha a Izquierda ←" });
+            cmbDirHorizontal.Items.AddRange(new string[] { "Arriba a Abajo ↓", "Abajo a Arriba ↑" });
             cmbDirHorizontal.SelectedIndex = 0;
             this.Controls.Add(cmbDirHorizontal);
 
@@ -104,9 +111,16 @@ namespace MiNamespace
             this.Controls.Add(txtSequenceVertical);
 
             cmbDirVertical = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(260, vertY), Width = 170 };
-            cmbDirVertical.Items.AddRange(new string[] { "Abajo a Arriba ↑", "Arriba a Abajo ↓" });
+            cmbDirVertical.Items.AddRange(new string[] { "Izquierda a Derecha →", "Derecha a Izquierda ←" });
             cmbDirVertical.SelectedIndex = 0;
             this.Controls.Add(cmbDirVertical);
+
+            // NUEVO - Checkbox selección específica
+            chkSpecificSelection = new CheckBox();
+            chkSpecificSelection.Text = "Seleccionar ejes específicos en el modelo";
+            chkSpecificSelection.Location = new Point(20, 165);
+            chkSpecificSelection.AutoSize = true;
+            this.Controls.Add(chkSpecificSelection);
 
             // Cancel Button
             btnCancel = new Button();
@@ -143,11 +157,17 @@ namespace MiNamespace
         {
             StartHorizontal = txtStartHorizontal.Text.Trim();
             SequenceHorizontal = txtSequenceHorizontal.Text.Trim();
-            IsHorizontalAscending = cmbDirHorizontal.SelectedIndex == 0; // 0 = Izquierda a Derecha
+            // index 0 = "Arriba a Abajo" -> descendente en Y
+            // index 1 = "Abajo a Arriba" -> ascendente en Y
+            IsHorizontalAscending = cmbDirHorizontal.SelectedIndex == 1;
 
             StartVertical = txtStartVertical.Text.Trim();
             SequenceVertical = txtSequenceVertical.Text.Trim();
-            IsVerticalAscending = cmbDirVertical.SelectedIndex == 0; // 0 = Abajo a Arriba
+            // index 0 = "Izquierda a Derecha" -> ascendente en X
+            // index 1 = "Derecha a Izquierda" -> descendente en X
+            IsVerticalAscending = cmbDirVertical.SelectedIndex == 0;
+
+            UseSpecificSelection = chkSpecificSelection.Checked;
 
             if (string.IsNullOrEmpty(SequenceHorizontal) && string.IsNullOrEmpty(SequenceVertical))
             {

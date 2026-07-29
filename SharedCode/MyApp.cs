@@ -499,7 +499,7 @@ namespace MiNamespace
                     "MiNamespace.MyTAGS_ORG_EJES"          // Clase IExternalCommand asociadae
                 );
 
-                string iconPath17 = Path.Combine(exeDirectory, "Images", "ejes.png");
+                string iconPath17 = Path.Combine(exeDirectory, "Images", "predim.png");
                 if (File.Exists(iconPath17))
                 {
                     BitmapImage largeImage17 = new BitmapImage();

@@ -5,13 +5,16 @@ using System.Windows.Forms;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Selection;
 
 namespace MiNamespace
 {
     [Transaction(TransactionMode.Manual)]
     public class MyTAGS_ORG_EJES : IExternalCommand
     {
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        public Result Execute(
+            ExternalCommandData commandData,
+            ref string message, ElementSet elements)
         {
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
@@ -51,37 +54,44 @@ namespace MiNamespace
                 return Result.Cancelled;
             }
 
-            List<Grid> horizontalGrids = new List<Grid>();
-            List<Grid> verticalGrids = new List<Grid>();
-
-            foreach (Element elem in gridElements)
-            {
-                Grid grid = elem as Grid;
-                if (grid == null) continue;
-
-                Curve curve = grid.Curve;
-                if (curve is Line line)
-                {
-                    XYZ direction = line.Direction;
-
-                    // Check if it's horizontal (parallel to X axis)
-                    if (Math.Abs(direction.Y) < 0.001 && Math.Abs(direction.Z) < 0.001)
-                    {
-                        horizontalGrids.Add(grid);
-                    }
-                    // Check if it's vertical (parallel to Y axis)
-                    else if (Math.Abs(direction.X) < 0.001 && Math.Abs(direction.Z) < 0.001)
-                    {
-                        verticalGrids.Add(grid);
-                    }
-                }
-            }
+            List<Grid> horizontalGrids;
+            List<Grid> verticalGrids;
+            ClassifyGrids(gridElements, activeView, out horizontalGrids, out verticalGrids);
 
             // Show UI
             using (OrgEjesWindow window = new OrgEjesWindow(hasPreSelection))
             {
                 if (window.ShowDialog() == DialogResult.OK)
                 {
+                    // NUEVO
+                    if (window.UseSpecificSelection)
+                    {
+                        try
+                        {
+                            IList<Reference> pickedRefs = uidoc.Selection.PickObjects(
+                                ObjectType.Element,
+                                new GridSelectionFilter(),
+                                "Selecciona los ejes a organizar y presiona Finalizar");
+
+                            IList<Element> pickedGrids = pickedRefs
+                                .Select(r => doc.GetElement(r))
+                                .Where(e => e is Grid)
+                                .ToList();
+
+                            if (pickedGrids.Count == 0)
+                            {
+                                TaskDialog.Show("ORG.EJES", "No se seleccionó ningún eje.");
+                                return Result.Cancelled;
+                            }
+
+                            ClassifyGrids(pickedGrids, activeView, out horizontalGrids, out verticalGrids);
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            return Result.Cancelled;
+                        }
+                    }
+
                     using (Transaction t = new Transaction(doc, "Organizar Ejes"))
                     {
                         t.Start();
@@ -92,28 +102,19 @@ namespace MiNamespace
                             bool renameVertical = !string.IsNullOrEmpty(window.SequenceVertical);
 
                             // 1. Ordenar los ejes ANTES de hacer cualquier modificación
+                            // 1. Ordenar los ejes ANTES de hacer cualquier modificación
                             if (renameHorizontal)
                             {
-                                if (window.IsHorizontalAscending)
-                                {
-                                    horizontalGrids = horizontalGrids.OrderBy(g => g.Curve.GetEndPoint(0).Y).ToList();
-                                }
-                                else
-                                {
-                                    horizontalGrids = horizontalGrids.OrderByDescending(g => g.Curve.GetEndPoint(0).Y).ToList();
-                                }
+                                horizontalGrids = window.IsHorizontalAscending
+                                    ? horizontalGrids.OrderBy(g => GetScreenY(g, activeView)).ToList()
+                                    : horizontalGrids.OrderByDescending(g => GetScreenY(g, activeView)).ToList();
                             }
 
                             if (renameVertical)
                             {
-                                if (window.IsVerticalAscending)
-                                {
-                                    verticalGrids = verticalGrids.OrderBy(g => g.Curve.GetEndPoint(0).Y).ToList();
-                                }
-                                else
-                                {
-                                    verticalGrids = verticalGrids.OrderByDescending(g => g.Curve.GetEndPoint(0).Y).ToList();
-                                }
+                                verticalGrids = window.IsVerticalAscending
+                                    ? verticalGrids.OrderBy(g => GetScreenX(g, activeView)).ToList()
+                                    : verticalGrids.OrderByDescending(g => GetScreenX(g, activeView)).ToList();
                             }
 
                             // 2. Renombrar a nombres temporales SOLO los ejes que se van a renombrar (Fase 1)
@@ -163,8 +164,10 @@ namespace MiNamespace
                                     currentVertSeq = GetNextInSequence(currentVertSeq);
                                 }
                             }
-
                             t.Commit();
+
+                        // NUEVO - Aviso de confirmación
+                        TaskDialog.Show("ORG.EJES", "Los ejes se organizaron correctamente.");
                         }
                         catch (Exception ex)
                         {
@@ -237,5 +240,62 @@ namespace MiNamespace
             }
         }
 
+        private double GetScreenX(Grid g, Autodesk.Revit.DB.View view)
+        {
+            return g.Curve.GetEndPoint(0).DotProduct(view.RightDirection);
+        }
+
+        private double GetScreenY(Grid g, Autodesk.Revit.DB.View view)
+        {
+            return g.Curve.GetEndPoint(0).DotProduct(view.UpDirection);
+        }
+
+        //private void ClassifyGrids(IList<Element> elements, out List<Grid> horizontalGrids, out List<Grid> verticalGrids)
+        private void ClassifyGrids(IList<Element> elements, Autodesk.Revit.DB.View view, out List<Grid> horizontalGrids, out List<Grid> verticalGrids)
+        {
+            horizontalGrids = new List<Grid>();
+            verticalGrids = new List<Grid>();
+
+            XYZ right = view.RightDirection.Normalize(); // eje horizontal EN PANTALLA
+            XYZ up = view.UpDirection.Normalize();        // eje vertical EN PANTALLA
+
+            foreach (Element elem in elements)
+            {
+                Grid grid = elem as Grid;
+                if (grid == null) continue;
+
+                Curve curve = grid.Curve;
+                if (curve is Line line)
+                {
+                    XYZ direction = line.Direction;
+
+                    double compRight = Math.Abs(direction.DotProduct(right));
+                    double compUp = Math.Abs(direction.DotProduct(up));
+
+                    // La línea corre principalmente a lo largo de "Right" -> es un eje horizontal en pantalla
+                    if (compUp < 0.01)
+                        horizontalGrids.Add(grid);
+                    // La línea corre principalmente a lo largo de "Up" -> es un eje vertical en pantalla
+                    else if (compRight < 0.01)
+                        verticalGrids.Add(grid);
+                }
+            }
+        }
     }
+
+    // NUEVO
+    public class GridSelectionFilter : ISelectionFilter
+    {
+        public bool AllowElement(Element elem)
+        {
+            return elem is Grid;
+        }
+
+        public bool AllowReference(Reference reference, XYZ position)
+        {
+            return false;
+        }
+    }
+
 }
+
