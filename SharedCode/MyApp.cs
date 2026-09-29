@@ -473,7 +473,7 @@ namespace MiNamespace
                 );
 
                 // Cargar imagen
-                string iconPath16 = Path.Combine(exeDirectory, "Images", "tags.png");
+                string iconPath16 = Path.Combine(exeDirectory, "Images", "iluminacion.png");
 
                 if (File.Exists(iconPath16))
                 {
@@ -496,10 +496,10 @@ namespace MiNamespace
                     "MyButtonInfo17",                     // Nombre interno (único)
                     "ORG.EJES",                            // Texto en la cinta
                     dllPath,                              // Ruta de la DLL
-                    "MiNamespace.MyTAGS_ORG_EJES"          // Clase IExternalCommand asociadae
+                    "MiNamespace.MyTAGS_ORG_EJES"          // Clase IExternalCommand asociada
                 );
 
-                string iconPath17 = Path.Combine(exeDirectory, "Images", "predim.png");
+                string iconPath17 = Path.Combine(exeDirectory, "Images", "ejes.png");
                 if (File.Exists(iconPath17))
                 {
                     BitmapImage largeImage17 = new BitmapImage();
@@ -513,6 +513,36 @@ namespace MiNamespace
 
                 buttonData17.ToolTip = "Organiza los ejes en la vista actual.";
                 panel.AddItem(buttonData17);
+
+                // -----------------------------------------------------------------
+                // BOTÓN 18: "TAGS.COOR" -> Abre modal de Coordinación
+                // -----------------------------------------------------------------
+                try
+                {
+                    PushButtonData buttonData18 = new PushButtonData(
+                        "MyButtonInfo18",          // Nombre interno único
+                        "TAGS.COOR",               // Texto en la cinta
+                        dllPath,
+                        "MiNamespace.MyTAGS_TAGS_COOR" // Clase IExternalCommand asociada
+                    );
+                    string iconPathPulldown18 = Path.Combine(exeDirectory, "Images", "tagCoord.png");
+                    if (File.Exists(iconPathPulldown18))
+                    {
+                        BitmapImage largeImagePulldown18 = new BitmapImage();
+                        largeImagePulldown18.BeginInit();
+                        largeImagePulldown18.UriSource = new Uri(iconPathPulldown18, UriKind.Absolute);
+                        largeImagePulldown18.EndInit();
+                        buttonData18.LargeImage = largeImagePulldown18;
+                        buttonData18.Image = largeImagePulldown18;
+                    }
+                    buttonData18.ToolTip = "Etiquetado y cotas de coordinación (Niveles, MEP, Estructura). Abre el modal de coordinación.";
+
+                    panel.AddItem(buttonData18);
+                }
+                catch (Exception exPulldown)
+                {
+                    TaskDialog.Show("DEBUG TAGS.COOR", exPulldown.ToString());
+                }
 
                 return Result.Succeeded;
             }

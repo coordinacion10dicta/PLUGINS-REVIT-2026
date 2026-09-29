@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputType>Library</OutputType>
+    <AssemblyName>AutoCAD</AssemblyName>
+    <RootNamespace>AutoCAD</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64;AnyCPU</Platforms>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- Rutas de instalación de AutoCAD detectadas en el sistema -->
+  <PropertyGroup>
+    <AutoCADInstallDir Condition="Exists('C:\Program Files\Autodesk\AutoCAD 2024')">C:\Program Files\Autodesk\AutoCAD 2024</AutoCADInstallDir>
+    <AutoCADInstallDir Condition="'$(AutoCADInstallDir)' == '' and Exists('C:\Program Files\Autodesk\AutoCAD 2025')">C:\Program Files\Autodesk\AutoCAD 2025</AutoCADInstallDir>
+    <AutoCADInstallDir Condition="'$(AutoCADInstallDir)' == ''">C:\Program Files\Autodesk\AutoCAD 2024</AutoCADInstallDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="AcCoreMgd">
+      <HintPath>$(AutoCADInstallDir)\accoremgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcDbMgd">
+      <HintPath>$(AutoCADInstallDir)\acdbmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcMgd">
+      <HintPath>$(AutoCADInstallDir)\acmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AdWindows">
+      <HintPath>$(AutoCADInstallDir)\AdWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <!-- COM Interop para Excel -->
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Interop.Excel">
+      <Guid>00020813-0000-0000-C000-000000000046</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>9</VersionMinor>
+      <WrapperTool>tlbimp</WrapperTool>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Images\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="PackageContents.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\SGH - Carga de ocupacion.xlsx">
+      <Link>Resources\SGH - Carga de ocupacion.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\Normas_NSR10_NFPA.xlsx" Condition="Exists('..\Resources\Normas_NSR10_NFPA.xlsx')">
+      <Link>Resources\Normas_NSR10_NFPA.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Despliegue automático como Autoloader Bundle en ProgramData -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <BundleDir>C:\ProgramData\Autodesk\ApplicationPlugins\DICTA.bundle</BundleDir>
+      <BundleContentsDir>$(BundleDir)\Contents</BundleContentsDir>
+      <BundleResourcesDir>$(BundleContentsDir)\Resources</BundleResourcesDir>
+      <BundleImagesDir>$(BundleContentsDir)\Images</BundleImagesDir>
+    </PropertyGroup>
+    <Message Text="Desplegando DICTA.bundle en $(BundleDir)..." Importance="high" />
+    <MakeDir Directories="$(BundleDir);$(BundleContentsDir);$(BundleResourcesDir);$(BundleImagesDir)" />
+    <Copy SourceFiles="$(ProjectDir)PackageContents.xml" DestinationFolder="$(BundleDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BundleContentsDir)" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="Exists('$(TargetDir)$(TargetName).pdb')" SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(BundleContentsDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="Exists('$(ProjectDir)..\Resources\SGH - Carga de ocupacion.xlsx')" SourceFiles="$(ProjectDir)..\Resources\SGH - Carga de ocupacion.xlsx" DestinationFolder="$(BundleResourcesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="Exists('$(ProjectDir)..\Resources\Normas_NSR10_NFPA.xlsx')" SourceFiles="$(ProjectDir)..\Resources\Normas_NSR10_NFPA.xlsx" DestinationFolder="$(BundleResourcesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <ItemGroup>
+      <AutoCADImages Include="$(ProjectDir)Images\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AutoCADImages)" DestinationFolder="$(BundleImagesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+</Project>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage 
+    SchemaVersion="1.0" 
+    AutodeskProduct="AutoCAD" 
+    ProductType="Application" 
+    AppVersion="1.0.0" 
+    Author="DICTA" 
+    Name="DICTA AutoCAD Plugin" 
+    Description="Plugin de AutoCAD para DICTA" 
+    ProductCode="{B98E4B17-48DF-4F15-8AE4-03A849F2D87B}">
+  <CompanyDetails Name="DICTA" />
+  <Components Description="AutoCAD Plugin Component">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R20.0" SeriesMax="R25.0" />
+    <ComponentEntry 
+        AppName="AutoCAD" 
+        Version="1.0.0" 
+        ModuleName="./Contents/AutoCAD.dll" 
+        AppDescription="DICTA Plugin para AutoCAD" 
+        LoadOnAutoCADStartup="True">
+      <Commands GroupName="DICTA_SGH">
+        <Command Local="SGHAREAS" Global="SGHAREAS" />
+        <Command Local="SGHEDITAREA" Global="SGHEDITAREA" />
+      </Commands>
+    </ComponentEntry>
+  </Components>
+</ApplicationPackage>

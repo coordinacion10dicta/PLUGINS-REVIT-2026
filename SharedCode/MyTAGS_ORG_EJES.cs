@@ -30,7 +30,7 @@ namespace MiNamespace
                 foreach (ElementId id in selectedIds)
                 {
                     Element el = doc.GetElement(id);
-                    if (el is Grid)
+                    if (el is Grid || el is MultiSegmentGrid)
                     {
                         gridElements.Add(el);
                     }
@@ -48,15 +48,17 @@ namespace MiNamespace
                 gridElements = collector.OfCategory(BuiltInCategory.OST_Grids).WhereElementIsNotElementType().ToElements();
             }
 
-            if (gridElements.Count == 0)
+            List<GridItem> gridItems = GetUniqueGridItems(gridElements, doc);
+
+            if (gridItems.Count == 0)
             {
                 TaskDialog.Show("ORG.EJES", "No se encontraron ejes (Grids) visibles o seleccionados.");
                 return Result.Cancelled;
             }
 
-            List<Grid> horizontalGrids;
-            List<Grid> verticalGrids;
-            ClassifyGrids(gridElements, activeView, out horizontalGrids, out verticalGrids);
+            List<GridItem> horizontalGrids;
+            List<GridItem> verticalGrids;
+            ClassifyGrids(gridItems, activeView, out horizontalGrids, out verticalGrids);
 
             // Show UI
             using (OrgEjesWindow window = new OrgEjesWindow(hasPreSelection))
@@ -75,7 +77,7 @@ namespace MiNamespace
 
                             IList<Element> pickedGrids = pickedRefs
                                 .Select(r => doc.GetElement(r))
-                                .Where(e => e is Grid)
+                                .Where(e => e is Grid || e is MultiSegmentGrid)
                                 .ToList();
 
                             if (pickedGrids.Count == 0)
@@ -84,7 +86,8 @@ namespace MiNamespace
                                 return Result.Cancelled;
                             }
 
-                            ClassifyGrids(pickedGrids, activeView, out horizontalGrids, out verticalGrids);
+                            gridItems = GetUniqueGridItems(pickedGrids, doc);
+                            ClassifyGrids(gridItems, activeView, out horizontalGrids, out verticalGrids);
                         }
                         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                         {
@@ -102,26 +105,25 @@ namespace MiNamespace
                             bool renameVertical = !string.IsNullOrEmpty(window.SequenceVertical);
 
                             // 1. Ordenar los ejes ANTES de hacer cualquier modificación
-                            // 1. Ordenar los ejes ANTES de hacer cualquier modificación
                             if (renameHorizontal)
                             {
                                 horizontalGrids = window.IsHorizontalAscending
-                                    ? horizontalGrids.OrderBy(g => GetScreenY(g, activeView)).ToList()
-                                    : horizontalGrids.OrderByDescending(g => GetScreenY(g, activeView)).ToList();
+                                    ? horizontalGrids.OrderBy(g => GetScreenYForHorizontal(g, activeView)).ToList()
+                                    : horizontalGrids.OrderByDescending(g => GetScreenYForHorizontal(g, activeView)).ToList();
                             }
 
                             if (renameVertical)
                             {
                                 verticalGrids = window.IsVerticalAscending
-                                    ? verticalGrids.OrderBy(g => GetScreenX(g, activeView)).ToList()
-                                    : verticalGrids.OrderByDescending(g => GetScreenX(g, activeView)).ToList();
+                                    ? verticalGrids.OrderBy(g => GetScreenXForVertical(g, activeView)).ToList()
+                                    : verticalGrids.OrderByDescending(g => GetScreenXForVertical(g, activeView)).ToList();
                             }
 
                             // 2. Renombrar a nombres temporales SOLO los ejes que se van a renombrar (Fase 1)
                             int tempIndex = 1;
                             string sessionGuid = Guid.NewGuid().ToString("N").Substring(0, 8);
 
-                            IEnumerable<Grid> gridsToRename = Enumerable.Empty<Grid>();
+                            IEnumerable<GridItem> gridsToRename = Enumerable.Empty<GridItem>();
 
                             if (renameHorizontal)
                                 gridsToRename = gridsToRename.Concat(horizontalGrids);
@@ -129,25 +131,22 @@ namespace MiNamespace
                             if (renameVertical)
                                 gridsToRename = gridsToRename.Concat(verticalGrids);
 
-                            foreach (Grid g in gridsToRename)
+                            foreach (GridItem item in gridsToRename)
                             {
-                                g.Name = $"TEMP_{sessionGuid}_{tempIndex}";
+                                item.Element.Name = $"TEMP_{sessionGuid}_{tempIndex}";
                                 tempIndex++;
                             }
-                            // 3. Asignar los nombres finales (Fase 2)
-                            // Formato: Inicio (estático) + Secuencia (se incrementa)
-                            // Ejemplo: Inicio="A", Secuencia="1" → A1, A2, A3, A4...
-                            // Ejemplo: Inicio="" , Secuencia="A" → A, B, C, D...
 
+                            // 3. Asignar los nombres finales (Fase 2)
                             // --- Ejes Horizontales ---
                             if (renameHorizontal)
                             {
                                 string prefijo = window.StartHorizontal.Trim();
                                 string currentHorizSeq = window.SequenceHorizontal;
 
-                                foreach (Grid g in horizontalGrids)
+                                foreach (GridItem item in horizontalGrids)
                                 {
-                                    g.Name = prefijo + currentHorizSeq;
+                                    item.Element.Name = currentHorizSeq + prefijo;
                                     currentHorizSeq = GetNextInSequence(currentHorizSeq);
                                 }
                             }
@@ -158,16 +157,15 @@ namespace MiNamespace
                                 string prefijoVert = window.StartVertical.Trim();
                                 string currentVertSeq = window.SequenceVertical;
 
-                                foreach (Grid g in verticalGrids)
+                                foreach (GridItem item in verticalGrids)
                                 {
-                                    g.Name = prefijoVert + currentVertSeq;
+                                    item.Element.Name = currentVertSeq + prefijoVert;
                                     currentVertSeq = GetNextInSequence(currentVertSeq);
                                 }
                             }
                             t.Commit();
 
-                        // NUEVO - Aviso de confirmación
-                        TaskDialog.Show("ORG.EJES", "Los ejes se organizaron correctamente.");
+                            TaskDialog.Show("ORG.EJES", "Los ejes se organizaron correctamente.");
                         }
                         catch (Exception ex)
                         {
@@ -186,24 +184,81 @@ namespace MiNamespace
             return Result.Succeeded;
         }
 
+        private List<GridItem> GetUniqueGridItems(IList<Element> rawElements, Document doc)
+        {
+            Dictionary<ElementId, ElementId> childToParentMap = new Dictionary<ElementId, ElementId>();
+            try
+            {
+                FilteredElementCollector msgCollector = new FilteredElementCollector(doc).OfClass(typeof(MultiSegmentGrid));
+                foreach (MultiSegmentGrid msg in msgCollector)
+                {
+                    ICollection<ElementId> subIds = msg.GetGridIds();
+                    if (subIds != null)
+                    {
+                        foreach (ElementId subId in subIds)
+                        {
+                            childToParentMap[subId] = msg.Id;
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            Dictionary<ElementId, Element> uniqueElements = new Dictionary<ElementId, Element>();
+
+            foreach (Element elem in rawElements)
+            {
+                if (elem is MultiSegmentGrid msg)
+                {
+                    if (!uniqueElements.ContainsKey(msg.Id))
+                        uniqueElements[msg.Id] = msg;
+                }
+                else if (elem is Grid g)
+                {
+                    if (childToParentMap.TryGetValue(g.Id, out ElementId parentId))
+                    {
+                        Element parent = doc.GetElement(parentId);
+                        if (parent != null)
+                        {
+                            if (!uniqueElements.ContainsKey(parent.Id))
+                                uniqueElements[parent.Id] = parent;
+                        }
+                        else if (!uniqueElements.ContainsKey(g.Id))
+                        {
+                            uniqueElements[g.Id] = g;
+                        }
+                    }
+                    else if (!uniqueElements.ContainsKey(g.Id))
+                    {
+                        uniqueElements[g.Id] = g;
+                    }
+                }
+            }
+
+            List<GridItem> items = new List<GridItem>();
+            foreach (Element elem in uniqueElements.Values)
+            {
+                items.Add(new GridItem(elem, doc));
+            }
+            return items;
+        }
+
         /// <summary>
         /// Incrementa el valor de secuencia. Si es número, suma 1.
         /// Si es texto (letras), incrementa alfabéticamente (A→B, Z→AA).
         /// </summary>
         private string GetNextInSequence(string current)
         {
-            // Números
             if (int.TryParse(current, out int num))
                 return (num + 1).ToString();
 
-            // Letras
             return IncrementString(current);
         }
 
         private string IncrementString(string s)
         {
             if (string.IsNullOrEmpty(s)) return "A";
-            
+
             char[] chars = s.ToCharArray();
             int i = chars.Length - 1;
 
@@ -226,7 +281,7 @@ namespace MiNamespace
                 }
                 else
                 {
-                    return s + "1"; // Fallback para alfanuméricos mixtos no previstos
+                    return s + "1";
                 }
             }
 
@@ -240,55 +295,129 @@ namespace MiNamespace
             }
         }
 
-        private double GetScreenX(Grid g, Autodesk.Revit.DB.View view)
+        private double GetScreenYForHorizontal(GridItem item, Autodesk.Revit.DB.View view)
         {
-            return g.Curve.GetEndPoint(0).DotProduct(view.RightDirection);
+            XYZ p0 = item.StartPoint;
+            XYZ p1 = item.EndPoint;
+
+            double x0 = p0.DotProduct(view.RightDirection);
+            double x1 = p1.DotProduct(view.RightDirection);
+
+            XYZ pLeft = (x0 <= x1) ? p0 : p1;
+            return pLeft.DotProduct(view.UpDirection);
         }
 
-        private double GetScreenY(Grid g, Autodesk.Revit.DB.View view)
+        private double GetScreenXForVertical(GridItem item, Autodesk.Revit.DB.View view)
         {
-            return g.Curve.GetEndPoint(0).DotProduct(view.UpDirection);
+            XYZ p0 = item.StartPoint;
+            XYZ p1 = item.EndPoint;
+
+            double y0 = p0.DotProduct(view.UpDirection);
+            double y1 = p1.DotProduct(view.UpDirection);
+
+            XYZ pTop = (y0 >= y1) ? p0 : p1;
+            return pTop.DotProduct(view.RightDirection);
         }
 
-        //private void ClassifyGrids(IList<Element> elements, out List<Grid> horizontalGrids, out List<Grid> verticalGrids)
-        private void ClassifyGrids(IList<Element> elements, Autodesk.Revit.DB.View view, out List<Grid> horizontalGrids, out List<Grid> verticalGrids)
+        private void ClassifyGrids(List<GridItem> gridItems, Autodesk.Revit.DB.View view, out List<GridItem> horizontalGrids, out List<GridItem> verticalGrids)
         {
-            horizontalGrids = new List<Grid>();
-            verticalGrids = new List<Grid>();
+            horizontalGrids = new List<GridItem>();
+            verticalGrids = new List<GridItem>();
 
-            XYZ right = view.RightDirection.Normalize(); // eje horizontal EN PANTALLA
-            XYZ up = view.UpDirection.Normalize();        // eje vertical EN PANTALLA
+            XYZ right = view.RightDirection.Normalize();
+            XYZ up = view.UpDirection.Normalize();
 
-            foreach (Element elem in elements)
+            foreach (GridItem item in gridItems)
             {
-                Grid grid = elem as Grid;
-                if (grid == null) continue;
+                XYZ direction = item.EndPoint.Subtract(item.StartPoint);
+                if (direction.IsZeroLength()) continue;
 
-                Curve curve = grid.Curve;
-                if (curve is Line line)
-                {
-                    XYZ direction = line.Direction;
+                direction = direction.Normalize();
 
-                    double compRight = Math.Abs(direction.DotProduct(right));
-                    double compUp = Math.Abs(direction.DotProduct(up));
+                double compRight = Math.Abs(direction.DotProduct(right));
+                double compUp = Math.Abs(direction.DotProduct(up));
 
-                    // La línea corre principalmente a lo largo de "Right" -> es un eje horizontal en pantalla
-                    if (compUp < 0.01)
-                        horizontalGrids.Add(grid);
-                    // La línea corre principalmente a lo largo de "Up" -> es un eje vertical en pantalla
-                    else if (compRight < 0.01)
-                        verticalGrids.Add(grid);
-                }
+                if (compRight >= compUp)
+                    horizontalGrids.Add(item);
+                else
+                    verticalGrids.Add(item);
             }
         }
     }
 
-    // NUEVO
+    public class GridItem
+    {
+        public Element Element { get; set; }
+        public XYZ StartPoint { get; set; }
+        public XYZ EndPoint { get; set; }
+
+        public GridItem(Element elem, Document doc)
+        {
+            Element = elem;
+            List<XYZ> endpoints = new List<XYZ>();
+
+            if (elem is Grid g)
+            {
+                if (g.Curve != null)
+                {
+                    endpoints.Add(g.Curve.GetEndPoint(0));
+                    endpoints.Add(g.Curve.GetEndPoint(1));
+                }
+            }
+            else if (elem is MultiSegmentGrid msg)
+            {
+                ICollection<ElementId> subGridIds = msg.GetGridIds();
+                foreach (ElementId id in subGridIds)
+                {
+                    if (doc.GetElement(id) is Grid subGrid && subGrid.Curve != null)
+                    {
+                        endpoints.Add(subGrid.Curve.GetEndPoint(0));
+                        endpoints.Add(subGrid.Curve.GetEndPoint(1));
+                    }
+                }
+            }
+
+            if (endpoints.Count >= 2)
+            {
+                double maxDistSq = -1;
+                XYZ bestStart = endpoints[0];
+                XYZ bestEnd = endpoints[1];
+
+                for (int i = 0; i < endpoints.Count; i++)
+                {
+                    for (int j = i + 1; j < endpoints.Count; j++)
+                    {
+                        double distSq = endpoints[i].DistanceTo(endpoints[j]);
+                        if (distSq > maxDistSq)
+                        {
+                            maxDistSq = distSq;
+                            bestStart = endpoints[i];
+                            bestEnd = endpoints[j];
+                        }
+                    }
+                }
+
+                StartPoint = bestStart;
+                EndPoint = bestEnd;
+            }
+            else if (endpoints.Count == 1)
+            {
+                StartPoint = endpoints[0];
+                EndPoint = endpoints[0];
+            }
+            else
+            {
+                StartPoint = XYZ.Zero;
+                EndPoint = XYZ.Zero;
+            }
+        }
+    }
+
     public class GridSelectionFilter : ISelectionFilter
     {
         public bool AllowElement(Element elem)
         {
-            return elem is Grid;
+            return elem is Grid || elem is MultiSegmentGrid;
         }
 
         public bool AllowReference(Reference reference, XYZ position)
@@ -296,6 +425,4 @@ namespace MiNamespace
             return false;
         }
     }
-
 }
-

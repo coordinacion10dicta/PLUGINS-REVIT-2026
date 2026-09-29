@@ -147,14 +147,29 @@ namespace MiNamespace
                     ((Excel.Range)ws.Cells[row, 4]).Value2 = lum.ColorAcabado;
                     ((Excel.Range)ws.Cells[row, 5]).Value2 = lum.Descripcion;
                     ((Excel.Range)ws.Cells[row, 6]).Value2 = lum.Tecnologia;
-                    ((Excel.Range)ws.Cells[row, 7]).Value2 = lum.FlujoLuminoso;
-                    ((Excel.Range)ws.Cells[row, 8]).Value2 = lum.Potencia;
+                    // ============================
+                    // ESCRIBIR DATOS (Flujo Luminoso y Potencia con decimales exactos)
+                    // ============================
+                    Excel.Range cellG = (Excel.Range)ws.Cells[row, 7];
+                    cellG.Value2 = lum.FlujoLuminoso;
+                    cellG.NumberFormat = "0.00";
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(cellG);
+
+                    Excel.Range cellH = (Excel.Range)ws.Cells[row, 8];
+                    cellH.Value2 = lum.Potencia;
+                    cellH.NumberFormat = "0.00";
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(cellH);
+
                     ((Excel.Range)ws.Cells[row, 10]).Value2 = lum.TensionInstalacion;
                     ((Excel.Range)ws.Cells[row, 11]).Value2 = lum.TemperaturaColor;
                     ((Excel.Range)ws.Cells[row, 12]).Value2 = lum.FactorPotencia;
                     ((Excel.Range)ws.Cells[row, 13]).Value2 = lum.ProteccionIP;
                     ((Excel.Range)ws.Cells[row, 14]).Value2 = lum.ProteccionIK;
-                    ((Excel.Range)ws.Cells[row, 15]).Value2 = lum.VidaUtil;
+
+                    Excel.Range cellO = (Excel.Range)ws.Cells[row, 15];
+                    cellO.Value2 = lum.VidaUtil;
+                    cellO.NumberFormat = "0.00";
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(cellO);
                     ((Excel.Range)ws.Cells[row, 16]).Value2 = lum.Control;
                     ((Excel.Range)ws.Cells[row, 17]).Value2 = lum.Dimensiones;
                     ((Excel.Range)ws.Cells[row, 18]).Value2 = lum.Instalacion;
@@ -167,6 +182,7 @@ namespace MiNamespace
                     Excel.Range cellI = (Excel.Range)ws.Cells[row, 9];
                     // Flujo Luminoso (G) / Potencia (H)
                     cellI.Formula = $"=IF(H{row}=0,\"\",G{row}/H{row})";
+                    cellI.NumberFormat = "0.00";
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(cellI);
 
                     // Mantener la altura de la plantilla
@@ -238,19 +254,42 @@ namespace MiNamespace
             var luminarias = new List<LuminariaData>();
             foreach (ElementType type in collector.Cast<ElementType>())
             {
-                LuminariaData lum = new LuminariaData();
-
                 instanciasPorTipo.TryGetValue(type.Id, out FamilyInstance instanciaRep);
+
+                //===========================
+                // FILTRADO Y CLAVES DE LUMINARIA
+                //===========================
+
+                // Se leen las claves obligatorias: Lamp / LAMP y DC_Dimensiones
+                string valLamp = ObtenerParam(type, "Lamp");
+                if (string.IsNullOrWhiteSpace(valLamp))
+                    valLamp = ObtenerParam(type, "LAMP");
+                if (string.IsNullOrWhiteSpace(valLamp) && instanciaRep != null)
+                {
+                    valLamp = ObtenerParam(instanciaRep, "Lamp");
+                    if (string.IsNullOrWhiteSpace(valLamp))
+                        valLamp = ObtenerParam(instanciaRep, "LAMP");
+                }
+
+                string valDimensiones = ObtenerParam(type, "DC_Dimensiones");
+                if (string.IsNullOrWhiteSpace(valDimensiones) && instanciaRep != null)
+                {
+                    valDimensiones = ObtenerParam(instanciaRep, "DC_Dimensiones");
+                }
+
+                // Si la luminaria carece de cualquiera de estas dos claves con valor, se omite
+                if (string.IsNullOrWhiteSpace(valLamp) || string.IsNullOrWhiteSpace(valDimensiones))
+                {
+                    continue;
+                }
+
+                LuminariaData lum = new LuminariaData();
 
                 //===========================
                 // IDENTIFICACIÓN
                 //===========================
 
-                // Primero intenta leer Lamp
-                lum.CodigoLuminaria =
-                    ObtenerParam(type, "Lamp");
-
-                // Si Lamp está vacío, intenta Type Mark
+                lum.CodigoLuminaria = valLamp;
                 if (string.IsNullOrWhiteSpace(lum.CodigoLuminaria))
                 {
                     lum.CodigoLuminaria =
@@ -259,7 +298,6 @@ namespace MiNamespace
                             BuiltInParameter.ALL_MODEL_TYPE_MARK);
                 }
 
-                // Si sigue vacío usa el nombre de familia
                 if (string.IsNullOrWhiteSpace(lum.CodigoLuminaria))
                 {
                     lum.CodigoLuminaria = type.FamilyName;
@@ -290,34 +328,70 @@ namespace MiNamespace
                 }
 
                 //===========================
-                // DESCRIPCIÓNooooooo
+                // DESCRIPCIÓN
                 //===========================
 
                 lum.Descripcion = type.FamilyName;
+                if (string.IsNullOrWhiteSpace(lum.Descripcion))
+                    lum.Descripcion = type.Name;
+
                 if (!string.IsNullOrWhiteSpace(lum.Descripcion))
                 {
-                    // Remover prefijo tipo "LUF-XX", "LUF-56", etc. (incluyendo guiones o espacios posteriores)
+                    // 1. Remover prefijo tipo "LUF-XX", "LUF-56", etc. (incluyendo guiones o espacios posteriores)
                     lum.Descripcion = System.Text.RegularExpressions.Regex.Replace(
                         lum.Descripcion, 
                         @"^LUF-[A-Za-z0-9]+\s*-?\s*", 
                         "", 
                         System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                    // 2. Omitir sufijos/etiquetas "RVT" o "RTV" seguidos de números 20 a 30 (ej. RVT20, RTV20, RVT21..RVT30)
+                    lum.Descripcion = System.Text.RegularExpressions.Regex.Replace(
+                        lum.Descripcion, 
+                        @"\s*-?\s*\b(RVT|RTV)\s*(2[0-9]|30|\d+)\b", 
+                        "", 
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
                 }
 
-                // Fallback por si acaso
-                if (string.IsNullOrWhiteSpace(lum.Descripcion))
-                    lum.Descripcion = type.Name;
 
                 //===========================
                 // ACABADO
                 //===========================
 
-                lum.ColorAcabado =
-                    ObtenerParam(type, "Cuerpo");
+                string colorVal = ObtenerParam(type, "DC_Color");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "DC_Acabado");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "Cuerpo");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "Marco");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "Color");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "Acabado");
+                if (string.IsNullOrWhiteSpace(colorVal))
+                    colorVal = ObtenerParam(type, "Finish");
 
-                if (string.IsNullOrWhiteSpace(lum.ColorAcabado))
-                    lum.ColorAcabado =
-                        ObtenerParam(type, "Marco");
+                if (string.IsNullOrWhiteSpace(colorVal) && instanciaRep != null)
+                {
+                    colorVal = ObtenerParam(instanciaRep, "DC_Color");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "DC_Acabado");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "Cuerpo");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "Marco");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "Color");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "Acabado");
+                    if (string.IsNullOrWhiteSpace(colorVal))
+                        colorVal = ObtenerParam(instanciaRep, "Finish");
+                }
+
+                string notaColor = "Nota: se debe validar el color con arquitectura antes de la entrega al proyecto";
+                lum.ColorAcabado = string.IsNullOrWhiteSpace(colorVal)
+                    ? notaColor
+                    : $"{colorVal} - {notaColor}";
 
                 //===========================
                 // TECNOLOGÍA
@@ -375,16 +449,10 @@ namespace MiNamespace
                     lum.TemperaturaColor = ObtenerParam(type, "DC_Temperatura de color");
 
                 //===========================
-                // FACTOR DE POTENCIA
+                // FACTOR DE POTENCIA (Valor fijo)
                 //===========================
+                lum.FactorPotencia = ">0,9";
 
-                lum.FactorPotencia = ObtenerParam(type, "DC_Factor de Potencia");
-
-                if (string.IsNullOrWhiteSpace(lum.FactorPotencia))
-                    lum.FactorPotencia = ObtenerParam(type, "DC_FactorPotencia");
-
-                if (string.IsNullOrWhiteSpace(lum.FactorPotencia))
-                    lum.FactorPotencia = ObtenerParam(type, "DC_FACTOR DE POTENCIA");
 
                 lum.ProteccionIP =
                     ObtenerParam(type, "DC_IP");
@@ -392,8 +460,12 @@ namespace MiNamespace
                 lum.ProteccionIK =
                     ObtenerParam(type, "DC_IK");
 
-                lum.VidaUtil =
-                    ObtenerParam(type, "DC_Vida Útil");
+                lum.VidaUtil = ObtenerVidaUtilEnHoras(type);
+                if (lum.VidaUtil == 0 && instanciaRep != null)
+                {
+                    lum.VidaUtil = ObtenerVidaUtilEnHoras(instanciaRep);
+                }
+
 
                 //===========================
                 // INFORMACIÓN TÉCNICA
@@ -402,15 +474,14 @@ namespace MiNamespace
                 lum.Control =
                     ObtenerParam(type, "DC_Control");
 
-                lum.Dimensiones =
-                    ObtenerParam(type, "DC_Dimensiones");
+                lum.Dimensiones = valDimensiones;
 
                 lum.Instalacion =
                     ObtenerParam(type, "DC_Tipo de Montaje");
 
-                //===========================
+                //==========================
                 // OBSERVACIONES
-                //===========================
+                //==========================
 
                 lum.Observaciones =
                     ObtenerParamBuiltIn(
@@ -454,13 +525,27 @@ namespace MiNamespace
 
             Parameter p = elem.LookupParameter(paramName);
 
+            // Búsqueda alternativa insensible a mayúsculas/minúsculas por si varía el nombre en Revit
+            if (p == null)
+            {
+                foreach (Parameter param in elem.Parameters)
+                {
+                    if (param.Definition != null && 
+                        string.Equals(param.Definition.Name.Trim(), paramName.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        p = param;
+                        break;
+                    }
+                }
+            }
+
             if (p == null || !p.HasValue)
                 return "";
 
             switch (p.StorageType)
             {
                 case StorageType.String:
-                    return p.AsString() ?? "";
+                    return (p.AsString() ?? "").Trim();
 
                 case StorageType.Double:
 
@@ -468,7 +553,7 @@ namespace MiNamespace
                     string valorDouble = p.AsValueString();
 
                     if (!string.IsNullOrWhiteSpace(valorDouble))
-                        return valorDouble;
+                        return valorDouble.Trim();
 
                     return p.AsDouble().ToString();
 
@@ -477,7 +562,7 @@ namespace MiNamespace
                     string valorInt = p.AsValueString();
 
                     if (!string.IsNullOrWhiteSpace(valorInt))
-                        return valorInt;
+                        return valorInt.Trim();
 
                     return p.AsInteger().ToString();
 
@@ -490,13 +575,13 @@ namespace MiNamespace
                         Element e = elem.Document.GetElement(id);
 
                         if (e != null)
-                            return e.Name;
+                            return e.Name ?? "";
                     }
 
                     return "";
 
                 default:
-                    return p.AsValueString() ?? "";
+                    return (p.AsValueString() ?? "").Trim();
             }
         }
 
@@ -553,22 +638,23 @@ namespace MiNamespace
             if (p == null || !p.HasValue)
                 return 0;
 
-            // Primero intentamos leer el valor mostrado por Revit
+            // Si el parámetro en Revit es de tipo Double, obtener directamente su valor numérico exacto sin redondeos visuales
+            if (p.StorageType == StorageType.Double)
+                return p.AsDouble();
+
+            if (p.StorageType == StorageType.Integer)
+                return p.AsInteger();
+
+            // Si es un parámetro de texto o tiene representación textual
             string texto = p.AsValueString();
+            if (string.IsNullOrWhiteSpace(texto) && p.StorageType == StorageType.String)
+            {
+                texto = p.AsString();
+            }
 
             if (!string.IsNullOrWhiteSpace(texto))
             {
-                texto = texto
-                    .Replace("W", "")
-                    .Replace("lm", "")
-                    .Replace("V", "")
-                    .Replace("K", "")
-                    .Replace("h", "")
-                    .Replace("s", "")
-                    .Trim();
-
-                // Cambiar coma por punto para evitar problemas de cultura
-                texto = texto.Replace(",", ".");
+                texto = LimpiarYNormalizarNumero(texto);
 
                 if (double.TryParse(
                     texto,
@@ -577,35 +663,6 @@ namespace MiNamespace
                     out double valor))
                 {
                     return valor;
-                }
-            }
-
-            // Si es un parámetro de texto
-            if (p.StorageType == StorageType.String)
-            {
-                texto = p.AsString();
-
-                if (!string.IsNullOrWhiteSpace(texto))
-                {
-                    texto = texto
-                        .Replace("W", "")
-                        .Replace("lm", "")
-                        .Replace("V", "")
-                        .Replace("K", "")
-                        .Replace("h", "")
-                        .Replace("s", "")
-                        .Trim();
-
-                    texto = texto.Replace(",", ".");
-
-                    if (double.TryParse(
-                        texto,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        out double valor))
-                    {
-                        return valor;
-                    }
                 }
             }
 
@@ -625,20 +682,22 @@ namespace MiNamespace
             if (p == null || !p.HasValue)
                 return 0;
 
-            // Primero intentamos leer el valor mostrado por Revit
+            // Si el parámetro en Revit es de tipo Double, obtener directamente su valor numérico exacto sin redondeos visuales
+            if (p.StorageType == StorageType.Double)
+                return p.AsDouble();
+
+            if (p.StorageType == StorageType.Integer)
+                return p.AsInteger();
+
             string texto = p.AsValueString();
+            if (string.IsNullOrWhiteSpace(texto) && p.StorageType == StorageType.String)
+            {
+                texto = p.AsString();
+            }
 
             if (!string.IsNullOrWhiteSpace(texto))
             {
-                texto = texto
-                    .Replace("W", "")
-                    .Replace("lm", "")
-                    .Replace("V", "")
-                    .Replace("K", "")
-                    .Replace("h", "")
-                    .Replace("s", "")
-                    .Trim()
-                    .Replace(",", ".");
+                texto = LimpiarYNormalizarNumero(texto);
 
                 if (double.TryParse(
                     texto,
@@ -650,13 +709,125 @@ namespace MiNamespace
                 }
             }
 
+            return 0;
+        }
+
+        private string LimpiarYNormalizarNumero(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return "";
+
+            texto = texto
+                .Replace("W", "")
+                .Replace("lm", "")
+                .Replace("V", "")
+                .Replace("K", "")
+                .Replace("h", "")
+                .Replace("s", "")
+                .Trim();
+
+            if (texto.Contains(".") && texto.Contains(","))
+            {
+                int lastDot = texto.LastIndexOf('.');
+                int lastComma = texto.LastIndexOf(',');
+                if (lastComma > lastDot)
+                {
+                    texto = texto.Replace(".", "").Replace(",", ".");
+                }
+                else
+                {
+                    texto = texto.Replace(",", "");
+                }
+            }
+            else if (texto.Contains(","))
+            {
+                texto = texto.Replace(",", ".");
+            }
+
+            return texto;
+        }
+
+        private double ObtenerVidaUtilEnHoras(Element elem)
+        {
+            if (elem == null) return 0;
+
+            string[] posiblesParams = new string[]
+            {
+                "DC_Vida Útil",
+                "DC_Vida Util",
+                "DC_Vida útil",
+                "Vida Útil",
+                "Vida Util",
+                "Operating Life",
+                "Life Span"
+            };
+
+            Parameter p = null;
+            foreach (string nombre in posiblesParams)
+            {
+                p = elem.LookupParameter(nombre);
+                if (p != null && p.HasValue) break;
+            }
+
+            if (p == null || !p.HasValue) return 0;
+
+            string valString = p.AsValueString();
+            if (!string.IsNullOrWhiteSpace(valString))
+            {
+                string textoLimpio = valString.Trim();
+                if (textoLimpio.EndsWith("h", StringComparison.OrdinalIgnoreCase))
+                {
+                    textoLimpio = textoLimpio.Substring(0, textoLimpio.Length - 1).Trim();
+                    textoLimpio = LimpiarYNormalizarNumero(textoLimpio);
+                    if (double.TryParse(textoLimpio, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double hVal))
+                    {
+                        return hVal;
+                    }
+                }
+                else if (textoLimpio.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+                {
+                    textoLimpio = textoLimpio.Substring(0, textoLimpio.Length - 1).Trim();
+                    textoLimpio = LimpiarYNormalizarNumero(textoLimpio);
+                    if (double.TryParse(textoLimpio, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sVal))
+                    {
+                        return sVal / 3600.0;
+                    }
+                }
+            }
+
             if (p.StorageType == StorageType.Double)
-                return p.AsDouble();
-            if (p.StorageType == StorageType.Integer)
+            {
+                double valSegundos = p.AsDouble();
+                if (valSegundos > 0)
+                {
+                    return valSegundos / 3600.0;
+                }
+            }
+            else if (p.StorageType == StorageType.Integer)
+            {
                 return p.AsInteger();
+            }
+            else if (p.StorageType == StorageType.String)
+            {
+                string strVal = p.AsString();
+                if (!string.IsNullOrWhiteSpace(strVal))
+                {
+                    string textoLimpio = strVal.Replace("h", "").Replace("s", "").Trim();
+                    textoLimpio = LimpiarYNormalizarNumero(textoLimpio);
+                    if (double.TryParse(textoLimpio, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double rawVal))
+                    {
+                        if (rawVal > 500000)
+                        {
+                            rawVal = rawVal / 3600.0;
+                        }
+                        return rawVal;
+                    }
+                }
+            }
 
             return 0;
         }
+
+
 
         // ---------------------------------------------------------------
         // MÉTODO: LocalizarPlantilla
@@ -914,7 +1085,7 @@ namespace MiNamespace
         public string FactorPotencia { get; set; }
         public string ProteccionIP { get; set; }
         public string ProteccionIK { get; set; }
-        public string VidaUtil { get; set; }
+        public double VidaUtil { get; set; }
         public string Control { get; set; }
         public string Dimensiones { get; set; }
         public string Instalacion { get; set; }

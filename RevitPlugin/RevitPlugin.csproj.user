@@ -10,6 +10,9 @@
     <Compile Update="..\SharedCode\TagMainMenu.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="..\SharedCode\TagsCoorWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="..\SharedCode\TagSelectionWindow.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -1,0 +1,207 @@
+<Window x:Class="AutoCAD.SGH.UI.AreaInputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SGH" 
+        Height="700" Width="490"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#1E1E2E"
+        Foreground="#CDD6F4"
+        FontFamily="Segoe UI"
+        FontSize="13">
+
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#11111B"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock x:Name="LblSubheader" Text="SEGURIDAD HUMANA (SGH)" FontSize="11" FontWeight="Bold" Foreground="#89B4FA"/>
+            <TextBlock x:Name="LblHeader" Text="Parámetros de Espacio / Área" FontSize="18" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- Formulario -->
+        <StackPanel Grid.Row="1" VerticalAlignment="Top">
+
+            <!-- Selección de Norma Aplicable -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Norma Aplicable:" VerticalAlignment="Center" Foreground="#BAC2DE" FontWeight="SemiBold"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <RadioButton x:Name="RbNormaNsr" Content="NSR-10" Foreground="#CDD6F4" Margin="0,0,15,0" IsChecked="True" Checked="RbNorma_Checked"/>
+                    <RadioButton x:Name="RbNormaNfpa" Content="NFPA" Foreground="#CDD6F4" Checked="RbNorma_Checked"/>
+                </StackPanel>
+            </Grid>
+            
+            <!-- Número de Espacio -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="N° de Espacio:" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtNumero" Text="1" TextChanged="Input_Changed"/>
+            </Grid>
+
+            <!-- Espacio -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Espacio (Ubicación):" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtEspacio" Text="" TextChanged="Input_Changed"/>
+            </Grid>
+
+            <!-- Piso -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Piso (Nivel):" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtPiso" Text="" TextChanged="TxtPiso_TextChanged"/>
+            </Grid>
+
+            <!-- Área (m²) -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Área Calculada (m²):" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtArea" Text="0.0" TextChanged="TxtArea_TextChanged"/>
+            </Grid>
+
+            <!-- Grupo Ocupación NSR -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Grupo Ocupación NSR:" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <ComboBox Grid.Column="1" x:Name="CboGrupoOcupacionNsr" IsEditable="True" SelectionChanged="CboGrupoOcupacionNsr_SelectionChanged" TextBoxBase.TextChanged="CboGrupoOcupacionNsr_TextChanged"/>
+            </Grid>
+
+            <!-- Grupo Ocupación NFPA -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Grupo Ocupación NFPA:" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <ComboBox Grid.Column="1" x:Name="CboGrupoOcupacionNfpa" IsEditable="True" SelectionChanged="CboGrupoOcupacionNfpa_SelectionChanged" TextBoxBase.TextChanged="CboGrupoOcupacionNfpa_TextChanged"/>
+            </Grid>
+
+            <!-- Carga de Ocupación CO (NSR) -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="CO (NSR-10):" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtCoNsr" Text="" TextChanged="Input_Changed"/>
+            </Grid>
+
+            <!-- Carga de Ocupación CO (NFPA) -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="CO (NFPA):" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtCoNfpa" Text="" TextChanged="Input_Changed"/>
+            </Grid>
+
+            <!-- Ancho Puertas y Pasillos -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Ancho Puertas y Pasillos:" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtAnchoPasillos" Text="" TextChanged="Input_Changed"/>
+            </Grid>
+
+            <!-- Ancho Escaleras -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Ancho Escaleras:" VerticalAlignment="Center" Foreground="#BAC2DE"/>
+                <TextBox Grid.Column="1" x:Name="TxtAnchoEscaleras" Text="" TextChanged="Input_Changed"/>
+            </Grid>
+
+        </StackPanel>
+
+        <!-- Preview del Bloque Badge (Cápsula con divisor) -->
+        <Border Grid.Row="2" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,18">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="VISTA PREVIA DEL BLOQUE EN PLANO:" FontSize="10" FontWeight="Bold" Foreground="#6C7086" Margin="0,0,0,6" HorizontalAlignment="Center"/>
+                
+                <!-- Badge capsule preview -->
+                <Border BorderBrush="#2563EB" BorderThickness="2" CornerRadius="28" Background="#FFFFFF" Padding="0" MinWidth="220" Height="56">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="58"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Lado Izquierdo: Número centrado con borde divisor derecho -->
+                        <Border Grid.Column="0" BorderBrush="#2563EB" BorderThickness="0,0,2,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TextBlock x:Name="LblPreviewNum" Text="1" FontWeight="Bold" FontSize="20" Foreground="#111111" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <!-- Lado Derecho: Textos alineados -->
+                        <StackPanel Grid.Column="1" Margin="10,0,12,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="LblPreviewArea" Text="A: 0,00m2" FontSize="11" Foreground="#111111" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="LblPreviewUso" Text="U:  (A)" FontSize="11" Foreground="#111111" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="LblPreviewCo" Text="CO:  1" FontSize="11" Foreground="#111111" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Botones de Acción -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Cancelar" Height="36" Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" FontWeight="Medium" Click="BtnCancelar_Click" Cursor="Hand"/>
+            <Button Grid.Column="2" x:Name="BtnAccion" Content="Insertar Bloque" Height="36" Background="#89B4FA" Foreground="#11111B" BorderThickness="0" FontWeight="Bold" Click="BtnAccion_Click" Cursor="Hand"/>
+        </Grid>
+
+    </Grid>
+</Window>
