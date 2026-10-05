@@ -150,14 +150,12 @@ namespace AutoCAD.SGH.UI
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
             Confirmed = false;
-            DialogResult = false;
             Close();
         }
 
         private void BtnExportar_Click(object sender, RoutedEventArgs e)
         {
             Confirmed = true;
-            DialogResult = true;
             Close();
         }
     }

@@ -42,57 +42,94 @@ namespace MiNamespace
         // =========================================================================
 
         /// <summary>
-        /// Flujo por clic para activar la herramienta nativa de Revit 'Spot Slope' (Spot Slopes | Sloped).
-        /// Abre la herramienta nativa Annotate > Spot Slope para que el usuario coloque la cota con su flecha nativa.
+        /// Flujo por clic para colocar cotas de pendiente Spot Slope (o tag SPOT) en tuberías.
+        /// Lanza la herramienta nativa de Spot Slope de Revit (Modify | Spot Slopes) para máxima precisión y control nativo.
         /// </summary>
         public static int TaguearPendientePorClic(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
         {
-            if (uidoc == null) return 0;
+            if (uidoc == null || doc == null || view == null) return 0;
 
-            string[] posiblesComandos = new string[]
+            try
             {
-                "ID_ANNOTATE_SPOT_SLOPE",
-                "ID_SPOT_SLOPE",
-                "ID_OBJECTS_SPOT_SLOPE",
-                "ID_DIMENSION_SPOT_SLOPE"
-            };
+                RevitCommandId slopeCmdId = RevitCommandId.LookupPostableCommandId(PostableCommand.SpotSlope);
+                if (slopeCmdId != null && uidoc.Application.CanPostCommand(slopeCmdId))
+                {
+                    uidoc.Application.PostCommand(slopeCmdId);
+                    return 1;
+                }
+            }
+            catch { }
 
-            RevitCommandId cmdId = null;
-            foreach (string cmdName in posiblesComandos)
+            // Fallback interactivo por clic en caso de que PostCommand no esté disponible
+            ElementId spotSlopeTypeId = ObtenerTipoSpotSlope(doc);
+            var filter = new PipeSelectionFilter();
+            int creados = 0;
+
+            while (true)
             {
                 try
                 {
-                    cmdId = RevitCommandId.LookupCommandId(cmdName);
-                    if (cmdId != null && uidoc.Application.CanPostCommand(cmdId))
+                    Reference pick = uidoc.Selection.PickObject(
+                        Autodesk.Revit.UI.Selection.ObjectType.Element,
+                        filter,
+                        "Clic en tubería para colocar Cota de Pendiente Spot Slope (Presiona ESC cuando termines):"
+                    );
+
+                    if (pick == null) break;
+
+                    Element elem = doc.GetElement(pick);
+                    if (elem == null) continue;
+
+                    XYZ puntoMitad;
+                    XYZ dirFlujo;
+                    if (!ObtenerDireccionFlujoAgua(elem, out puntoMitad, out dirFlujo, out double _))
                     {
-                        break;
+                        if (!EsTuberiaAptaParaSeleccion(elem, out puntoMitad, out dirFlujo))
+                        {
+                            continue;
+                        }
+                    }
+
+                    XYZ puntoTag = puntoMitad;
+                    if (pick.GlobalPoint != null)
+                    {
+                        puntoTag = new XYZ(pick.GlobalPoint.X, pick.GlobalPoint.Y, puntoMitad.Z);
+                    }
+
+                    using (Transaction tx = new Transaction(doc, "Colocar Spot Slope por Clic"))
+                    {
+                        tx.Start();
+                        SpotDimension spot = ColocarSpotSlope(doc, view, elem, pick, puntoTag, dirFlujo, spotSlopeTypeId);
+                        if (spot != null)
+                        {
+                            creados++;
+                        }
+                        tx.Commit();
                     }
                 }
-                catch { }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    break; // Presionar ESC termina el comando limpiamente
+                }
+                catch
+                {
+                    break;
+                }
             }
 
-            if (cmdId != null && uidoc.Application.CanPostCommand(cmdId))
-            {
-                uidoc.Application.PostCommand(cmdId);
-                return 1;
-            }
-            else
-            {
-                Autodesk.Revit.UI.TaskDialog.Show("Tag Pendientes",
-                    "No se pudo activar la herramienta nativa 'Spot Slope' (Cota de pendiente) de Revit.\nAsegúrate de estar en una vista planimétrica o de sección válida.");
-                return 0;
-            }
+            return creados;
         }
 
         /// <summary>
-        /// Permite al usuario seleccionar múltiples tuberías en pantalla mediante recuadro/clics
-        /// y coloca en cada tubería la etiqueta 'SPOT' (familia creada) orientada según la dirección del flujo de agua.
+        /// Permite al usuario seleccionar múltiples tuberías en pantalla mediante cursor +/- (Finish) o recuadro
+        /// y coloca en cada tubería la cota de pendiente nativa Spot Slope (tipo Sloped).
         /// </summary>
         public static int TaguearPendientePorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
         {
             if (uidoc == null || doc == null || view == null) return 0;
 
             List<Reference> refsList = new List<Reference>();
+            var filter = new PipeSelectionFilter();
 
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
@@ -101,43 +138,58 @@ namespace MiNamespace
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         refsList.Add(new Reference(el));
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, permitir selección con PickObjects (+, -, Finish) o recuadro
             if (refsList.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
+                    var picked = uidoc.Selection.PickObjects(
                         Autodesk.Revit.UI.Selection.ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías a las que deseas colocar el tag de pendiente 'SPOT' (Presiona Finalizar o Esc cuando termines):"
+                        filter,
+                        "Selecciona las tuberías a colocar Cota de Pendiente (Spot Slope) y haz clic en 'Finish':"
                     );
+                    if (picked != null && picked.Count > 0)
+                    {
+                        refsList.AddRange(picked);
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0; // El usuario canceló la selección con Esc
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
 
-                if (refs != null && refs.Count > 0)
+                if (refsList.Count == 0)
                 {
-                    refsList.AddRange(refs);
+                    try
+                    {
+                        var rectElements = uidoc.Selection.PickElementsByRectangle(
+                            filter,
+                            "Arrastra un recuadro sobre las tuberías a colocar Spot Slope:"
+                        );
+                        if (rectElements != null && rectElements.Count > 0)
+                        {
+                            foreach (var el in rectElements)
+                            {
+                                refsList.Add(new Reference(el));
+                            }
+                        }
+                    }
+                    catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
+                    catch { }
                 }
             }
 
             if (refsList.Count == 0) return 0;
 
-            ElementId slopeTagTypeId = ObtenerTipoPipeTagPendiente(doc);
+            ElementId spotSlopeTypeId = ObtenerTipoSpotSlope(doc);
 
             int creados = 0;
-            using (Transaction tx = new Transaction(doc, "Tags Pendientes SPOT por Selección"))
+            using (Transaction tx = new Transaction(doc, "Colocar Spot Slopes por Selección"))
             {
                 tx.Start();
 
@@ -158,40 +210,9 @@ namespace MiNamespace
                             }
                         }
 
-                        Reference pipeRef = new Reference(elem);
-
-                        bool esVertical = Math.Abs(dirFlujo.Y) > Math.Abs(dirFlujo.X);
-                        TagOrientation orientacion = esVertical ? TagOrientation.Vertical : TagOrientation.Horizontal;
-
-                        IndependentTag newTag = IndependentTag.Create(
-                            doc,
-                            view.Id,
-                            pipeRef,
-                            false, // sin líder
-                            TagMode.TM_ADDBY_CATEGORY,
-                            orientacion,
-                            puntoMitad
-                        );
-
-                        if (newTag != null)
+                        SpotDimension spot = ColocarSpotSlope(doc, view, elem, r, puntoMitad, dirFlujo, spotSlopeTypeId);
+                        if (spot != null)
                         {
-                            if (slopeTagTypeId != null && slopeTagTypeId != ElementId.InvalidElementId)
-                            {
-                                try { newTag.ChangeTypeId(slopeTagTypeId); } catch { }
-                            }
-
-                            // Si el flujo de agua va hacia la izquierda/abajo, voltear el tag 180°
-                            bool requiereVolteo = (dirFlujo.X < -0.001) || (Math.Abs(dirFlujo.X) <= 0.001 && dirFlujo.Y < -0.001);
-                            if (requiereVolteo)
-                            {
-                                try
-                                {
-                                    Line ejeRotacion = Line.CreateBound(puntoMitad, puntoMitad + XYZ.BasisZ);
-                                    ElementTransformUtils.RotateElement(doc, newTag.Id, ejeRotacion, Math.PI);
-                                }
-                                catch { }
-                            }
-
                             creados++;
                         }
                     }
@@ -203,13 +224,13 @@ namespace MiNamespace
 
             if (creados > 0)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Tag Pendientes SPOT",
-                    $"Se etiquetaron exitosamente {creados} tuberías con la familia 'SPOT'.");
+                Autodesk.Revit.UI.TaskDialog.Show("Tag Pendientes Spot Slope",
+                    $"Se colocaron exitosamente {creados} cotas de pendiente (Spot Slope).");
             }
             else
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Tag Pendientes SPOT",
-                    "No se pudieron colocar etiquetas en las tuberías seleccionadas.");
+                Autodesk.Revit.UI.TaskDialog.Show("Tag Pendientes Spot Slope",
+                    "No se pudieron colocar cotas de pendiente en las tuberías seleccionadas. Verifica que las tuberías tengan pendiente configurada en la vista.");
             }
 
             return creados;
@@ -1249,6 +1270,7 @@ namespace MiNamespace
 
             List<Reference> refsList = new List<Reference>();
 
+            var filter = new PipeSelectionFilter();
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
@@ -1256,30 +1278,36 @@ namespace MiNamespace
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         refsList.Add(new Reference(el));
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (refsList.Count == 0)
             {
                 try
                 {
-                    var picked = uidoc.Selection.PickObjects(
+                    var pickedRefs = uidoc.Selection.PickObjects(
                         ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías a taguear material (ESC o Finalizar para terminar):"
+                        filter,
+                        "Selecciona las tuberías a taguear material y haz clic en 'Finish':"
                     );
-                    if (picked != null) refsList.AddRange(picked);
+                    if (pickedRefs != null && pickedRefs.Count > 0)
+                    {
+                        refsList.AddRange(pickedRefs);
+                    }
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
                     return 0;
                 }
-                catch { }
+                catch
+                {
+                    return 0;
+                }
             }
 
             if (refsList.Count == 0) return 0;
@@ -2225,42 +2253,86 @@ namespace MiNamespace
 
             List<Reference> refsList = new List<Reference>();
 
-            // 1. Revisar si el usuario ya tenía codos seleccionados en Revit
+            var filter = new CodoCambioDeNivelSelectionFilter();
+            // 1. Preselección
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
             {
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el != null)
+                    if (el != null && filter.AllowElement(el))
                     {
                         refsList.Add(new Reference(el));
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, permitir selección por recuadro o clics continuos con ESC para finalizar
             if (refsList.Count == 0)
             {
                 try
                 {
-                    var picked = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new CodoCambioDeNivelSelectionFilter(),
-                        "Selecciona los codos de cambio de nivel a taguear (ESC o Finalizar para terminar):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre los codos de cambio de nivel:"
                     );
-                    if (picked != null) refsList.AddRange(picked);
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        foreach (var el in rectElements)
+                        {
+                            refsList.Add(new Reference(el));
+                        }
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
+
+                if (refsList.Count == 0)
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en codos de cambio de nivel (presiona ESC cuando termines para colocar tags):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (!EsCodoCambioDeNivelValido(el, out string motivoRechazo))
+                                {
+                                    Autodesk.Revit.UI.TaskDialog.Show("Tag C.N - No Aplica",
+                                        $"El elemento seleccionado no aplica como cambio de nivel:\n\n{motivoRechazo}");
+                                    continue;
+                                }
+
+                                if (!refsList.Any(r => r.ElementId == pick.ElementId))
+                                {
+                                    refsList.Add(pick);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                }
             }
 
             if (refsList.Count == 0) return 0;
 
             int colocados = 0;
+            int omitidos = 0;
+            List<string> motivosOmitidos = new List<string>();
+
             using (Transaction tx = new Transaction(doc, "Tags C.N por Selección (Redes Húmedas)"))
             {
                 tx.Start();
@@ -2278,9 +2350,19 @@ namespace MiNamespace
                         Element el = doc.GetElement(pickRef.ElementId);
                         if (el == null) continue;
 
-                        if (!EsCodoCambioDeNivelValido(el, out _)) continue;
+                        if (!EsCodoCambioDeNivelValido(el, out string motivo))
+                        {
+                            omitidos++;
+                            if (!string.IsNullOrEmpty(motivo) && !motivosOmitidos.Contains(motivo))
+                            {
+                                motivosOmitidos.Add(motivo);
+                            }
+                            continue;
+                        }
 
                         XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
+                        if (puntoEje == null) continue;
+
                         XYZ tagHeadPos = puntoEje + new XYZ(0.8, 0.8, 0);
 
                         IndependentTag tag = IndependentTag.Create(
@@ -2307,9 +2389,11 @@ namespace MiNamespace
                 tx.Commit();
             }
 
-            if (colocados > 0)
+            if (omitidos > 0)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Tags \"C.N\"", $"Se etiquetaron {colocados} puntos con Tags \"C.N\".");
+                string detalle = string.Join("\n• ", motivosOmitidos);
+                Autodesk.Revit.UI.TaskDialog.Show("Tags C.N - Resumen",
+                    $"Se colocaron {colocados} tags 'C.N'.\n\nSe omitieron {omitidos} elementos no aplicables:\n• {detalle}");
             }
 
             return colocados;
@@ -2863,7 +2947,21 @@ namespace MiNamespace
                 return false;
             }
 
-            // 3. Verificar si hay un cambio de altura / elevación Z real (mínimo 0.15 ft ≈ 4.5 cm / 50 mm)
+            // 3. Descartar Codos de 90° (giros a escuadra, bajadas a pared/tableros)
+            if (EsCodoDe90Grados(fiElem))
+            {
+                motivoRechazo = "No aplica: Es un codo a 90° (los cambios de nivel se realizan con codos de 15°, 30°, 45° o 60°).";
+                return false;
+            }
+
+            // 4. Descartar "Caballitos" / saltos de cruce (bypass temporal que esquiva un obstáculo y regresa al mismo nivel original)
+            if (EsCaballitoOSaltoDeCruce(fiElem))
+            {
+                motivoRechazo = "No aplica: Es un 'caballito' o salto de cruce (la tubería regresa a su nivel original).";
+                return false;
+            }
+
+            // 5. Verificar si hay un cambio de altura / elevación Z real (mínimo 0.15 ft ≈ 4.5 cm / 50 mm)
             double umbralMinimoZ = 0.15; // en pies (~4.5 cm)
             bool presentaCambioZ = false;
 
@@ -2921,11 +3019,173 @@ namespace MiNamespace
 
             if (!presentaCambioZ)
             {
-                motivoRechazo = "No aplica: el accesorio no presenta un cambio de nivel vertical significativo (diferencia de altura menor a 4.5 cm o giro horizontal en planta).";
+                motivoRechazo = "No presenta cambio de nivel ni desnivel vertical en Z (giro horizontal en planta o pendiente mínima).";
                 return false;
             }
 
             return true;
+        }
+
+        public static bool EsCodoDe90Grados(FamilyInstance fi)
+        {
+            if (fi == null) return false;
+
+            Parameter pAng = fi.LookupParameter("Angle")
+                           ?? fi.LookupParameter("Ángulo")
+                           ?? fi.LookupParameter("Angulo")
+                           ?? fi.LookupParameter("Angle 1")
+                           ?? fi.LookupParameter("Angle 2");
+
+            if (pAng != null && pAng.StorageType == StorageType.Double)
+            {
+                double rad = pAng.AsDouble();
+                double deg = rad * (180.0 / Math.PI);
+                if (deg >= 80.0 && deg <= 100.0) return true;
+            }
+
+            if (fi.MEPModel?.ConnectorManager != null)
+            {
+                var conns = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
+                if (conns.Count >= 2)
+                {
+                    XYZ v1 = conns[0].CoordinateSystem?.BasisZ;
+                    XYZ v2 = conns[1].CoordinateSystem?.BasisZ;
+                    if (v1 != null && v2 != null && !v1.IsZeroLength() && !v2.IsZeroLength())
+                    {
+                        double dot = Math.Max(-1.0, Math.Min(1.0, v1.Normalize().DotProduct(v2.Normalize())));
+                        double angDeg = Math.Acos(dot) * (180.0 / Math.PI);
+                        if (angDeg >= 80.0 && angDeg <= 100.0) return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static bool EsCaballitoOSaltoDeCruce(FamilyInstance fi)
+        {
+            if (fi?.MEPModel?.ConnectorManager == null) return false;
+
+            var connectors = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
+            if (connectors.Count < 2) return false;
+
+            List<double> zExtremos = new List<double>();
+            double zCodo = fi.Location is LocationPoint lp ? lp.Point.Z : connectors[0].Origin.Z;
+
+            foreach (Connector conn in connectors)
+            {
+                double zExtremo = ObtenerElevacionTramoPrincipalHumedas(conn, fi.Id, 4, 10.0, out _);
+                if (!double.IsNaN(zExtremo))
+                {
+                    zExtremos.Add(zExtremo);
+                }
+            }
+
+            if (zExtremos.Count == 2)
+            {
+                double diffExtremos = Math.Abs(zExtremos[0] - zExtremos[1]);
+                double alturaSalto = Math.Abs(zCodo - zExtremos[0]);
+
+                if (diffExtremos < 0.08 && (alturaSalto >= 0.10 || TieneInclinacionVerticalHumedas(fi)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TieneInclinacionVerticalHumedas(FamilyInstance fi)
+        {
+            if (fi?.MEPModel?.ConnectorManager == null) return false;
+            foreach (Connector c in fi.MEPModel.ConnectorManager.Connectors)
+            {
+                if (c.CoordinateSystem != null && Math.Abs(c.CoordinateSystem.BasisZ.Z) >= 0.15)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static double ObtenerElevacionTramoPrincipalHumedas(Connector startConn, ElementId originId, int maxProfundidad, double maxDistanciaFt, out ElementId levelId)
+        {
+            levelId = ElementId.InvalidElementId;
+            double distAcumulada = 0;
+            Connector currConn = startConn;
+            ElementId lastId = originId;
+
+            for (int step = 0; step < maxProfundidad; step++)
+            {
+                Connector nextStepConn = null;
+                foreach (Connector refConn in currConn.AllRefs)
+                {
+                    Element owner = refConn.Owner;
+                    if (owner == null || owner.Id == lastId) continue;
+
+                    if (owner is MEPCurve mepCurve)
+                    {
+                        if (mepCurve.ReferenceLevel != null)
+                        {
+                            levelId = mepCurve.ReferenceLevel.Id;
+                        }
+                        else if (mepCurve.LevelId != null && mepCurve.LevelId != ElementId.InvalidElementId)
+                        {
+                            levelId = mepCurve.LevelId;
+                        }
+
+                        if (mepCurve.Location is LocationCurve lc && lc.Curve != null)
+                        {
+                            double len = lc.Curve.Length;
+                            distAcumulada += len;
+                            XYZ p0 = lc.Curve.GetEndPoint(0);
+                            XYZ p1 = lc.Curve.GetEndPoint(1);
+
+                            if (Math.Abs(p1.Z - p0.Z) < 0.05 && (len > 2.0 || distAcumulada > maxDistanciaFt))
+                            {
+                                return (p0.Z + p1.Z) / 2.0;
+                            }
+
+                            if (mepCurve.ConnectorManager != null)
+                            {
+                                foreach (Connector nextConn in mepCurve.ConnectorManager.Connectors)
+                                {
+                                    if (nextConn.Id != refConn.Id)
+                                    {
+                                        nextStepConn = nextConn;
+                                        lastId = mepCurve.Id;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (owner is FamilyInstance nextFi && nextFi.MEPModel?.ConnectorManager != null)
+                    {
+                        if (nextFi.LevelId != null && nextFi.LevelId != ElementId.InvalidElementId)
+                        {
+                            levelId = nextFi.LevelId;
+                        }
+
+                        lastId = nextFi.Id;
+                        foreach (Connector nextConn in nextFi.MEPModel.ConnectorManager.Connectors)
+                        {
+                            if (nextConn.Id != refConn.Id)
+                            {
+                                nextStepConn = nextConn;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (nextStepConn != null) break;
+                }
+
+                if (nextStepConn == null) break;
+                currConn = nextStepConn;
+            }
+
+            return double.NaN;
         }
 
         public static FamilySymbol ObtenerTagPipeAccesorio(Document doc)
@@ -3462,45 +3722,65 @@ namespace MiNamespace
             List<Element> pipes = new List<Element>();
 
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
+            var filter = new PipeSelectionFilter();
+            // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
             {
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         pipes.Add(el);
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
             if (pipes.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías en piso/afinado a acotar (Presiona Finalizar o ESC cuando termines):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre las tuberías en piso/afinado a acotar:"
                     );
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        pipes.AddRange(rectElements);
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
 
-                if (refs != null)
+                if (pipes.Count == 0)
                 {
-                    foreach (var r in refs)
+                    while (true)
                     {
-                        Element e = doc.GetElement(r);
-                        if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                        try
                         {
-                            pipes.Add(e);
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en tuberías en piso/afinado a acotar (presiona ESC cuando termines para acotar):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (el != null && !pipes.Any(x => x.Id == el.Id))
+                                {
+                                    pipes.Add(el);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede
+                        }
+                        catch
+                        {
+                            break;
                         }
                     }
                 }
@@ -3536,6 +3816,7 @@ namespace MiNamespace
 
             List<Element> pipes = new List<Element>();
 
+            var filter = new PipeSelectionFilter();
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
@@ -3543,39 +3824,57 @@ namespace MiNamespace
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         pipes.Add(el);
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
             if (pipes.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías en placa a acotar (Presiona Finalizar o ESC cuando termines):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre las tuberías en placa a acotar:"
                     );
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        pipes.AddRange(rectElements);
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
 
-                if (refs != null)
+                if (pipes.Count == 0)
                 {
-                    foreach (var r in refs)
+                    while (true)
                     {
-                        Element e = doc.GetElement(r);
-                        if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                        try
                         {
-                            pipes.Add(e);
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en tuberías en placa a acotar (presiona ESC cuando termines para acotar):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (el != null && !pipes.Any(x => x.Id == el.Id))
+                                {
+                                    pipes.Add(el);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede
+                        }
+                        catch
+                        {
+                            break;
                         }
                     }
                 }
@@ -3863,6 +4162,7 @@ namespace MiNamespace
 
             List<Element> pipes = new List<Element>();
 
+            var filter = new PipeSelectionFilter();
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
@@ -3870,39 +4170,57 @@ namespace MiNamespace
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         pipes.Add(el);
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
             if (pipes.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías elevadas / cielo raso a acotar a la estructura (ESC o Finalizar para terminar):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre las tuberías elevadas / cielo raso a acotar:"
                     );
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        pipes.AddRange(rectElements);
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
 
-                if (refs != null)
+                if (pipes.Count == 0)
                 {
-                    foreach (var r in refs)
+                    while (true)
                     {
-                        Element e = doc.GetElement(r);
-                        if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                        try
                         {
-                            pipes.Add(e);
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en tuberías elevadas / cielo raso (presiona ESC cuando termines para acotar):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (el != null && !pipes.Any(x => x.Id == el.Id))
+                                {
+                                    pipes.Add(el);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede
+                        }
+                        catch
+                        {
+                            break;
                         }
                     }
                 }
@@ -4363,6 +4681,7 @@ namespace MiNamespace
 
             List<Element> pipes = new List<Element>();
 
+            var filter = new PipeSelectionFilter();
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
@@ -4370,39 +4689,57 @@ namespace MiNamespace
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el?.Category != null && el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                    if (el != null && filter.AllowElement(el))
                     {
                         pipes.Add(el);
                     }
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
             if (pipes.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new PipeSelectionFilter(),
-                        "Selecciona las tuberías en pases de viga a taguear con 'Size' (ESC o Finalizar para terminar):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre las tuberías en pases de viga a taguear:"
                     );
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        pipes.AddRange(rectElements);
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
 
-                if (refs != null)
+                if (pipes.Count == 0)
                 {
-                    foreach (var r in refs)
+                    while (true)
                     {
-                        Element e = doc.GetElement(r);
-                        if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves)
+                        try
                         {
-                            pipes.Add(e);
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en tuberías en pases de viga (presiona ESC cuando termines para taguear):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (el != null && !pipes.Any(x => x.Id == el.Id))
+                                {
+                                    pipes.Add(el);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede
+                        }
+                        catch
+                        {
+                            break;
                         }
                     }
                 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace AutoCAD.SGH.Services
@@ -60,8 +61,12 @@ namespace AutoCAD.SGH.Services
 
         static OccupancyService()
         {
-            InitializeDefaults();
-            TryLoadSavedOrDefaultNorms();
+            try
+            {
+                InitializeDefaults();
+                TryLoadSavedOrDefaultNorms();
+            }
+            catch { }
         }
 
         private static void InitializeDefaults()
@@ -237,16 +242,15 @@ namespace AutoCAD.SGH.Services
             }
             catch { }
 
-            string defaultPath = LocalizarPlantillaNormas();
-            if (string.IsNullOrEmpty(defaultPath) || !File.Exists(defaultPath))
+            try
             {
-                defaultPath = EnsureDefaultNormsFileExists();
+                string defaultPath = LocalizarPlantillaNormas();
+                if (!string.IsNullOrEmpty(defaultPath) && File.Exists(defaultPath))
+                {
+                    LoadNormsFromExcel(defaultPath);
+                }
             }
-
-            if (!string.IsNullOrEmpty(defaultPath) && File.Exists(defaultPath))
-            {
-                LoadNormsFromExcel(defaultPath);
-            }
+            catch { }
         }
 
         public static string LocalizarPlantillaNormas()
@@ -287,92 +291,19 @@ namespace AutoCAD.SGH.Services
             return null;
         }
 
-        public static string EnsureDefaultNormsFileExists()
-        {
-            string resDir = @"C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\Resources";
-            if (!Directory.Exists(resDir))
-            {
-                try
-                {
-                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    resDir = Path.Combine(appData, "DICTA_SGH", "Resources");
-                    Directory.CreateDirectory(resDir);
-                }
-                catch { }
-            }
-
-            string filePath = Path.Combine(resDir, NORMS_FILE_NAME);
-            if (File.Exists(filePath)) return filePath;
-
-            Excel.Application xl = null;
-            Excel.Workbook wb = null;
-            Excel.Worksheet ws = null;
-
-            try
-            {
-                xl = new Excel.Application { Visible = false, DisplayAlerts = false };
-                wb = xl.Workbooks.Add();
-                ws = (Excel.Worksheet)wb.Worksheets[1];
-                ws.Name = "Normas";
-
-                // Tabla 1: NSR-10 (Columnas 1-3)
-                ws.Cells[1, 1] = "Tabla k.3.3-1 NSR";
-                ws.Cells[2, 1] = "Nomenclatura";
-                ws.Cells[2, 2] = "Grupos de Ocupación";
-                ws.Cells[2, 3] = "Área neta de piso en metros cuadrados por ocupante";
-
-                int rowNsr = 3;
-                foreach (var g in NormsNSR10.Groups)
-                {
-                    ws.Cells[rowNsr, 1] = g.Code;
-                    ws.Cells[rowNsr, 2] = g.Name;
-                    ws.Cells[rowNsr, 3] = g.FactorM2PerPerson.HasValue ? g.FactorM2PerPerson.Value.ToString("0.#", CultureInfo.InvariantCulture) : (g.Code == "E" ? "según ocupación" : "");
-                    rowNsr++;
-                }
-
-                // Tabla 2: NFPA (Columnas 5-7)
-                ws.Cells[1, 5] = "TABLA 7.3.1.2 NFPA";
-                ws.Cells[2, 5] = "USO";
-                ws.Cells[2, 6] = "Grupos de Ocupación";
-                ws.Cells[2, 7] = "Área neta de piso en metros cuadrados por ocupante";
-
-                int rowNfpa = 3;
-                foreach (var g in NormsNFPA.Groups)
-                {
-                    ws.Cells[rowNfpa, 5] = g.Code;
-                    ws.Cells[rowNfpa, 6] = g.Name;
-                    ws.Cells[rowNfpa, 7] = g.FactorM2PerPerson.HasValue ? g.FactorM2PerPerson.Value.ToString("0.#", CultureInfo.InvariantCulture) : "según ocupación";
-                    rowNfpa++;
-                }
-
-                ws.Columns.AutoFit();
-                wb.SaveAs(filePath);
-                wb.Close(true);
-
-                return filePath;
-            }
-            catch
-            {
-                if (wb != null) { try { wb.Close(false); } catch { } }
-                return null;
-            }
-            finally
-            {
-                if (ws != null) Marshal.ReleaseComObject(ws);
-                if (wb != null) Marshal.ReleaseComObject(wb);
-                if (xl != null)
-                {
-                    try { xl.Quit(); } catch { }
-                    Marshal.ReleaseComObject(xl);
-                }
-            }
-        }
-
         public static bool LoadNormsFromExcel(string excelPath)
         {
             if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
                 return false;
 
+            // 1. Intento de lectura ultrarrápida en memoria vía OpenXml (ZipArchive + XDocument)
+            if (TryLoadNormsViaOpenXml(excelPath, out var parsedSets) && parsedSets.Count > 0)
+            {
+                ApplyParsedNormSets(parsedSets, excelPath);
+                return true;
+            }
+
+            // 2. Fallback COM solo si no se pudo leer por OpenXml (por ejemplo, archivos .xls binarios antiguos)
             Excel.Application xl = null;
             Excel.Workbook wb = null;
 
@@ -381,7 +312,7 @@ namespace AutoCAD.SGH.Services
                 xl = new Excel.Application { Visible = false, DisplayAlerts = false };
                 wb = xl.Workbooks.Open(excelPath, ReadOnly: true);
 
-                var parsedSets = new List<NormSet>();
+                var comParsedSets = new List<NormSet>();
 
                 foreach (Excel.Worksheet ws in wb.Worksheets)
                 {
@@ -428,7 +359,7 @@ namespace AutoCAD.SGH.Services
                             }
                         }
 
-                        if (headerPositions.Count == 0 && parsedSets.Count == 0)
+                        if (headerPositions.Count == 0 && comParsedSets.Count == 0)
                         {
                             string checkData = (ws.Cells[2, 1] as Excel.Range)?.Value2?.ToString()?.Trim() ??
                                               (ws.Cells[3, 1] as Excel.Range)?.Value2?.ToString()?.Trim() ?? "";
@@ -518,7 +449,300 @@ namespace AutoCAD.SGH.Services
                             if (tempRows.Count > 0)
                             {
                                 var samples = tempRows.Select(x => (x.Code, x.Name)).ToList();
-                                string normName = DetectNormType(ws, headerRow, codeCol, colHeader, samples);
+                                string normName = DetectNormTypeFromCom(ws, headerRow, codeCol, colHeader, samples);
+
+                                var set = new NormSet { Name = normName };
+                                foreach (var item in tempRows)
+                                {
+                                    double? pasillos = item.Pasillos;
+                                    double? escaleras = item.Escaleras;
+
+                                    if (!pasillos.HasValue || !escaleras.HasValue)
+                                    {
+                                        var defaultSet = normName == "NFPA" ? CreateDefaultNFPA() : CreateDefaultNSR10();
+                                        if (defaultSet.EgressWidthFactors.TryGetValue(item.Code, out var defEw))
+                                        {
+                                            if (!pasillos.HasValue) pasillos = defEw.CorredoresMm;
+                                            if (!escaleras.HasValue) escaleras = defEw.EscalerasMm;
+                                        }
+                                    }
+
+                                    set.Groups.Add(new OccupancyGroupInfo
+                                    {
+                                        Code = item.Code,
+                                        Name = item.Name,
+                                        FactorM2PerPerson = item.Factor
+                                    });
+
+                                    set.EgressWidthFactors[item.Code] = (pasillos, escaleras);
+                                }
+
+                                comParsedSets.Add(set);
+                            }
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        if (ws != null) Marshal.ReleaseComObject(ws);
+                    }
+                }
+
+                if (comParsedSets.Count > 0)
+                {
+                    ApplyParsedNormSets(comParsedSets, excelPath);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SGH LoadNormsFromExcel COM Error]: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                if (wb != null) { try { wb.Close(false); } catch { } Marshal.ReleaseComObject(wb); }
+                if (xl != null) { try { xl.Quit(); } catch { } Marshal.ReleaseComObject(xl); }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        private static bool TryLoadNormsViaOpenXml(string excelPath, out List<NormSet> parsedSets)
+        {
+            parsedSets = new List<NormSet>();
+            try
+            {
+                using (var zip = System.IO.Compression.ZipFile.OpenRead(excelPath))
+                {
+                    XNamespace sNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+                    XNamespace rNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+                    XNamespace pkgRelNs = "http://schemas.openxmlformats.org/package/2006/relationships";
+
+                    // 1. Cargar cadenas compartidas (SharedStrings)
+                    var sharedStrings = new List<string>();
+                    var ssEntry = zip.GetEntry("xl/sharedStrings.xml");
+                    if (ssEntry != null)
+                    {
+                        using (var s = ssEntry.Open())
+                        {
+                            var xss = System.Xml.Linq.XDocument.Load(s);
+                            foreach (var si in xss.Descendants(sNs + "si"))
+                            {
+                                string str = string.Concat(si.Descendants(sNs + "t").Select(t => t.Value));
+                                sharedStrings.Add(str);
+                            }
+                        }
+                    }
+
+                    // 2. Mapear hojas
+                    var relMap = new Dictionary<string, string>();
+                    var relsEntry = zip.GetEntry("xl/_rels/workbook.xml.rels");
+                    if (relsEntry != null)
+                    {
+                        using (var s = relsEntry.Open())
+                        {
+                            var xRels = System.Xml.Linq.XDocument.Load(s);
+                            foreach (var rel in xRels.Descendants(pkgRelNs + "Relationship"))
+                            {
+                                string id = (string)rel.Attribute("Id");
+                                string target = (string)rel.Attribute("Target");
+                                if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(target))
+                                {
+                                    if (!target.StartsWith("xl/")) target = "xl/" + target.TrimStart('/');
+                                    relMap[id] = target;
+                                }
+                            }
+                        }
+                    }
+
+                    var sheetList = new List<(string Name, string Path)>();
+                    var wbEntry = zip.GetEntry("xl/workbook.xml");
+                    if (wbEntry != null)
+                    {
+                        using (var s = wbEntry.Open())
+                        {
+                            var xWb = System.Xml.Linq.XDocument.Load(s);
+                            foreach (var sh in xWb.Descendants(sNs + "sheet"))
+                            {
+                                string name = (string)sh.Attribute("name");
+                                string rId = (string)sh.Attribute(rNs + "id");
+                                if (!string.IsNullOrEmpty(rId) && relMap.TryGetValue(rId, out string p))
+                                {
+                                    sheetList.Add((name, p));
+                                }
+                            }
+                        }
+                    }
+
+                    if (sheetList.Count == 0)
+                    {
+                        foreach (var e in zip.Entries)
+                        {
+                            if (e.FullName.StartsWith("xl/worksheets/sheet") && e.FullName.EndsWith(".xml"))
+                            {
+                                sheetList.Add((Path.GetFileNameWithoutExtension(e.FullName), e.FullName));
+                            }
+                        }
+                    }
+
+                    // 3. Procesar cada hoja de cálculo
+                    foreach (var shInfo in sheetList)
+                    {
+                        var shEntry = zip.GetEntry(shInfo.Path);
+                        if (shEntry == null) continue;
+
+                        var grid = new Dictionary<(int Row, int Col), string>();
+                        using (var s = shEntry.Open())
+                        {
+                            var xSheet = System.Xml.Linq.XDocument.Load(s);
+                            foreach (var c in xSheet.Descendants(sNs + "c"))
+                            {
+                                string rAttr = (string)c.Attribute("r");
+                                if (string.IsNullOrEmpty(rAttr)) continue;
+
+                                var (rIdx, cIdx) = ParseCellReference(rAttr);
+                                string cellVal = null;
+                                string tAttr = (string)c.Attribute("t");
+
+                                if (tAttr == "s")
+                                {
+                                    string vStr = c.Element(sNs + "v")?.Value;
+                                    if (int.TryParse(vStr, out int sIdx) && sIdx >= 0 && sIdx < sharedStrings.Count)
+                                    {
+                                        cellVal = sharedStrings[sIdx];
+                                    }
+                                }
+                                else if (tAttr == "inlineStr")
+                                {
+                                    cellVal = c.Element(sNs + "is")?.Element(sNs + "t")?.Value;
+                                }
+                                else
+                                {
+                                    cellVal = c.Element(sNs + "v")?.Value;
+                                }
+
+                                if (!string.IsNullOrEmpty(cellVal))
+                                {
+                                    grid[(rIdx, cIdx)] = cellVal.Trim();
+                                }
+                            }
+                        }
+
+                        // Localizar cabeceras en la cuadrícula
+                        var headerPositions = new List<(int Row, int Col, string Title, string ColHeader)>();
+                        for (int r = 1; r <= 150; r++)
+                        {
+                            for (int c = 1; c <= 15; c++)
+                            {
+                                if (grid.TryGetValue((r, c), out string val) && !string.IsNullOrEmpty(val))
+                                {
+                                    string valLower = val.ToLowerInvariant();
+                                    if (valLower.Equals("nomenclatura") ||
+                                        valLower.Equals("uso") ||
+                                        valLower.Equals("código") ||
+                                        valLower.Equals("codigo") ||
+                                        valLower.Equals("cod") ||
+                                        valLower.Equals("grupo") ||
+                                        valLower.Equals("grupos") ||
+                                        valLower.Equals("clasificación") ||
+                                        valLower.Equals("clasificacion") ||
+                                        valLower.Equals("categoría") ||
+                                        valLower.Equals("categoria") ||
+                                        valLower.Equals("norma") ||
+                                        valLower.StartsWith("código") ||
+                                        valLower.StartsWith("codigo"))
+                                    {
+                                        string title = "";
+                                        if (r > 1 && grid.TryGetValue((r - 1, c), out string t1)) title = t1;
+                                        if (string.IsNullOrEmpty(title) && r > 1 && c > 1 && grid.TryGetValue((r - 1, c - 1), out string t2)) title = t2;
+
+                                        headerPositions.Add((r, c, title, val));
+                                    }
+                                }
+                            }
+                        }
+
+                        if (headerPositions.Count == 0 && parsedSets.Count == 0)
+                        {
+                            if (grid.TryGetValue((2, 1), out string _) || grid.TryGetValue((3, 1), out string _))
+                            {
+                                headerPositions.Add((2, 1, shInfo.Name ?? "Normas", "Nomenclatura"));
+                            }
+                        }
+
+                        for (int i = 0; i < headerPositions.Count; i++)
+                        {
+                            var pos = headerPositions[i];
+                            int headerRow = pos.Row;
+                            int codeCol = pos.Col;
+                            string title = pos.Title;
+                            string colHeader = pos.ColHeader;
+
+                            int nameCol = codeCol + 1;
+                            int factorCol = codeCol + 2;
+
+                            int pasillosCol = -1;
+                            int escalerasCol = -1;
+
+                            if (grid.TryGetValue((headerRow, codeCol + 3), out string h3) && (h3.IndexOf("Pasillo", StringComparison.OrdinalIgnoreCase) >= 0 || h3.IndexOf("Corredor", StringComparison.OrdinalIgnoreCase) >= 0))
+                                pasillosCol = codeCol + 3;
+                            if (grid.TryGetValue((headerRow, codeCol + 4), out string h4) && h4.IndexOf("Escalera", StringComparison.OrdinalIgnoreCase) >= 0)
+                                escalerasCol = codeCol + 4;
+
+                            var tempRows = new List<(string Code, string Name, double? Factor, double? Pasillos, double? Escaleras)>();
+                            int row = headerRow + 1;
+                            int emptyCount = 0;
+                            string lastCodeOrUso = "";
+
+                            while (row <= headerRow + 100 && emptyCount < 4)
+                            {
+                                grid.TryGetValue((row, codeCol), out string code);
+                                grid.TryGetValue((row, nameCol), out string name);
+                                grid.TryGetValue((row, factorCol), out string valFactorRaw);
+
+                                code = code?.Trim();
+                                name = name?.Trim() ?? "";
+
+                                if (string.IsNullOrEmpty(code) && string.IsNullOrEmpty(name) && string.IsNullOrEmpty(valFactorRaw))
+                                {
+                                    emptyCount++;
+                                    row++;
+                                    continue;
+                                }
+
+                                if (!string.IsNullOrEmpty(code) &&
+                                    (code.StartsWith("Tabla", StringComparison.OrdinalIgnoreCase) ||
+                                     code.StartsWith("TABLA", StringComparison.OrdinalIgnoreCase) ||
+                                     code.Equals("Nomenclatura", StringComparison.OrdinalIgnoreCase) ||
+                                     code.Equals("USO", StringComparison.OrdinalIgnoreCase) ||
+                                     code.Equals("Código", StringComparison.OrdinalIgnoreCase) ||
+                                     code.Equals("Codigo", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    break;
+                                }
+
+                                emptyCount = 0;
+
+                                if (!string.IsNullOrEmpty(code)) lastCodeOrUso = code;
+                                else code = lastCodeOrUso;
+
+                                if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(code)) name = code;
+
+                                double? factor = ParseDoubleNullable(valFactorRaw);
+                                double? pasillos = pasillosCol > 0 && grid.TryGetValue((row, pasillosCol), out string pStr) ? ParseDoubleNullable(pStr) : null;
+                                double? escaleras = escalerasCol > 0 && grid.TryGetValue((row, escalerasCol), out string eStr) ? ParseDoubleNullable(eStr) : null;
+
+                                tempRows.Add((code, name, factor, pasillos, escaleras));
+                                row++;
+                            }
+
+                            if (tempRows.Count > 0)
+                            {
+                                var samples = tempRows.Select(x => (x.Code, x.Name)).ToList();
+                                string normName = DetectNormTypeFromGrid(grid, shInfo.Name, headerRow, codeCol, colHeader, samples);
 
                                 var set = new NormSet { Name = normName };
                                 foreach (var item in tempRows)
@@ -550,116 +774,106 @@ namespace AutoCAD.SGH.Services
                             }
                         }
                     }
-                    catch { }
-                    finally
-                    {
-                        if (ws != null) Marshal.ReleaseComObject(ws);
-                    }
                 }
 
-                if (parsedSets.Count > 0)
-                {
-                    var nsrSet = parsedSets.FirstOrDefault(s => s.Name.Equals("NSR-10", StringComparison.OrdinalIgnoreCase));
-                    var nfpaSet = parsedSets.FirstOrDefault(s => s.Name.Equals("NFPA", StringComparison.OrdinalIgnoreCase));
-
-                    if (parsedSets.Count >= 2)
-                    {
-                        if (nsrSet == null && nfpaSet != null)
-                        {
-                            nsrSet = parsedSets.FirstOrDefault(s => s != nfpaSet);
-                            if (nsrSet != null) nsrSet.Name = "NSR-10";
-                        }
-                        else if (nfpaSet == null && nsrSet != null)
-                        {
-                            nfpaSet = parsedSets.FirstOrDefault(s => s != nsrSet);
-                            if (nfpaSet != null) nfpaSet.Name = "NFPA";
-                        }
-                        else if (nsrSet == null && nfpaSet == null)
-                        {
-                            nsrSet = parsedSets[0];
-                            nsrSet.Name = "NSR-10";
-                            nfpaSet = parsedSets[1];
-                            nfpaSet.Name = "NFPA";
-                        }
-                        else if (nsrSet != null && nfpaSet != null && nsrSet == nfpaSet)
-                        {
-                            var remaining = parsedSets.FirstOrDefault(s => s != nsrSet);
-                            if (remaining != null)
-                            {
-                                nfpaSet = remaining;
-                                nfpaSet.Name = "NFPA";
-                            }
-                        }
-
-                        HasNsrTable = nsrSet != null;
-                        HasNfpaTable = nfpaSet != null;
-
-                        NormsNSR10 = nsrSet ?? CreateDefaultNSR10();
-                        NormsNFPA = nfpaSet ?? CreateDefaultNFPA();
-                        PrimaryNormName = "NSR-10";
-                        IsMultiNormMode = true;
-                    }
-                    else
-                    {
-                        var singleSet = parsedSets[0];
-                        if (singleSet.Name.Equals("NFPA", StringComparison.OrdinalIgnoreCase))
-                        {
-                            HasNsrTable = false;
-                            HasNfpaTable = true;
-                            NormsNFPA = singleSet;
-                            NormsNSR10 = singleSet;
-                            PrimaryNormName = "NFPA";
-                            IsMultiNormMode = false;
-                        }
-                        else
-                        {
-                            HasNsrTable = true;
-                            HasNfpaTable = false;
-                            NormsNSR10 = singleSet;
-                            NormsNFPA = singleSet;
-                            PrimaryNormName = "NSR-10";
-                            IsMultiNormMode = false;
-                        }
-                    }
-
-                    LoadedNormsFilePath = excelPath;
-
-                    try
-                    {
-                        File.WriteAllText(GetConfigPath(), excelPath);
-                    }
-                    catch { }
-
-                    return true;
-                }
-
-                return false;
+                return parsedSets.Count > 0;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SGH LoadNormsFromExcel Error]: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[OpenXml Reader Exception]: {ex.Message}");
                 return false;
-            }
-            finally
-            {
-                if (wb != null) { try { wb.Close(false); } catch { } Marshal.ReleaseComObject(wb); }
-                if (xl != null) { try { xl.Quit(); } catch { } Marshal.ReleaseComObject(xl); }
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
-        private static string DetectNormType(Excel.Worksheet ws, int headerRow, int codeCol, string colHeader, List<(string Code, string Name)> sampleRows)
+        private static (int Row, int Col) ParseCellReference(string cellRef)
         {
-            if (ws != null)
+            int col = 0;
+            int row = 0;
+            int i = 0;
+            while (i < cellRef.Length && char.IsLetter(cellRef[i]))
             {
-                try
+                col = col * 26 + (char.ToUpperInvariant(cellRef[i]) - 'A' + 1);
+                i++;
+            }
+            while (i < cellRef.Length && char.IsDigit(cellRef[i]))
+            {
+                row = row * 10 + (cellRef[i] - '0');
+                i++;
+            }
+            return (row, col);
+        }
+
+        private static void ApplyParsedNormSets(List<NormSet> parsedSets, string excelPath)
+        {
+            if (parsedSets == null || parsedSets.Count == 0) return;
+
+            var nsrSet = parsedSets.FirstOrDefault(s => s.Name.Equals("NSR-10", StringComparison.OrdinalIgnoreCase));
+            var nfpaSet = parsedSets.FirstOrDefault(s => s.Name.Equals("NFPA", StringComparison.OrdinalIgnoreCase));
+
+            if (parsedSets.Count >= 2)
+            {
+                if (nsrSet == null && nfpaSet != null)
                 {
-                    string wsName = ws.Name ?? "";
-                    if (wsName.IndexOf("NFPA", StringComparison.OrdinalIgnoreCase) >= 0) return "NFPA";
-                    if (wsName.IndexOf("NSR", StringComparison.OrdinalIgnoreCase) >= 0) return "NSR-10";
+                    nsrSet = parsedSets.FirstOrDefault(s => s != nfpaSet);
+                    if (nsrSet != null) nsrSet.Name = "NSR-10";
                 }
-                catch { }
+                else if (nfpaSet == null && nsrSet != null)
+                {
+                    nfpaSet = parsedSets.FirstOrDefault(s => s != nsrSet);
+                    if (nfpaSet != null) nfpaSet.Name = "NFPA";
+                }
+                else if (nsrSet == null && nfpaSet == null)
+                {
+                    nsrSet = parsedSets[0];
+                    nsrSet.Name = "NSR-10";
+                    nfpaSet = parsedSets[1];
+                    nfpaSet.Name = "NFPA";
+                }
+
+                HasNsrTable = nsrSet != null;
+                HasNfpaTable = nfpaSet != null;
+
+                NormsNSR10 = nsrSet ?? CreateDefaultNSR10();
+                NormsNFPA = nfpaSet ?? CreateDefaultNFPA();
+                PrimaryNormName = "NSR-10";
+                IsMultiNormMode = true;
+            }
+            else
+            {
+                var singleSet = parsedSets[0];
+                if (singleSet.Name.Equals("NFPA", StringComparison.OrdinalIgnoreCase))
+                {
+                    HasNsrTable = false;
+                    HasNfpaTable = true;
+                    NormsNFPA = singleSet;
+                    PrimaryNormName = "NFPA";
+                    IsMultiNormMode = false;
+                }
+                else
+                {
+                    HasNsrTable = true;
+                    HasNfpaTable = false;
+                    NormsNSR10 = singleSet;
+                    PrimaryNormName = "NSR-10";
+                    IsMultiNormMode = false;
+                }
+            }
+
+            LoadedNormsFilePath = excelPath;
+
+            try
+            {
+                File.WriteAllText(GetConfigPath(), excelPath);
+            }
+            catch { }
+        }
+
+        private static string DetectNormTypeFromGrid(Dictionary<(int Row, int Col), string> grid, string sheetName, int headerRow, int codeCol, string colHeader, List<(string Code, string Name)> sampleRows)
+        {
+            if (!string.IsNullOrEmpty(sheetName))
+            {
+                if (sheetName.IndexOf("NFPA", StringComparison.OrdinalIgnoreCase) >= 0) return "NFPA";
+                if (sheetName.IndexOf("NSR", StringComparison.OrdinalIgnoreCase) >= 0) return "NSR-10";
             }
 
             if (!string.IsNullOrEmpty(colHeader))
@@ -674,18 +888,13 @@ namespace AutoCAD.SGH.Services
             {
                 for (int c = Math.Max(1, codeCol - 2); c <= codeCol + 4; c++)
                 {
-                    try
+                    if (grid.TryGetValue((r, c), out string cellText) && !string.IsNullOrEmpty(cellText))
                     {
-                        string cellText = (ws.Cells[r, c] as Excel.Range)?.Value2?.ToString()?.Trim() ?? "";
-                        if (!string.IsNullOrEmpty(cellText))
-                        {
-                            if (cellText.IndexOf("NFPA", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("7.3.1", StringComparison.OrdinalIgnoreCase) >= 0)
-                                return "NFPA";
-                            if (cellText.IndexOf("NSR", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("K.3.3", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("k.3.3", StringComparison.OrdinalIgnoreCase) >= 0)
-                                return "NSR-10";
-                        }
+                        if (cellText.IndexOf("NFPA", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("7.3.1", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "NFPA";
+                        if (cellText.IndexOf("NSR", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("K.3.3", StringComparison.OrdinalIgnoreCase) >= 0 || cellText.IndexOf("k.3.3", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "NSR-10";
                     }
-                    catch { }
                 }
             }
 
@@ -725,6 +934,128 @@ namespace AutoCAD.SGH.Services
 
             return colHeader.Equals("USO", StringComparison.OrdinalIgnoreCase) ? "NFPA" : "NSR-10";
         }
+
+        private static string DetectNormTypeFromCom(Excel.Worksheet ws, int headerRow, int codeCol, string colHeader, List<(string Code, string Name)> sampleRows)
+        {
+            if (ws != null)
+            {
+                try
+                {
+                    string wsName = ws.Name ?? "";
+                    if (wsName.IndexOf("NFPA", StringComparison.OrdinalIgnoreCase) >= 0) return "NFPA";
+                    if (wsName.IndexOf("NSR", StringComparison.OrdinalIgnoreCase) >= 0) return "NSR-10";
+                }
+                catch { }
+            }
+
+            return DetectNormTypeFromGrid(new Dictionary<(int Row, int Col), string>(), ws?.Name, headerRow, codeCol, colHeader, sampleRows);
+        }
+
+        /// <summary>
+        /// Obtiene la lista consolidada de grupos únicos de ocupación disponibles para la norma seleccionada (NSR-10 o NFPA).
+        /// </summary>
+        public static List<string> GetDistinctGroupNamesForNorm(string normName)
+        {
+            var result = new List<string>();
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                if (string.Equals(normName, "NFPA", StringComparison.OrdinalIgnoreCase))
+                {
+                    var nfpaGroups = NormsNFPA?.Groups != null && NormsNFPA.Groups.Count > 0
+                        ? NormsNFPA.Groups
+                        : CreateDefaultNFPA().Groups;
+
+                    foreach (var g in nfpaGroups ?? Enumerable.Empty<OccupancyGroupInfo>())
+                    {
+                        if (g == null) continue;
+                        string name = (g.Name ?? g.Code ?? "").Trim();
+                        if (!string.IsNullOrEmpty(name) && set.Add(name))
+                        {
+                            result.Add(name);
+                        }
+                    }
+
+                    if (result.Count == 0)
+                    {
+                        result = new List<string> { "Almacenamiento", "Mercantil", "Negocios", "Guarderías", "Detención y correccional", "Educacional", "Salud", "Industrial", "Residencial", "Reunión pública" };
+                    }
+                }
+                else
+                {
+                    var nsrGroups = NormsNSR10?.Groups != null && NormsNSR10.Groups.Count > 0
+                        ? NormsNSR10.Groups
+                        : CreateDefaultNSR10().Groups;
+
+                    // Extraer los grupos principales de NSR-10
+                    foreach (var g in nsrGroups ?? Enumerable.Empty<OccupancyGroupInfo>())
+                    {
+                        if (g == null) continue;
+                        string code = (g.Code ?? "").Trim();
+                        string name = (g.Name ?? "").Trim();
+                        string groupName = null;
+
+                        if (!string.IsNullOrEmpty(code) && code.Length == 1 && char.IsLetter(code[0]))
+                        {
+                            groupName = !string.IsNullOrEmpty(name) ? $"{name} ({code})" : code;
+                        }
+                        else if (!string.IsNullOrEmpty(code) && (code.StartsWith("C-") || code.StartsWith("I-") || code.StartsWith("R-") || code.StartsWith("L-")))
+                        {
+                            groupName = !string.IsNullOrEmpty(name) ? $"{name} ({code})" : code;
+                        }
+                        else if (!string.IsNullOrEmpty(name))
+                        {
+                            groupName = name;
+                        }
+
+                        if (!string.IsNullOrEmpty(groupName) && set.Add(groupName))
+                        {
+                            result.Add(groupName);
+                        }
+                    }
+
+                    if (result.Count == 0 || !result.Any(r => r.IndexOf("Residencial", StringComparison.OrdinalIgnoreCase) >= 0 || r.IndexOf("R-1", StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        result = new List<string>
+                        {
+                            "Almacenamiento (A)",
+                            "Comercial (C)",
+                            "Especial (E)",
+                            "Fabril e Industrial (F)",
+                            "Institucional (I)",
+                            "Lugares de Reunión (L)",
+                            "Mixto y Otros (M)",
+                            "Alta Peligrosidad (P)",
+                            "Residencial (R)",
+                            "Residencial (R-1)",
+                            "Residencial (R-2)",
+                            "Temporal y Misceláneo (T)"
+                        };
+                    }
+                }
+            }
+            catch
+            {
+                result = new List<string>
+                {
+                    "Almacenamiento (A)",
+                    "Comercial (C)",
+                    "Especial (E)",
+                    "Fabril e Industrial (F)",
+                    "Institucional (I)",
+                    "Lugares de Reunión (L)",
+                    "Mixto y Otros (M)",
+                    "Alta Peligrosidad (P)",
+                    "Residencial (R)",
+                    "Temporal y Misceláneo (T)"
+                };
+            }
+
+            return result;
+        }
+
+
 
         private static double? ParseDoubleNullable(object valObj)
         {
@@ -1196,30 +1527,37 @@ namespace AutoCAD.SGH.Services
 
         public static string GetCanonicalPisoKey(string piso)
         {
-            if (string.IsNullOrWhiteSpace(piso)) return "N1";
-
-            string clean = piso.Trim();
-
-            string norm = System.Text.RegularExpressions.Regex.Replace(clean, @"^(piso|nivel|nv|level)\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
-
-            if (int.TryParse(norm, out int n))
+            try
             {
-                return $"N{n}";
-            }
+                if (string.IsNullOrWhiteSpace(piso)) return "N1";
 
-            if (System.Text.RegularExpressions.Regex.IsMatch(norm, @"^[nN][-_\s]*\d+$"))
+                string clean = piso.Trim();
+
+                string norm = System.Text.RegularExpressions.Regex.Replace(clean, @"^(piso|nivel|nv|level)\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                if (int.TryParse(norm, out int n))
+                {
+                    return $"N{n}";
+                }
+
+                if (System.Text.RegularExpressions.Regex.IsMatch(norm, @"^[nN][-_\s]*\d+$"))
+                {
+                    string digits = System.Text.RegularExpressions.Regex.Match(norm, @"\d+").Value;
+                    return $"N{digits}";
+                }
+
+                if (System.Text.RegularExpressions.Regex.IsMatch(norm, @"^[sS](ub)?[-_\s]*\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    string digits = System.Text.RegularExpressions.Regex.Match(norm, @"\d+").Value;
+                    return $"S{digits}";
+                }
+
+                return norm.ToUpperInvariant();
+            }
+            catch
             {
-                string digits = System.Text.RegularExpressions.Regex.Match(norm, @"\d+").Value;
-                return $"N{digits}";
+                return (piso ?? "N1").Trim().ToUpperInvariant();
             }
-
-            if (System.Text.RegularExpressions.Regex.IsMatch(norm, @"^[sS](ub)?[-_\s]*\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-            {
-                string digits = System.Text.RegularExpressions.Regex.Match(norm, @"\d+").Value;
-                return $"S{digits}";
-            }
-
-            return norm.ToUpperInvariant();
         }
     }
 }

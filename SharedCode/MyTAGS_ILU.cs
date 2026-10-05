@@ -23,25 +23,25 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.ApplicationServices;
 #endif
 
-// Espacios de nombres necesarios para funcionalidades del sistema, Revit y la interfaz gr·fica
-using System.Linq; //LINQ(Language Integrated Query) es una caracterÌstica que permite realizar consultas sobre colecciones de datos de manera sencilla y eficiente.
+// Espacios de nombres necesarios para funcionalidades del sistema, Revit y la interfaz gr√°fica
+using System.Linq; //LINQ(Language Integrated Query) es una caracter√≠stica que permite realizar consultas sobre colecciones de datos de manera sencilla y eficiente.
 using Autodesk.Revit.Attributes;// Permite usar atributos como [Transaction]
 using Autodesk.Revit.DB;// Acceso a la base de datos de Revit (Elementos, Document, etc.)
 using Autodesk.Revit.UI;// Permite crear comandos externos y mostrar ventanas como TaskDialog
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms; // Para mostrar ventanas de Windows Forms
-//using RevitPlugin; // Namespace donde est· definida la ventana personalizada de selecciÛn de tag
+//using RevitPlugin; // Namespace donde est√° definida la ventana personalizada de selecci√≥n de tag
 using Autodesk.Revit.UI;
 
 
 namespace MiNamespace
 {
-    //Indica cu·ndo se inicia y se finaliza una transacciÛn.
+    //Indica cu√°ndo se inicia y se finaliza una transacci√≥n.
     [Transaction(TransactionMode.Manual)]
     public class MyTAGS_ILU : IExternalCommand
     {
-        // MÈtodo principal que se ejecuta cuando se llama el plugin desde Revit
+        // M√©todo principal que se ejecuta cuando se llama el plugin desde Revit
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             // Referencias al documento activo de Revit
@@ -63,7 +63,7 @@ namespace MiNamespace
             //   .Where(fs => fs.Category != null && fs.Category.Name.ToLower().Contains("tag"))
             //   .ToList();
 
-            // Si no hay ning˙n tag cargado, mostrar error y terminar
+            // Si no hay ning√∫n tag cargado, mostrar error y terminar
             if (!availableTags.Any())
             {
                 TaskDialog.Show("Error", "There are no lighting fixture tag types in the model.");
@@ -73,7 +73,7 @@ namespace MiNamespace
             // Obtener los nombres de los tipos de tags encontrados para mostrarlos en la ventana
             List<string> tagNames = availableTags.Select(t => t.Name).ToList();
 
-            // Mostrar la ventana para selecciÛn alguno de los tags cargados
+            // Mostrar la ventana para selecci√≥n alguno de los tags cargados
             TagSelectionWindow tagWindow = new TagSelectionWindow(tagNames);
             if (tagWindow.ShowDialog() != DialogResult.OK)
             {
@@ -107,37 +107,37 @@ namespace MiNamespace
                 TaskDialog.Show("Warning", "There are no lighting fixtures in the active view to tag.");
                 return Result.Cancelled;
             }
-            // Iniciar una transacciÛn para hacer cambios en el modelo
+            // Iniciar una transacci√≥n para hacer cambios en el modelo
             using (Transaction tx = new Transaction(doc, "Tag Lighting Fixtures"))
             {
                 tx.Start();
 
-                // Condicional para activar el tipo de tag si no est· activado
+                // Condicional para activar el tipo de tag si no est√° activado
                 if (!tagType.IsActive)
                 {
                     tagType.Activate();
                     doc.Regenerate(); // Actualiza el modelo para reflejar el cambio
                 }
 
-                // Obtener direcciÛn del "lado derecho" de la vista (para mover horizontalmente)
+                // Obtener direcci√≥n del "lado derecho" de la vista (para mover horizontalmente)
                 XYZ rightDir = uidoc.ActiveView.RightDirection;
-                // Obtener direcciÛn "hacia abajo" de la vista (para mover verticalmente)
+                // Obtener direcci√≥n "hacia abajo" de la vista (para mover verticalmente)
                 XYZ downDir = -uidoc.ActiveView.UpDirection;
 
                 // Recorrer cada luminaria encontrada
                 foreach (var luz in luces)
                 {
-                    // Asegurarse de que la luminaria tiene una ubicaciÛn puntual
+                    // Asegurarse de que la luminaria tiene una ubicaci√≥n puntual
                     if (luz.Location is LocationPoint location)
                     {
                         Reference luzRef = new Reference(luz);      // Crear referencia a la luminaria
-                        XYZ luzPos = location.Point;                // Obtener posiciÛn de la luminaria
+                        XYZ luzPos = location.Point;                // Obtener posici√≥n de la luminaria
 
                         // Calcular desplazamiento adaptable: 1m a la derecha y 0.5m hacia abajo, relativo a la vista
                         XYZ offset = (rightDir * 1.0) + (downDir * 0.5);
                         XYZ tagHeadPos = luzPos + offset;
 
-                        // Crear el tag con la posiciÛn desplazada
+                        // Crear el tag con la posici√≥n desplazada
                         IndependentTag newTag = IndependentTag.Create(
                             doc,
                             tagType.Id,
@@ -147,14 +147,14 @@ namespace MiNamespace
                             TagOrientation.Horizontal,
                             tagHeadPos);
 
-                        // Configurar el tag para que tenga una lÌnea de lÌder (como en la luminaria 1)
+                        // Configurar el tag para que tenga una l√≠nea de l√≠der (como en la luminaria 1)
                         newTag.HasLeader = true;
                         newTag.LeaderEndCondition = LeaderEndCondition.Free;
                         newTag.TagHeadPosition = tagHeadPos;
                     }
 
 
-                    // Si quieres mostrarla o incluirla como par·metro en el tag, aquÌ puedes usar luminariaAltura
+                    // Si quieres mostrarla o incluirla como par√°metro en el tag, aqu√≠ puedes usar luminariaAltura
 
                 }
                 // Confirmar todos los cambios en el modelo

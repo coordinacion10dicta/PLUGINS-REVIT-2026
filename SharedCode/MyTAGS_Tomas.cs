@@ -1,4 +1,4 @@
-﻿#if REVIT2020
+#if REVIT2020
 #define REVIT
 using Autodesk.Revit.ApplicationServices;
 #endif
@@ -435,21 +435,69 @@ namespace MiNamespace
                 return Result.Failed;
             }
 
-            // 3) Selección manual (clic sobre conduits)
-            IList<Reference> picks;
-            try
+            // 3) Selección manual (preselección, recuadro o clics individuales finalizando con ESC)
+            List<Reference> picks = new List<Reference>();
+            var conduitFilter = new ConduitPickFilter_Tomas();
+
+            var preSelected = uidoc.Selection.GetElementIds();
+            if (preSelected != null && preSelected.Count > 0)
             {
-                picks = uidoc.Selection.PickObjects(
-                    ObjectType.PointOnElement,
-                    new ConduitPickFilter_Tomas(),
-                    "Selecciona conduits (clics sucesivos). Pulsa ESC para terminar.");
-            }
-            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-            {
-                return Result.Cancelled;
+                foreach (var id in preSelected)
+                {
+                    Element el = doc.GetElement(id);
+                    if (el != null && conduitFilter.AllowElement(el))
+                    {
+                        picks.Add(new Reference(el));
+                    }
+                }
             }
 
-            if (picks == null || picks.Count == 0) return Result.Cancelled;
+            if (picks.Count == 0)
+            {
+                try
+                {
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        conduitFilter,
+                        "Arrastra un recuadro sobre los conduits (o haz clics individuales):");
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        foreach (var el in rectElements)
+                        {
+                            picks.Add(new Reference(el));
+                        }
+                    }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
+                catch { }
+            }
+
+            if (picks.Count == 0)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        Reference pick = uidoc.Selection.PickObject(
+                            ObjectType.PointOnElement,
+                            conduitFilter,
+                            "Selecciona conduits (clics sucesivos). Pulsa ESC para terminar y colocar tags.");
+                        if (pick != null)
+                        {
+                            picks.Add(pick);
+                        }
+                    }
+                    catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                    {
+                        break; // Al presionar ESC termina la selección y procede a taguear
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (picks.Count == 0) return Result.Cancelled;
 
             // 4) Crear tags en una sola transacción
             using (var tx = new Transaction(doc, "Tag Conduits (manual múltiple)"))
@@ -549,24 +597,71 @@ namespace MiNamespace
                 return Result.Failed;
             }
 
-            // 3) Selección de codos
-            IList<Reference> refs;
-            try
+            // 3) Selección de codos (preselección, recuadro o clics continuos finalizando con ESC)
+            List<Reference> refs = new List<Reference>();
+            var codoFilter = new CodoSelectionFilter();
+
+            var preSelectedCodos = uidoc.Selection.GetElementIds();
+            if (preSelectedCodos != null && preSelectedCodos.Count > 0)
             {
-                refs = uidoc.Selection.PickObjects(
-                    ObjectType.Element, new CodoSelectionFilter(),
-                    "Selecciona los codos a taguear y pulsa 'Finalizar'. (Esc para cancelar)");
+                foreach (var id in preSelectedCodos)
+                {
+                    Element el = doc.GetElement(id);
+                    if (el != null && codoFilter.AllowElement(el))
+                    {
+                        refs.Add(new Reference(el));
+                    }
+                }
             }
-            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+
+            if (refs.Count == 0)
             {
-                TaskDialog.Show("Cancelado", "No se seleccionaron codos.");
-                return Result.Cancelled;
+                try
+                {
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        codoFilter,
+                        "Arrastra un recuadro sobre los codos (o haz clics individuales):");
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        foreach (var el in rectElements)
+                        {
+                            refs.Add(new Reference(el));
+                        }
+                    }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
+                catch { }
+            }
+
+            if (refs.Count == 0)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        Reference pick = uidoc.Selection.PickObject(
+                            ObjectType.Element,
+                            codoFilter,
+                            "Selecciona codos a taguear (clics sucesivos). Pulsa ESC para terminar y colocar tags.");
+                        if (pick != null && !refs.Any(r => r.ElementId == pick.ElementId))
+                        {
+                            refs.Add(pick);
+                        }
+                    }
+                    catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                    {
+                        break; // Al presionar ESC termina la selección y procede
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
             }
 
             var codos = refs.Select(r => doc.GetElement(r)).OfType<FamilyInstance>().ToList();
             if (!codos.Any())
             {
-                TaskDialog.Show("Aviso", "No se seleccionaron codos.");
                 return Result.Cancelled;
             }
 

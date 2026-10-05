@@ -90,10 +90,11 @@ namespace AutoCAD.SGH.Services
             // Ordenar por Nivel (Piso) usando clave canónica y luego por Número de espacio numéricamente
             int ParseNum(string n) => int.TryParse(n?.Trim(), out int val) ? val : 999999;
 
-            return spaces
-                .OrderBy(s => OccupancyService.GetCanonicalPisoKey(s.Piso))
-                .ThenBy(s => ParseNum(s.Numero))
-                .ThenBy(s => s.Numero ?? string.Empty)
+            return (spaces ?? new List<SghSpace>())
+                .Where(s => s != null)
+                .OrderBy(s => OccupancyService.GetCanonicalPisoKey(s?.Piso))
+                .ThenBy(s => ParseNum(s?.Numero))
+                .ThenBy(s => s?.Numero ?? string.Empty)
                 .ToList();
         }
 
@@ -190,63 +191,88 @@ namespace AutoCAD.SGH.Services
                 return false;
             }
 
-            // 2. Desplegar diálogo de selección y actualización de normas Excel (NSR-10 / NFPA)
-            var normsDialog = new NormsSelectionDialog();
-            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalWindow(normsDialog);
-
-            if (!normsDialog.Confirmed)
+            SghReportModel model = null;
+            while (true)
             {
-                ed.WriteMessage("\n[SGH] Exportación cancelada por el usuario en el paso de selección de normas.");
-                return false;
+                // 2. Desplegar diálogo de selección y actualización de normas Excel (NSR-10 / NFPA)
+                var normsDialog = new NormsSelectionDialog();
+                Autodesk.AutoCAD.ApplicationServices.Application.ShowModalWindow(normsDialog);
+
+                if (!normsDialog.Confirmed)
+                {
+                    ed.WriteMessage("\n[SGH] Exportación cancelada por el usuario en el paso de selección de normas.");
+                    return false;
+                }
+
+                // 3. Desplegar diálogo asistente de informe y exportación SGH (Portada, Parámetros y Conclusiones)
+                var reportDialog = new SghReportDialog(spaces, drawingName);
+                Autodesk.AutoCAD.ApplicationServices.Application.ShowModalWindow(reportDialog);
+
+                if (reportDialog.Confirmed)
+                {
+                    model = reportDialog.Model;
+                    break;
+                }
+
+                // Si el usuario hace clic en Cancelar dentro del informe, regresa automáticamente a la pantalla de Selección de Normas
             }
 
-            // 3. Localizar plantilla
-            string templatePath = LocalizarPlantilla();
-            if (string.IsNullOrEmpty(templatePath) || !File.Exists(templatePath))
-            {
-                MessageBox.Show(
-                    $"No se encontró el archivo de plantilla '{TEMPLATE_FILE_NAME}'.\n\n" +
-                    "Verifique que la plantilla se encuentre en la carpeta 'Resources' del plugin.",
-                    "SGH - Plantilla no encontrada",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return false;
-            }
+            string outputPath = model.ExcelOutputPath;
+            string wordPath = model.WordOutputPath;
+            bool excelSuccess = false;
+            bool wordSuccess = false;
 
-            // 4. Seleccionar archivo de destino
-            string outputPath = SeleccionarSalida(drawingName);
-            if (string.IsNullOrEmpty(outputPath))
-            {
-                ed.WriteMessage("\n[SGH] Exportación cancelada por el usuario.");
-                return false;
-            }
-
-            dynamic xl = null;
-            dynamic wb = null;
-            dynamic ws = null;
-
+            // Mostrar rueda de carga azul pequeña mientras se generan y abren los entregables
+            SghLoadingWindow loadingWin = null;
             try
             {
-                // 4. Copiar plantilla al destino (la plantilla original nunca se altera)
-                File.Copy(templatePath, outputPath, overwrite: true);
+                loadingWin = new SghLoadingWindow();
+                loadingWin.Show();
+                System.Windows.Forms.Application.DoEvents();
 
-                // 5. Iniciar Excel mediante Late-Binding Dynamic para evitar errores de COM TypeLib QueryInterface
-                Type excelType = Type.GetTypeFromProgID("Excel.Application");
-                if (excelType == null)
+                // 4. Si se seleccionó exportar Excel
+            if (model.GenerateExcel)
+            {
+                string templatePath = LocalizarPlantilla();
+                if (string.IsNullOrEmpty(templatePath) || !File.Exists(templatePath))
                 {
                     MessageBox.Show(
-                        "No se encontró Microsoft Excel instalado en esta computadora.",
-                        "Error de Exportación SGH",
+                        $"No se encontró el archivo de plantilla '{TEMPLATE_FILE_NAME}'.\n\n" +
+                        "Verifique que la plantilla se encuentre en la carpeta 'Resources' del plugin.",
+                        "SGH - Plantilla no encontrada",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                     return false;
                 }
 
-                xl = Activator.CreateInstance(excelType);
-                xl.Visible = false;
-                xl.DisplayAlerts = false;
+                dynamic xl = null;
+                dynamic wb = null;
+                dynamic ws = null;
 
-                wb = xl.Workbooks.Open(outputPath);
+                try
+                {
+                    // Copiar plantilla al destino (la plantilla original nunca se altera)
+                    string outDir = Path.GetDirectoryName(outputPath);
+                    if (!string.IsNullOrEmpty(outDir) && !Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+                    File.Copy(templatePath, outputPath, overwrite: true);
+
+                    // Iniciar Excel mediante Late-Binding Dynamic para evitar errores de COM TypeLib QueryInterface
+                    Type excelType = Type.GetTypeFromProgID("Excel.Application");
+                    if (excelType == null)
+                    {
+                        MessageBox.Show(
+                            "No se encontró Microsoft Excel instalado en esta computadora.",
+                            "Error de Exportación SGH",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return false;
+                    }
+
+                    xl = Activator.CreateInstance(excelType);
+                    xl.Visible = false;
+                    xl.DisplayAlerts = false;
+
+                    wb = xl.Workbooks.Open(outputPath);
 
                 try
                 {
@@ -676,28 +702,8 @@ namespace AutoCAD.SGH.Services
                 wb.Save();
                 wb.Close(true);
 
+                excelSuccess = true;
                 ed.WriteMessage($"\n[SGH] Carga de ocupación exportada exitosamente: {outputPath}\n");
-
-                // Preguntar al usuario si desea abrir el archivo
-                var res = MessageBox.Show(
-                    $"La Carga de Ocupación ({totalSpaces} espacios) fue exportada exitosamente en:\n\n{outputPath}\n\n¿Desea abrir el archivo Excel ahora?",
-                    "SGH - Exportación Exitosa",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Information);
-
-                if (res == DialogResult.Yes)
-                {
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo(outputPath) { UseShellExecute = true });
-                    }
-                    catch (Exception exLaunch)
-                    {
-                        ed.WriteMessage($"\n[SGH] No se pudo abrir Excel automáticamente: {exLaunch.Message}");
-                    }
-                }
-
-                return true;
             }
             catch (Exception ex)
             {
@@ -707,7 +713,6 @@ namespace AutoCAD.SGH.Services
                     "Error de Exportación SGH",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                return false;
             }
             finally
             {
@@ -724,5 +729,57 @@ namespace AutoCAD.SGH.Services
                 GC.WaitForPendingFinalizers();
             }
         }
+
+        // 5. Si se seleccionó generar Informe Word
+        if (model.GenerateWord)
+        {
+            ed.WriteMessage("\n[SGH] Generando Informe Técnico de Seguridad Humana en Word...");
+            wordSuccess = WordReportService.GenerarInforme(model, spaces, wordPath, ed);
+        }
+
+            // 6. Apertura automática de ambos entregables (Excel y Word) directamente
+            if (excelSuccess || wordSuccess)
+            {
+                ed.WriteMessage("\n[SGH] ¡Entregables generados con éxito!\n");
+                if (excelSuccess) ed.WriteMessage($"[SGH] Archivo Excel: {outputPath}\n");
+                if (wordSuccess) ed.WriteMessage($"[SGH] Archivo Word: {wordPath}\n");
+
+                // Abrir automáticamente el archivo Excel
+                if (excelSuccess && File.Exists(outputPath))
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(outputPath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        ed.WriteMessage($"\n[SGH] No se pudo abrir automáticamente el archivo Excel: {ex.Message}\n");
+                    }
+                }
+
+                // Abrir automáticamente el archivo Word
+                if (wordSuccess && File.Exists(wordPath))
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(wordPath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        ed.WriteMessage($"\n[SGH] No se pudo abrir automáticamente el archivo Word: {ex.Message}\n");
+                    }
+                }
+            }
+
+            return excelSuccess || wordSuccess;
+        }
+        finally
+        {
+            if (loadingWin != null)
+            {
+                try { loadingWin.Close(); } catch { }
+            }
+        }
     }
+}
 }

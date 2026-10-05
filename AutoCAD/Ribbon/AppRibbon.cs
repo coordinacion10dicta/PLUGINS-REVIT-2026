@@ -26,7 +26,7 @@ namespace AutoCAD.Ribbon
         private const string CommandEditString = "SGHEDITAREA ";
 
         private const string ButtonExcelId = "DICTA_SGH_EXCEL_BTN";
-        private const string ButtonExcelText = "Exportar Excel";
+        private const string ButtonExcelText = "Generar Entregables";
         private const string CommandExcelString = "SGHEXPORTEXCEL ";
 
         public static void CreateRibbon()

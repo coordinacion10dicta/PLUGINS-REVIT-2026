@@ -30,11 +30,14 @@ namespace MiNamespace
                 return Result.Cancelled;
             }
 
+            OpcionNivelReferencia opcionNivel = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+            if (opcionNivel == null) return Result.Cancelled;
+
             // Ejecuta directamente el flujo de colocación interactiva por clic
-            int colocados = TaguearNivelesPorClic(uidoc, doc, view);
+            int colocados = TaguearNivelesPorClic(uidoc, doc, view, opcionNivel);
             if (colocados > 0)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Niveles de Elevación", $"Se colocaron {colocados} cotas de elevación.");
+                Autodesk.Revit.UI.TaskDialog.Show("Cotas de Nivel", $"Se colocaron {colocados} cotas de nivel ({opcionNivel.Descripcion}).");
             }
 
             return Result.Succeeded;
@@ -55,40 +58,85 @@ namespace MiNamespace
             }
 
             List<Reference> refs = new List<Reference>();
+            var filter = new CodoCambioDeNivelSelectionFilter();
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
             {
                 foreach (var id in preSelected)
                 {
                     Element el = doc.GetElement(id);
-                    if (el != null)
+                    if (el != null && filter.AllowElement(el))
                     {
                         refs.Add(new Reference(el));
                     }
                 }
             }
 
+            // Si no había preselección, permitir selección por ventana (rectángulo) o clics continuos finalizando con ESC
             if (refs.Count == 0)
             {
                 try
                 {
-                    var picked = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
-                        new CodoCambioDeNivelSelectionFilter(),
-                        "Selecciona los codos de cambio de nivel a taguear (ESC o Finalizar para terminar):"
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre los codos de cambio de nivel:"
                     );
-                    if (picked != null) refs.AddRange(picked);
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        foreach (var el in rectElements)
+                        {
+                            refs.Add(new Reference(el));
+                        }
+                    }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    return 0;
-                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
                 catch { }
+
+                if (refs.Count == 0)
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en codos de cambio de nivel (presiona ESC cuando termines para taguear):"
+                            );
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (!EsCodoCambioDeNivelValido(el, out string motivoRechazo))
+                                {
+                                    Autodesk.Revit.UI.TaskDialog.Show("Tag C.N - No Aplica",
+                                        $"El elemento seleccionado no aplica como cambio de nivel:\n\n{motivoRechazo}");
+                                    continue;
+                                }
+
+                                if (!refs.Any(r => r.ElementId == pick.ElementId))
+                                {
+                                    refs.Add(pick);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede a taguear
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                }
             }
 
             if (refs.Count == 0) return 0;
 
             int colocados = 0;
+            int omitidos = 0;
+            List<string> motivosOmitidos = new List<string>();
+
             using (Transaction tx = new Transaction(doc, "Tags C.N por Selección (Redes Secas)"))
             {
                 tx.Start();
@@ -106,9 +154,19 @@ namespace MiNamespace
                         Element el = doc.GetElement(r.ElementId);
                         if (el == null) continue;
 
-                        if (!EsCodoCambioDeNivelValido(el, out _)) continue;
+                        if (!EsCodoCambioDeNivelValido(el, out string motivo))
+                        {
+                            omitidos++;
+                            if (!string.IsNullOrEmpty(motivo) && !motivosOmitidos.Contains(motivo))
+                            {
+                                motivosOmitidos.Add(motivo);
+                            }
+                            continue;
+                        }
 
                         XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, r.GlobalPoint);
+                        if (puntoEje == null) continue;
+
                         XYZ tagHeadPos = puntoEje + new XYZ(0.8, 0.8, 0);
 
                         IndependentTag tag = IndependentTag.Create(
@@ -126,6 +184,17 @@ namespace MiNamespace
                             tag.HasLeader = true;
                             tag.LeaderEndCondition = LeaderEndCondition.Attached;
                             tag.TagHeadPosition = tagHeadPos;
+
+                            Parameter pCambio = el.LookupParameter("DC. TAG conduit accesorio")
+                                             ?? el.LookupParameter("cambio de nivel")
+                                             ?? el.LookupParameter("Cambio de Nivel")
+                                             ?? el.LookupParameter("C.N");
+
+                            if (pCambio != null && !pCambio.IsReadOnly && pCambio.StorageType == StorageType.String)
+                            {
+                                pCambio.Set("Cambio de nivel");
+                            }
+
                             colocados++;
                         }
                     }
@@ -133,6 +202,13 @@ namespace MiNamespace
                 }
 
                 tx.Commit();
+            }
+
+            if (omitidos > 0)
+            {
+                string detalle = string.Join("\n• ", motivosOmitidos);
+                Autodesk.Revit.UI.TaskDialog.Show("Tags C.N - Resumen",
+                    $"Se colocaron {colocados} tags 'C.N'.\n\nSe omitieron {omitidos} elementos no aplicables:\n• {detalle}");
             }
 
             return colocados;
@@ -656,9 +732,13 @@ namespace MiNamespace
         }
 
         /// <summary>
-        /// Valida si el elemento seleccionado es un accesorio MEP (Fitting / Codo) que representa un cambio de nivel real
-        /// (diferencia de elevación en Z >= 0.15 ft / 4.5 cm o inclinación vertical significativa).
-        /// Descarta tramos de tubos/conduits (MEPCurve), cajas de paso/aparatos, y tolerancias mínimas de pendiente (img 1).
+        /// Valida si el elemento seleccionado es un accesorio MEP (Fitting / Codo) que representa un cambio de nivel real.
+        /// Descarta:
+        /// 1. Tramos de tubos/conduits rectos (MEPCurve).
+        /// 2. Cajas de paso / derivación y conexiones directas a cajas.
+        /// 3. Codos de 90° (giros a escuadra / bajadas a tablero).
+        /// 4. "Caballitos" / saltos de cruce (donde el circuito salta temporalmente un obstáculo y regresa al mismo nivel original).
+        /// 5. Giros horizontales en planta y pendientes mínimas sin desnivel vertical real (< 4.5 cm).
         /// </summary>
         public static bool EsCodoCambioDeNivelValido(Element el, out string motivoRechazo)
         {
@@ -676,7 +756,7 @@ namespace MiNamespace
                 el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_CableTray ||
                 el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_DuctCurves)))
             {
-                motivoRechazo = "Debes seleccionar un codo / accesorio (Fitting), no un tramo de tubería o conduit.";
+                motivoRechazo = "Debes seleccionar un codo / accesorio (Fitting), no un tramo recto de tubería o conduit.";
                 return false;
             }
 
@@ -705,8 +785,21 @@ namespace MiNamespace
                 return false;
             }
 
-            // 3. Verificar si hay un cambio de altura / elevación Z real (mínimo 0.15 ft ≈ 4.5 cm / 50 mm)
-            // Esto evita que pendientes constructivas mínimas de tubos (como en img 1) se clasifiquen erróneamente como C.N.
+            // 3. Descartar Codos de 90° (giros a escuadra, bajadas a pared/tableros)
+            if (EsCodoDe90Grados(fiElem))
+            {
+                motivoRechazo = "No aplica: Es un codo a 90° (los cambios de nivel se realizan con codos de 15°, 30°, 45° o 60°).";
+                return false;
+            }
+
+            // 4. Descartar "Caballitos" / saltos de cruce (bypass temporal que esquiva un obstáculo y regresa al mismo nivel original)
+            if (EsCaballitoOSaltoDeCruce(fiElem))
+            {
+                motivoRechazo = "No aplica: Es un 'caballito' o salto de cruce (el conduit regresa a su nivel original).";
+                return false;
+            }
+
+            // 5. Verificar si hay un cambio de altura / elevación Z real (mínimo 0.15 ft ≈ 4.5 cm / 50 mm)
             double umbralMinimoZ = 0.15; // en pies (~4.5 cm)
             bool presentaCambioZ = false;
 
@@ -766,11 +859,186 @@ namespace MiNamespace
 
             if (!presentaCambioZ)
             {
-                motivoRechazo = "No aplica: el accesorio no presenta un cambio de nivel vertical significativo (diferencia de altura menor a 4.5 cm o giro horizontal en planta).";
+                motivoRechazo = "No presenta cambio de nivel ni desnivel vertical en Z (giro horizontal en planta o pendiente mínima).";
                 return false;
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Determina si un accesorio/codo es de 90 grados (giro a escuadra o bajada perpendicular).
+        /// </summary>
+        public static bool EsCodoDe90Grados(FamilyInstance fi)
+        {
+            if (fi == null) return false;
+
+            // 1. Verificar parámetro de ángulo si existe
+            Parameter pAng = fi.LookupParameter("Angle")
+                           ?? fi.LookupParameter("Ángulo")
+                           ?? fi.LookupParameter("Angulo")
+                           ?? fi.LookupParameter("Angle 1")
+                           ?? fi.LookupParameter("Angle 2");
+
+            if (pAng != null && pAng.StorageType == StorageType.Double)
+            {
+                double rad = pAng.AsDouble();
+                double deg = rad * (180.0 / Math.PI);
+                if (deg >= 80.0 && deg <= 100.0) return true;
+            }
+
+            // 2. Verificar ángulo geométrico entre conectores MEP
+            if (fi.MEPModel?.ConnectorManager != null)
+            {
+                var conns = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
+                if (conns.Count >= 2)
+                {
+                    XYZ v1 = conns[0].CoordinateSystem?.BasisZ;
+                    XYZ v2 = conns[1].CoordinateSystem?.BasisZ;
+                    if (v1 != null && v2 != null && !v1.IsZeroLength() && !v2.IsZeroLength())
+                    {
+                        double dot = Math.Max(-1.0, Math.Min(1.0, v1.Normalize().DotProduct(v2.Normalize())));
+                        double angDeg = Math.Acos(dot) * (180.0 / Math.PI);
+                        if (angDeg >= 80.0 && angDeg <= 100.0) return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determina si un codo forma parte de un "caballito" / salto de cruce (img 1).
+        /// Un caballito es un puente o salto temporal para esquivar una tubería/viga,
+        /// donde los tramos principales antes y después del salto continúan al MISMO nivel Z.
+        /// </summary>
+        public static bool EsCaballitoOSaltoDeCruce(FamilyInstance fi)
+        {
+            if (fi?.MEPModel?.ConnectorManager == null) return false;
+
+            var connectors = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
+            if (connectors.Count < 2) return false;
+
+            List<double> zExtremos = new List<double>();
+            double zCodo = fi.Location is LocationPoint lp ? lp.Point.Z : connectors[0].Origin.Z;
+
+            foreach (Connector conn in connectors)
+            {
+                double zExtremo = ObtenerElevacionTramoPrincipal(conn, fi.Id, 4, 10.0, out _);
+                if (!double.IsNaN(zExtremo))
+                {
+                    zExtremos.Add(zExtremo);
+                }
+            }
+
+            if (zExtremos.Count == 2)
+            {
+                double diffExtremos = Math.Abs(zExtremos[0] - zExtremos[1]);
+                double alturaSalto = Math.Abs(zCodo - zExtremos[0]);
+
+                // Si ambos extremos continúan en el MISMO nivel Z (diferencia < 2.5 cm / 0.08 ft)
+                // y el codo o salto tiene una diferencia vertical respecto a la línea principal
+                if (diffExtremos < 0.08 && (alturaSalto >= 0.10 || TieneInclinacionVertical(fi)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TieneInclinacionVertical(FamilyInstance fi)
+        {
+            if (fi?.MEPModel?.ConnectorManager == null) return false;
+            foreach (Connector c in fi.MEPModel.ConnectorManager.Connectors)
+            {
+                if (c.CoordinateSystem != null && Math.Abs(c.CoordinateSystem.BasisZ.Z) >= 0.15)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static double ObtenerElevacionTramoPrincipal(Connector startConn, ElementId originId, int maxProfundidad, double maxDistanciaFt, out ElementId levelId)
+        {
+            levelId = ElementId.InvalidElementId;
+            double distAcumulada = 0;
+            Connector currConn = startConn;
+            ElementId lastId = originId;
+
+            for (int step = 0; step < maxProfundidad; step++)
+            {
+                Connector nextStepConn = null;
+                foreach (Connector refConn in currConn.AllRefs)
+                {
+                    Element owner = refConn.Owner;
+                    if (owner == null || owner.Id == lastId) continue;
+
+                    if (owner is MEPCurve mepCurve)
+                    {
+                        if (mepCurve.ReferenceLevel != null)
+                        {
+                            levelId = mepCurve.ReferenceLevel.Id;
+                        }
+                        else if (mepCurve.LevelId != null && mepCurve.LevelId != ElementId.InvalidElementId)
+                        {
+                            levelId = mepCurve.LevelId;
+                        }
+
+                        if (mepCurve.Location is LocationCurve lc && lc.Curve != null)
+                        {
+                            double len = lc.Curve.Length;
+                            distAcumulada += len;
+                            XYZ p0 = lc.Curve.GetEndPoint(0);
+                            XYZ p1 = lc.Curve.GetEndPoint(1);
+
+                            // Si este tramo es horizontal y largo (> 2 ft) o sobrepasa la distancia del salto
+                            if (Math.Abs(p1.Z - p0.Z) < 0.05 && (len > 2.0 || distAcumulada > maxDistanciaFt))
+                            {
+                                return (p0.Z + p1.Z) / 2.0;
+                            }
+
+                            if (mepCurve.ConnectorManager != null)
+                            {
+                                foreach (Connector nextConn in mepCurve.ConnectorManager.Connectors)
+                                {
+                                    if (nextConn.Id != refConn.Id)
+                                    {
+                                        nextStepConn = nextConn;
+                                        lastId = mepCurve.Id;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (owner is FamilyInstance nextFi && nextFi.MEPModel?.ConnectorManager != null)
+                    {
+                        if (nextFi.LevelId != null && nextFi.LevelId != ElementId.InvalidElementId)
+                        {
+                            levelId = nextFi.LevelId;
+                        }
+
+                        lastId = nextFi.Id;
+                        foreach (Connector nextConn in nextFi.MEPModel.ConnectorManager.Connectors)
+                        {
+                            if (nextConn.Id != refConn.Id)
+                            {
+                                nextStepConn = nextConn;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (nextStepConn != null) break;
+                }
+
+                if (nextStepConn == null) break;
+                currConn = nextStepConn;
+            }
+
+            return double.NaN;
         }
 
         /// <summary>
@@ -836,77 +1104,1042 @@ namespace MiNamespace
         }
 
         /// <summary>
-        /// Flujo interactivo por clic para colocar cota de Nivel de Ubicación (Spot Elevation de proyecto / elevación absoluta).
+        /// Filtro de selección para elementos acotables en Cotas Alineadas:
+        /// Tramos MEP (Conduits, Tuberías, Bandejas, Ductos), Cajas y Tomas (ElectricalFixtures, etc.), Muros, Grids/Ejes.
         /// </summary>
-        public static int TaguearNivelDeUbicacion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        public class CotasAlineadasSelectionFilter : ISelectionFilter
         {
-            int colocados = 0;
-            ElementId spotTypeId = ObtenerTipoSpotElevation(doc);
-            SpotCollisionContext collisionCtx = SpotCollisionContext.BuildFromView(doc, view);
-
-            while (true)
+            public bool AllowElement(Element elem)
             {
-                Reference pickRef = null;
-                try
-                {
-                    pickRef = uidoc.Selection.PickObject(
-                        ObjectType.PointOnElement,
-                        "Clic en elemento para colocar Nivel de Ubicación (ESC para terminar)"
-                    );
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (pickRef == null) break;
-
-                Element el = doc.GetElement(pickRef.ElementId);
-                if (el == null) continue;
-
-                XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
-                Level nivelTecho = ObtenerNivelTecho(doc, view, el, puntoEje);
-
-                XYZ puntoUbicacion = null;
-                try
-                {
-                    puntoUbicacion = uidoc.Selection.PickPoint(
-                        ObjectSnapTypes.None,
-                        "Clic para ubicar la directriz del Nivel de Ubicación (o ESC para ubicación automática)"
-                    );
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    puntoUbicacion = null;
-                }
-
-                using (Transaction tx = new Transaction(doc, "Colocar Nivel de Ubicación"))
-                {
-                    tx.Start();
-
-                    SpotDimension spot = ColocarSpotElevation(
-                        doc, view, el, pickRef, puntoEje, puntoUbicacion, spotTypeId, nivelTecho, collisionCtx
-                    );
-
-                    if (spot != null)
-                    {
-                        colocados++;
-                    }
-
-                    tx.Commit();
-                }
+                if (elem == null || elem.Category == null) return false;
+                int catId = elem.Category.Id.IntegerValue;
+                return catId == (int)BuiltInCategory.OST_Conduit ||
+                       catId == (int)BuiltInCategory.OST_ConduitFitting ||
+                       catId == (int)BuiltInCategory.OST_ElectricalFixtures ||
+                       catId == (int)BuiltInCategory.OST_LightingDevices ||
+                       catId == (int)BuiltInCategory.OST_LightingFixtures ||
+                       catId == (int)BuiltInCategory.OST_ElectricalEquipment ||
+                       catId == (int)BuiltInCategory.OST_CommunicationDevices ||
+                       catId == (int)BuiltInCategory.OST_DataDevices ||
+                       catId == (int)BuiltInCategory.OST_PipeCurves ||
+                       catId == (int)BuiltInCategory.OST_PipeFitting ||
+                       catId == (int)BuiltInCategory.OST_CableTray ||
+                       catId == (int)BuiltInCategory.OST_DuctCurves ||
+                       catId == (int)BuiltInCategory.OST_Walls ||
+                       catId == (int)BuiltInCategory.OST_Grids ||
+                       catId == (int)BuiltInCategory.OST_StructuralColumns ||
+                       catId == (int)BuiltInCategory.OST_StructuralFraming;
             }
 
-            return colocados;
+            public bool AllowReference(Reference r, XYZ p) => true;
         }
 
         /// <summary>
-        /// Flujo interactivo por clic para colocar cotas de elevación (SpotDimension).
+        /// Flujo por selección múltiple para colocar Cotas Alineadas:
+        /// 1. Cotas de retranqueo/distancia de cada elemento a la cara del muro (e.g. 0.79, 0.79, 0.89).
+        /// 2. Cota en cadena continua entre los ejes de los elementos a lo largo del muro (e.g. 1.63, 1.16).
+        /// Soporta preselección, selección por recuadro y clics continuos finalizando con ESC.
+        /// </summary>
+        public static int TaguearCotasAlineadasPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            if (uidoc == null || doc == null || view == null) return 0;
+
+            List<Element> elementos = new List<Element>();
+            var filter = new CotasAlineadasSelectionFilter();
+
+            // 1. Preselección
+            var preSelected = uidoc.Selection.GetElementIds();
+            if (preSelected != null && preSelected.Count > 0)
+            {
+                foreach (var id in preSelected)
+                {
+                    Element e = doc.GetElement(id);
+                    if (e != null && filter.AllowElement(e))
+                    {
+                        elementos.Add(e);
+                    }
+                }
+            }
+
+            // 2. Selección por recuadro o clics continuos finalizando con ESC
+            if (elementos.Count == 0)
+            {
+                try
+                {
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                        filter,
+                        "Arrastra un recuadro sobre las tomas/conduits y muros a acotar:"
+                    );
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        elementos.AddRange(rectElements);
+                    }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
+                catch { }
+
+                if (elementos.Count == 0)
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                filter,
+                                "Clic en tomas/conduits o muros a acotar (presiona ESC cuando termines para colocar las cotas alineadas):"
+                            );
+                            if (pick != null)
+                            {
+                                Element e = doc.GetElement(pick.ElementId);
+                                if (e != null && !elementos.Any(x => x.Id == e.Id))
+                                {
+                                    elementos.Add(e);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break;
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (elementos.Count == 0) return 0;
+
+            return ProcesarCreacionCotasAlineadas(doc, view, elementos);
+        }
+
+        /// <summary>
+        /// Flujo automático que escanea la vista activa y coloca Cotas Alineadas (cadena intereje y distancia a muro).
+        /// </summary>
+        public static int TaguearCotasAlineadasTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            if (doc == null || view == null) return 0;
+
+            var categorias = new[]
+            {
+                BuiltInCategory.OST_Conduit,
+                BuiltInCategory.OST_ConduitFitting,
+                BuiltInCategory.OST_ElectricalFixtures,
+                BuiltInCategory.OST_LightingDevices,
+                BuiltInCategory.OST_LightingFixtures,
+                BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_CableTray,
+                BuiltInCategory.OST_DuctCurves
+            };
+
+            List<Element> mepElems = new List<Element>();
+            foreach (var cat in categorias)
+            {
+                var elems = new FilteredElementCollector(doc, view.Id)
+                    .OfCategory(cat)
+                    .WhereElementIsNotElementType()
+                    .ToElements();
+                mepElems.AddRange(elems);
+            }
+
+            if (mepElems.Count == 0) return 0;
+
+            return ProcesarCreacionCotasAlineadas(doc, view, mepElems);
+        }
+
+        /// <summary>
+        /// Método de compatibilidad para NivelDeUbicacion que delega a Cotas Alineadas.
+        /// </summary>
+        public static int TaguearNivelDeUbicacion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            return TaguearCotasAlineadasPorSeleccion(uidoc, doc, view);
+        }
+
+        private class ElementoAcotableInfo
+        {
+            public Element Elemento;
+            public XYZ Centro2D;
+            public XYZ PuntoExtremo;
+            public XYZ DirEje2D;
+            public Reference RefGeom;
+        }
+
+        /// <summary>
+        /// Procesa la creación de cotas alineadas:
+        /// 1. Cotas de retranqueo/distancia de cada elemento a la cara del muro (perpendiculares).
+        /// 2. Cadena horizontal continua entre los ejes de los elementos a lo largo del muro (intereje).
+        /// </summary>
+        private static int ProcesarCreacionCotasAlineadas(Document doc, Autodesk.Revit.DB.View view, List<Element> elementos)
+        {
+            if (doc == null || view == null || elementos == null || elementos.Count == 0) return 0;
+
+            DimensionType dimType = ObtenerOCrearTipoCotaAlineada(doc);
+            if (dimType == null) return 0;
+
+            // 1. Obtener todos los muros visibles en la vista o seleccionados
+            var murosEnVista = new FilteredElementCollector(doc, view.Id)
+                .OfCategory(BuiltInCategory.OST_Walls)
+                .WhereElementIsNotElementType()
+                .Cast<Wall>()
+                .ToList();
+
+            // 2. Extraer información geométrica y referencias de los elementos MEP / dispositivos seleccionados
+            List<ElementoAcotableInfo> itemsMep = new List<ElementoAcotableInfo>();
+            List<Wall> murosSeleccionados = new List<Wall>();
+            List<Grid> gridsSeleccionados = new List<Grid>();
+
+            foreach (var el in elementos)
+            {
+                if (el is Wall w)
+                {
+                    murosSeleccionados.Add(w);
+                    continue;
+                }
+                if (el is Grid g)
+                {
+                    gridsSeleccionados.Add(g);
+                    continue;
+                }
+
+                XYZ centro = null;
+                XYZ extremo = null;
+                XYZ dir = XYZ.BasisX;
+
+                if (el.Location is LocationCurve lc && lc.Curve != null)
+                {
+                    XYZ p0 = lc.Curve.GetEndPoint(0);
+                    XYZ p1 = lc.Curve.GetEndPoint(1);
+                    centro = new XYZ((p0.X + p1.X) * 0.5, (p0.Y + p1.Y) * 0.5, 0);
+                    extremo = new XYZ(p1.X, p1.Y, 0);
+                    XYZ v = new XYZ(p1.X - p0.X, p1.Y - p0.Y, 0);
+                    if (!v.IsZeroLength()) dir = v.Normalize();
+                }
+                else if (el.Location is LocationPoint lp)
+                {
+                    centro = new XYZ(lp.Point.X, lp.Point.Y, 0);
+                    extremo = centro;
+                }
+                else if (el is FamilyInstance fi)
+                {
+                    BoundingBoxXYZ bb = fi.get_BoundingBox(view);
+                    if (bb != null)
+                    {
+                        XYZ mid = (bb.Min + bb.Max) * 0.5;
+                        centro = new XYZ(mid.X, mid.Y, 0);
+                        extremo = centro;
+                    }
+                }
+
+                if (centro != null)
+                {
+                    Reference rEje = ObtenerReferenciaEjeElemento(el, view);
+                    if (rEje != null)
+                    {
+                        itemsMep.Add(new ElementoAcotableInfo
+                        {
+                            Elemento = el,
+                            Centro2D = centro,
+                            PuntoExtremo = extremo ?? centro,
+                            DirEje2D = dir,
+                            RefGeom = rEje
+                        });
+                    }
+                }
+            }
+
+            if (itemsMep.Count == 0 && (murosSeleccionados.Count >= 2 || gridsSeleccionados.Count >= 2))
+            {
+                return AcotarElementosReferenciaDirectos(doc, view, elementos, dimType);
+            }
+
+            if (itemsMep.Count == 0) return 0;
+
+            // 3. Agrupar elementos MEP por el muro de referencia más cercano
+            var murosCandidatos = murosSeleccionados.Count > 0 ? murosSeleccionados : murosEnVista;
+
+            var gruposPorMuro = new Dictionary<Wall, List<ElementoAcotableInfo>>();
+            List<ElementoAcotableInfo> itemsSinMuro = new List<ElementoAcotableInfo>();
+
+            foreach (var item in itemsMep)
+            {
+                Wall mejorMuro = null;
+                double menorDist = double.MaxValue;
+
+                foreach (var wall in murosCandidatos)
+                {
+                    if (wall.Location is LocationCurve wLc && wLc.Curve != null)
+                    {
+                        IntersectionResult proj = wLc.Curve.Project(item.Centro2D);
+                        if (proj != null)
+                        {
+                            XYZ pProj = new XYZ(proj.XYZPoint.X, proj.XYZPoint.Y, 0);
+                            double dist = item.Centro2D.DistanceTo(pProj);
+                            if (dist < menorDist && dist <= 16.0) // Hasta 5m de distancia al muro
+                            {
+                                menorDist = dist;
+                                mejorMuro = wall;
+                            }
+                        }
+                    }
+                }
+
+                if (mejorMuro != null)
+                {
+                    if (!gruposPorMuro.ContainsKey(mejorMuro))
+                    {
+                        gruposPorMuro[mejorMuro] = new List<ElementoAcotableInfo>();
+                    }
+                    gruposPorMuro[mejorMuro].Add(item);
+                }
+                else
+                {
+                    itemsSinMuro.Add(item);
+                }
+            }
+
+            int cotasCreadas = 0;
+
+            using (Transaction tx = new Transaction(doc, "Colocar Cotas Alineadas"))
+            {
+                tx.Start();
+
+                // 4. Procesar cada grupo asociado a un muro
+                foreach (var kvp in gruposPorMuro)
+                {
+                    Wall wall = kvp.Key;
+                    var grupoItems = kvp.Value;
+                    if (!(wall.Location is LocationCurve wLc) || !(wLc.Curve is Line lineWall)) continue;
+
+                    XYZ wp0 = new XYZ(lineWall.GetEndPoint(0).X, lineWall.GetEndPoint(0).Y, 0);
+                    XYZ wp1 = new XYZ(lineWall.GetEndPoint(1).X, lineWall.GetEndPoint(1).Y, 0);
+                    XYZ dirWall = (wp1 - wp0).Normalize();
+                    XYZ normWall = new XYZ(-dirWall.Y, dirWall.X, 0).Normalize(); // Vector normal al muro
+
+                    // Determinar hacia qué lado del muro están los elementos
+                    double dotSign = grupoItems.Average(it => (it.Centro2D - wp0).DotProduct(normWall));
+                    if (dotSign < 0) normWall = -normWall;
+
+                    // Referencia de la cara acabada del muro en ese lado
+                    Reference refCaraMuro = ObtenerReferenciaCaraAcabadaMuro(wall, view, normWall);
+
+                    // Agrupar elementos en columnas/ramas a lo largo del muro (tolerancia de 0.25 ft ≈ 7.5 cm para no duplicar cotas)
+                    var ordenadosPorX = grupoItems
+                        .OrderBy(it => (it.Centro2D - wp0).DotProduct(dirWall))
+                        .ToList();
+
+                    List<List<ElementoAcotableInfo>> columnas = new List<List<ElementoAcotableInfo>>();
+                    foreach (var it in ordenadosPorX)
+                    {
+                        double proyX = (it.Centro2D - wp0).DotProduct(dirWall);
+                        bool agregada = false;
+                        foreach (var col in columnas)
+                        {
+                            double colProyX = (col[0].Centro2D - wp0).DotProduct(dirWall);
+                            if (Math.Abs(proyX - colProyX) < 0.25)
+                            {
+                                col.Add(it);
+                                agregada = true;
+                                break;
+                            }
+                        }
+                        if (!agregada)
+                        {
+                            columnas.Add(new List<ElementoAcotableInfo> { it });
+                        }
+                    }
+
+                    double viewZ = view.GenLevel?.ProjectElevation ?? (view.Origin != null ? view.Origin.Z : lineWall.GetEndPoint(0).Z);
+
+                    // A) COTAS VERTICALES / PERPENDICULARES: Distancia de cada columna/rama a la cara del muro (e.g. 0.89, 0.79, 0.79, 0.89)
+                    List<Reference> carasMuro = ObtenerReferenciasCarasMuro(wall, view, normWall);
+
+                    foreach (var col in columnas)
+                    {
+                        try
+                        {
+                            // 1. Recopilar todas las referencias candidatas de todos los elementos de la columna
+                            List<Reference> colRefs = new List<Reference>();
+                            foreach (var it in col)
+                            {
+                                var refsElem = ObtenerReferenciasParalelasCandidatas(it.Elemento, view, normWall, dirWall);
+                                foreach (var r in refsElem)
+                                {
+                                    if (r != null && !colRefs.Contains(r)) colRefs.Add(r);
+                                }
+                            }
+
+                            // Si no se encontró ninguna referencia específica, añadir las RefGeom de los elementos
+                            foreach (var it in col)
+                            {
+                                if (it.RefGeom != null && !colRefs.Contains(it.RefGeom)) colRefs.Add(it.RefGeom);
+                            }
+
+                            if (carasMuro.Count == 0 || colRefs.Count == 0) continue;
+
+                            // 2. Calcular la posición geométrica de la línea de cota perpendicular
+                            double proyXProm = col.Average(it => (it.Centro2D - wp0).DotProduct(dirWall));
+                            double maxDistY = col.Max(it => (it.PuntoExtremo - wp0).DotProduct(normWall));
+
+                            // Punto base en la cara del muro
+                            XYZ pBaseCol = wp0 + dirWall * proyXProm;
+                            XYZ offsetLateral = -dirWall * 0.40; // ~12 cm a la izquierda del tramo
+
+                            XYZ dimStart = new XYZ(
+                                (pBaseCol + offsetLateral - normWall * 2.0).X,
+                                (pBaseCol + offsetLateral - normWall * 2.0).Y,
+                                viewZ
+                            );
+                            XYZ dimEnd = new XYZ(
+                                (pBaseCol + offsetLateral + normWall * (maxDistY + 5.0)).X,
+                                (pBaseCol + offsetLateral + normWall * (maxDistY + 5.0)).Y,
+                                viewZ
+                            );
+
+                            Line dimLinePerp = Line.CreateBound(dimStart, dimEnd);
+
+                            // 3. Probar la creación de cota con las referencias disponibles hasta que Revit acepte una
+                            bool cotaCreada = false;
+                            foreach (var rMuro in carasMuro)
+                            {
+                                foreach (var rCol in colRefs)
+                                {
+                                    try
+                                    {
+                                        ReferenceArray refArrPerp = new ReferenceArray();
+                                        refArrPerp.Append(rMuro);
+                                        refArrPerp.Append(rCol);
+
+                                        Dimension dimPerp = doc.Create.NewDimension(view, dimLinePerp, refArrPerp, dimType);
+                                        if (dimPerp != null)
+                                        {
+                                            AjustarPosicionTextoDimension(dimPerp);
+                                            cotasCreadas++;
+                                            cotaCreada = true;
+                                            break;
+                                        }
+                                    }
+                                    catch { }
+                                }
+                                if (cotaCreada) break;
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // B) COTA EN CADENA HORIZONTAL: Intereje continuo entre columnas a lo largo del muro (e.g. 1.60, 1.63, 1.16)
+                    if (columnas.Count >= 2)
+                    {
+                        try
+                        {
+                            ReferenceArray refArrChain = new ReferenceArray();
+                            double maxDistMuro = 0;
+
+                            foreach (var col in columnas)
+                            {
+                                // Tomar exactamente UNA referencia por columna (evitando segmentos 0.00)
+                                Reference rColChain = null;
+
+                                // Prioridad: Centerline de MEPCurve perpendicular al muro (corre a lo largo de normWall)
+                                var repMep = col.FirstOrDefault(it => it.Elemento is MEPCurve);
+                                if (repMep != null && repMep.RefGeom != null)
+                                {
+                                    rColChain = repMep.RefGeom;
+                                }
+
+                                // Si no hay MEPCurve o no tiene RefGeom, buscar CenterLeftRight / CenterFrontBack en FamilyInstance
+                                if (rColChain == null)
+                                {
+                                    foreach (var it in col)
+                                    {
+                                        if (it.Elemento is FamilyInstance fi)
+                                        {
+                                            try
+                                            {
+                                                var refsLR = fi.GetReferences(FamilyInstanceReferenceType.CenterLeftRight);
+                                                if (refsLR != null && refsLR.Count > 0) { rColChain = refsLR[0]; break; }
+                                                var refsFB = fi.GetReferences(FamilyInstanceReferenceType.CenterFrontBack);
+                                                if (refsFB != null && refsFB.Count > 0) { rColChain = refsFB[0]; break; }
+                                            }
+                                            catch { }
+                                        }
+                                    }
+                                }
+
+                                if (rColChain == null)
+                                {
+                                    rColChain = col[0].RefGeom;
+                                }
+
+                                if (rColChain != null)
+                                {
+                                    refArrChain.Append(rColChain);
+                                }
+
+                                double distCol = col.Max(it => (it.PuntoExtremo - wp0).DotProduct(normWall));
+                                if (distCol > maxDistMuro) maxDistMuro = distCol;
+                            }
+
+                            if (refArrChain.Size >= 2)
+                            {
+                                double distOffsetCota = maxDistMuro + 0.85; // 0.85 ft (~25 cm) por encima de las tomas/conduits
+
+                                var colCentral = columnas[columnas.Count / 2];
+                                double proyLong = (colCentral[0].Centro2D - wp0).DotProduct(dirWall);
+                                XYZ posBaseCadena = new XYZ(
+                                    wp0.X + dirWall.X * proyLong + normWall.X * distOffsetCota,
+                                    wp0.Y + dirWall.Y * proyLong + normWall.Y * distOffsetCota,
+                                    viewZ
+                                );
+
+                                XYZ chainStart = posBaseCadena - dirWall * 30.0;
+                                XYZ chainEnd = posBaseCadena + dirWall * 30.0;
+
+                                Line dimLineChain = Line.CreateBound(chainStart, chainEnd);
+                                Dimension dimChain = doc.Create.NewDimension(view, dimLineChain, refArrChain, dimType);
+                                if (dimChain != null)
+                                {
+                                    AjustarPosicionTextoDimension(dimChain);
+                                    cotasCreadas++;
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                // 5. Procesar elementos sin muro (cadenas entre elementos paralelos en espacio abierto)
+                if (itemsSinMuro.Count >= 2)
+                {
+                    try
+                    {
+                        var dirPrincipal = itemsSinMuro[0].DirEje2D;
+                        var dirPerp = new XYZ(-dirPrincipal.Y, dirPrincipal.X, 0).Normalize();
+
+                        var ordenadosPorPerp = itemsSinMuro
+                            .OrderBy(it => it.Centro2D.DotProduct(dirPerp))
+                            .ToList();
+
+                        // Agrupar elementos paralelos que compartan el mismo eje (evitar 0.00)
+                        List<List<ElementoAcotableInfo>> lineasParalelas = new List<List<ElementoAcotableInfo>>();
+                        foreach (var it in ordenadosPorPerp)
+                        {
+                            double proy = it.Centro2D.DotProduct(dirPerp);
+                            bool agregada = false;
+                            foreach (var lp in lineasParalelas)
+                            {
+                                double lpProy = lp[0].Centro2D.DotProduct(dirPerp);
+                                if (Math.Abs(proy - lpProy) < 0.25)
+                                {
+                                    lp.Add(it);
+                                    agregada = true;
+                                    break;
+                                }
+                            }
+                            if (!agregada)
+                            {
+                                lineasParalelas.Add(new List<ElementoAcotableInfo> { it });
+                            }
+                        }
+
+                        if (lineasParalelas.Count >= 2)
+                        {
+                            ReferenceArray refArrOpen = new ReferenceArray();
+                            foreach (var lp in lineasParalelas)
+                            {
+                                var rep = lp.FirstOrDefault(it => it.Elemento is MEPCurve) ?? lp.First();
+                                if (rep.RefGeom != null)
+                                {
+                                    refArrOpen.Append(rep.RefGeom);
+                                }
+                            }
+
+                            if (refArrOpen.Size >= 2)
+                            {
+                                XYZ centroProm = new XYZ(
+                                    lineasParalelas.Average(lp => lp[0].Centro2D.X),
+                                    lineasParalelas.Average(lp => lp[0].Centro2D.Y),
+                                    0
+                                );
+
+                                XYZ pStart = (centroProm + dirPrincipal * 1.5) - dirPerp * 15.0;
+                                XYZ pEnd = (centroProm + dirPrincipal * 1.5) + dirPerp * 15.0;
+
+                                Line dimLineOpen = Line.CreateBound(pStart, pEnd);
+                                Dimension dimOpen = doc.Create.NewDimension(view, dimLineOpen, refArrOpen, dimType);
+                                if (dimOpen != null)
+                                {
+                                    AjustarPosicionTextoDimension(dimOpen);
+                                    cotasCreadas++;
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                tx.Commit();
+            }
+
+            return cotasCreadas;
+        }
+
+        private static int AcotarElementosReferenciaDirectos(Document doc, Autodesk.Revit.DB.View view, List<Element> refElements, DimensionType dimType)
+        {
+            if (refElements == null || refElements.Count < 2) return 0;
+            int creados = 0;
+            using (Transaction tx = new Transaction(doc, "Colocar Cotas Alineadas"))
+            {
+                tx.Start();
+                try
+                {
+                    ReferenceArray refArray = new ReferenceArray();
+                    List<XYZ> centros = new List<XYZ>();
+
+                    foreach (var e in refElements)
+                    {
+                        Reference r = null;
+                        XYZ pt = null;
+                        if (e is Wall w)
+                        {
+                            r = ObtenerReferenciaCaraAcabadaMuro(w, view, XYZ.BasisX) ?? ObtenerReferenciaCaraAcabadaMuro(w, view, XYZ.BasisY);
+                            pt = (w.Location as LocationCurve)?.Curve?.Evaluate(0.5, true);
+                        }
+                        else if (e is Grid g)
+                        {
+                            r = ObtenerReferenciaGrid(g, view);
+                            pt = (g.Curve as Line)?.Evaluate(0.5, true);
+                        }
+                        else
+                        {
+                            r = ObtenerReferenciaEjeElemento(e, view);
+                            pt = (e.Location as LocationPoint)?.Point ?? (e.Location as LocationCurve)?.Curve?.Evaluate(0.5, true);
+                        }
+
+                        if (r != null && pt != null)
+                        {
+                            refArray.Append(r);
+                            centros.Add(pt);
+                        }
+                    }
+
+                    if (refArray.Size >= 2 && centros.Count >= 2)
+                    {
+                        XYZ c0 = centros[0];
+                        XYZ c1 = centros[1];
+                        XYZ dir = (c1 - c0).Normalize();
+                        if (!dir.IsZeroLength())
+                        {
+                            XYZ mid = (c0 + c1) * 0.5;
+                            XYZ pStart = mid - dir * 10.0;
+                            XYZ pEnd = mid + dir * 10.0;
+                            Line line = Line.CreateBound(pStart, pEnd);
+                            Dimension dim = doc.Create.NewDimension(view, line, refArray, dimType);
+                            if (dim != null)
+                            {
+                                AjustarPosicionTextoDimension(dim);
+                                creados++;
+                            }
+                        }
+                    }
+                }
+                catch { }
+                tx.Commit();
+            }
+            return creados;
+        }
+
+        /// <summary>
+        /// Ajusta la posición de texto en segmentos de cota pequeños para evitar solapamientos.
+        /// </summary>
+        private static void AjustarPosicionTextoDimension(Dimension dim)
+        {
+            try
+            {
+                if (dim == null) return;
+                if (dim.NumberOfSegments > 0)
+                {
+                    for (int i = 0; i < dim.NumberOfSegments; i++)
+                    {
+                        DimensionSegment seg = dim.Segments.get_Item(i);
+                        if (seg != null && seg.Value.HasValue && seg.Value.Value < 0.6) // Menos de 18 cm
+                        {
+                            XYZ currPos = seg.TextPosition;
+                            XYZ lineDir = (dim.Curve as Line)?.Direction ?? XYZ.BasisY;
+                            seg.TextPosition = currPos + lineDir * (i % 2 == 0 ? 0.35 : -0.35);
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Obtiene o configura automáticamente un tipo de cota lineal limpio con altura de texto estándar 2.5 mm.
+        /// </summary>
+        public static DimensionType ObtenerOCrearTipoCotaAlineada(Document doc)
+        {
+            try
+            {
+                var dimTypes = new FilteredElementCollector(doc)
+                    .OfClass(typeof(DimensionType))
+                    .Cast<DimensionType>()
+                    .Where(t => t.StyleType == DimensionStyleType.Linear || t.StyleType == DimensionStyleType.LinearFixed)
+                    .ToList();
+
+                // 1. Buscar si ya existe "DC - Cotas Alineadas" o "Diagonal - 2.5mm" o "Diagonal - 2mm"
+                var exacto = dimTypes.FirstOrDefault(t =>
+                    string.Equals(t.Name.Trim(), "DC - Cotas Alineadas", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(t.Name.Trim(), "DC - Cota Alineada", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(t.Name.Trim(), "Diagonal - 2.5mm", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(t.Name.Trim(), "Diagonal - 2.0mm", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(t.Name.Trim(), "Diagonal - 2mm", StringComparison.OrdinalIgnoreCase));
+
+                if (exacto != null) return exacto;
+
+                // 2. Buscar cualquier tipo limpio con "2.5mm" o "2mm" o "Diagonal"
+                var pref = dimTypes.FirstOrDefault(t =>
+                    (t.Name.IndexOf("2.5", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     t.Name.IndexOf("2mm", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     t.Name.IndexOf("Diagonal", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                    t.Name.IndexOf("Grande", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    t.Name.IndexOf("3.5", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    t.Name.IndexOf("5mm", StringComparison.OrdinalIgnoreCase) < 0);
+
+                if (pref != null) return pref;
+
+                var alt = dimTypes.FirstOrDefault(t =>
+                    t.Name.IndexOf("Linear", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    t.Name.IndexOf("Cota", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                return alt ?? dimTypes.FirstOrDefault();
+            }
+            catch { return null; }
+        }
+
+        public static DimensionType ObtenerTipoCotaAlineada(Document doc)
+        {
+            return ObtenerOCrearTipoCotaAlineada(doc);
+        }
+
+        public static Reference ObtenerReferenciaEjeElemento(Element elem, Autodesk.Revit.DB.View view)
+        {
+            try
+            {
+                Options opt = new Options { ComputeReferences = true, View = view, IncludeNonVisibleObjects = true };
+                GeometryElement geom = elem.get_Geometry(opt);
+                if (geom != null)
+                {
+                    Reference r = BuscarReferenciaEnGeometria(geom);
+                    if (r != null) return r;
+                }
+
+                if (elem is FamilyInstance fi && fi.MEPModel?.ConnectorManager != null)
+                {
+                    foreach (Connector conn in fi.MEPModel.ConnectorManager.Connectors)
+                    {
+                        foreach (Connector refConn in conn.AllRefs)
+                        {
+                            if (refConn.Owner is MEPCurve mep && mep.Id != elem.Id)
+                            {
+                                Reference rMep = ObtenerReferenciaEjeElemento(mep, view);
+                                if (rMep != null) return rMep;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private static Reference BuscarReferenciaEnGeometria(GeometryElement geom)
+        {
+            foreach (GeometryObject obj in geom)
+            {
+                if (obj is Line line && line.Reference != null)
+                {
+                    return line.Reference;
+                }
+                if (obj is Solid solid)
+                {
+                    foreach (Face face in solid.Faces)
+                    {
+                        if (face.Reference != null) return face.Reference;
+                    }
+                }
+                if (obj is GeometryInstance gi)
+                {
+                    GeometryElement instGeom = gi.GetInstanceGeometry();
+                    if (instGeom != null)
+                    {
+                        Reference r = BuscarReferenciaEnGeometria(instGeom);
+                        if (r != null) return r;
+                    }
+                    GeometryElement symGeom = gi.GetSymbolGeometry();
+                    if (symGeom != null)
+                    {
+                        Reference r = BuscarReferenciaEnGeometria(symGeom);
+                        if (r != null) return r;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static List<Reference> ObtenerReferenciasCarasMuro(Wall wall, Autodesk.Revit.DB.View view, XYZ normWall)
+        {
+            List<Reference> res = new List<Reference>();
+            if (wall == null) return res;
+
+            try
+            {
+                var extFaces = HostObjectUtils.GetSideFaces(wall, ShellLayerType.Exterior);
+                var intFaces = HostObjectUtils.GetSideFaces(wall, ShellLayerType.Interior);
+                var allFaces = new List<Reference>();
+                if (extFaces != null) allFaces.AddRange(extFaces);
+                if (intFaces != null) allFaces.AddRange(intFaces);
+
+                List<Tuple<Reference, double>> valoradas = new List<Tuple<Reference, double>>();
+                foreach (var rFace in allFaces)
+                {
+                    try
+                    {
+                        GeometryObject geomObj = wall.GetGeometryObjectFromReference(rFace);
+                        if (geomObj is PlanarFace pf)
+                        {
+                            double dot = pf.FaceNormal.DotProduct(normWall);
+                            valoradas.Add(Tuple.Create(rFace, dot));
+                        }
+                    }
+                    catch { }
+                }
+
+                // Ordenar: primero las caras con normal apuntando hacia los elementos (dot > 0), luego las demás
+                foreach (var item in valoradas.OrderByDescending(x => x.Item2))
+                {
+                    if (!res.Contains(item.Item1)) res.Add(item.Item1);
+                }
+
+                if (res.Count == 0 && allFaces.Count > 0)
+                {
+                    res.AddRange(allFaces);
+                }
+
+                // Fallback a geometría directa
+                Options opt = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine, IncludeNonVisibleObjects = true };
+                GeometryElement geom = wall.get_Geometry(opt);
+                if (geom != null)
+                {
+                    foreach (GeometryObject obj in geom)
+                    {
+                        if (obj is Solid solid)
+                        {
+                            foreach (Face face in solid.Faces)
+                            {
+                                if (face is PlanarFace pf && pf.Reference != null)
+                                {
+                                    if (Math.Abs(pf.FaceNormal.DotProduct(normWall)) > 0.40)
+                                    {
+                                        if (!res.Contains(pf.Reference)) res.Add(pf.Reference);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return res;
+        }
+
+        public static List<Reference> ObtenerReferenciasParalelasCandidatas(Element elem, Autodesk.Revit.DB.View view, XYZ normWall, XYZ dirWall)
+        {
+            List<Reference> candidatas = new List<Reference>();
+            if (elem == null) return candidatas;
+
+            try
+            {
+                // 1. Si es FamilyInstance (caja, dispositivo, accesorio/fitting)
+                if (elem is FamilyInstance fi)
+                {
+                    var refTypes = new[]
+                    {
+                        FamilyInstanceReferenceType.CenterFrontBack,
+                        FamilyInstanceReferenceType.CenterLeftRight,
+                        FamilyInstanceReferenceType.Front,
+                        FamilyInstanceReferenceType.Back,
+                        FamilyInstanceReferenceType.Left,
+                        FamilyInstanceReferenceType.Right,
+                        FamilyInstanceReferenceType.StrongReference,
+                        FamilyInstanceReferenceType.WeakReference
+                    };
+
+                    foreach (var rt in refTypes)
+                    {
+                        try
+                        {
+                            var refs = fi.GetReferences(rt);
+                            if (refs != null)
+                            {
+                                foreach (var r in refs)
+                                {
+                                    if (r != null && !candidatas.Contains(r)) candidatas.Add(r);
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    Options optFine = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine, IncludeNonVisibleObjects = true };
+                    GeometryElement geom = fi.get_Geometry(optFine);
+                    if (geom != null)
+                    {
+                        BuscarReferenciasParalelasEnGeometria(geom, normWall, dirWall, candidatas);
+                    }
+                }
+                // 2. Si es MEPCurve (Conduit, Tubo, etc.)
+                else if (elem is MEPCurve mep)
+                {
+                    Options optFine = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine, IncludeNonVisibleObjects = true };
+                    GeometryElement geom = mep.get_Geometry(optFine);
+                    if (geom != null)
+                    {
+                        BuscarReferenciasParalelasEnGeometria(geom, normWall, dirWall, candidatas);
+                    }
+
+                    if (mep.ConnectorManager != null)
+                    {
+                        foreach (Connector conn in mep.ConnectorManager.Connectors)
+                        {
+                            foreach (Connector refConn in conn.AllRefs)
+                            {
+                                if (refConn.Owner != null && refConn.Owner.Id != elem.Id)
+                                {
+                                    var subRefs = ObtenerReferenciasParalelasCandidatas(refConn.Owner, view, normWall, dirWall);
+                                    foreach (var sr in subRefs)
+                                    {
+                                        if (sr != null && !candidatas.Contains(sr)) candidatas.Add(sr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Options optFine = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine, IncludeNonVisibleObjects = true };
+                    GeometryElement geom = elem.get_Geometry(optFine);
+                    if (geom != null)
+                    {
+                        BuscarReferenciasParalelasEnGeometria(geom, normWall, dirWall, candidatas);
+                    }
+                }
+            }
+            catch { }
+
+            return candidatas;
+        }
+
+        private static void BuscarReferenciasParalelasEnGeometria(GeometryElement geom, XYZ normWall, XYZ dirWall, List<Reference> candidatas)
+        {
+            if (geom == null) return;
+            foreach (GeometryObject obj in geom)
+            {
+                if (obj is Solid solid)
+                {
+                    foreach (Face face in solid.Faces)
+                    {
+                        if (face is PlanarFace pf && pf.Reference != null)
+                        {
+                            if (Math.Abs(pf.FaceNormal.DotProduct(normWall)) > 0.50)
+                            {
+                                if (!candidatas.Contains(pf.Reference)) candidatas.Add(pf.Reference);
+                            }
+                        }
+                    }
+                }
+                else if (obj is Line line && line.Reference != null)
+                {
+                    if (Math.Abs(line.Direction.DotProduct(dirWall)) > 0.50)
+                    {
+                        if (!candidatas.Contains(line.Reference)) candidatas.Add(line.Reference);
+                    }
+                }
+                else if (obj is GeometryInstance gi)
+                {
+                    try
+                    {
+                        GeometryElement symGeom = gi.GetSymbolGeometry();
+                        if (symGeom != null) BuscarReferenciasParalelasEnGeometria(symGeom, normWall, dirWall, candidatas);
+                        GeometryElement instGeom = gi.GetInstanceGeometry();
+                        if (instGeom != null) BuscarReferenciasParalelasEnGeometria(instGeom, normWall, dirWall, candidatas);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public static Reference ObtenerReferenciaExtremoParaCotaMuro(Element elem, Autodesk.Revit.DB.View view, XYZ normWall)
+        {
+            try
+            {
+                XYZ dirWall = new XYZ(-normWall.Y, normWall.X, 0).Normalize();
+                var cands = ObtenerReferenciasParalelasCandidatas(elem, view, normWall, dirWall);
+                if (cands.Count > 0) return cands[0];
+            }
+            catch { }
+            return null;
+        }
+
+        public static Reference ObtenerReferenciaCaraAcabadaMuro(Wall wall, Autodesk.Revit.DB.View view, XYZ dirNormalCota)
+        {
+            try
+            {
+                var caras = ObtenerReferenciasCarasMuro(wall, view, dirNormalCota);
+                if (caras.Count > 0) return caras[0];
+            }
+            catch { }
+            return null;
+        }
+
+        public static Reference ObtenerReferenciaGrid(Grid grid, Autodesk.Revit.DB.View view)
+        {
+            try
+            {
+                Options opt = new Options { ComputeReferences = true, View = view, IncludeNonVisibleObjects = true };
+                GeometryElement geom = grid.get_Geometry(opt);
+                if (geom != null)
+                {
+                    foreach (GeometryObject obj in geom)
+                    {
+                        if (obj is Line line && line.Reference != null)
+                        {
+                            return line.Reference;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>
+        /// Flujo interactivo por clic para colocar Cotas de Nivel (SpotDimension).
         /// Clic 1: Selecciona la tubería/red.
         /// Clic 2 (opcional): Posición personalizada de la cota con directriz (ESC para posición automática).
         /// </summary>
-        public static int TaguearNivelesPorClic(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        public static int TaguearNivelesPorClic(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, OpcionNivelReferencia opcionNivel = null)
         {
+            if (uidoc == null || doc == null || view == null) return 0;
+
+            if (opcionNivel == null)
+            {
+                opcionNivel = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+                if (opcionNivel == null) return 0;
+            }
+
             int colocados = 0;
             var filter = new MepElementSelectionFilter();
 
@@ -922,7 +2155,7 @@ namespace MiNamespace
                     pickRef = uidoc.Selection.PickObject(
                         ObjectType.PointOnElement,
                         filter,
-                        "Clic en tubería o conducto para colocar Nivel de Elevación (ESC para terminar)"
+                        "Clic en tubería o conducto para colocar Cota de Nivel (ESC para terminar)"
                     );
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -937,15 +2170,15 @@ namespace MiNamespace
 
                 if (!EsTuberiaHorizontalSinPendiente(el, out _, out _))
                 {
-                    Autodesk.Revit.UI.TaskDialog.Show("Nivel de Elevación", "Solo se pueden colocar cotas de elevación en tuberías o conduits horizontales sin pendiente.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Cotas de Nivel", "Solo se pueden colocar cotas de nivel en tuberías o conduits horizontales sin pendiente.");
                     continue;
                 }
 
                 // 1. Obtener punto en el eje/centro 3D del elemento
                 XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
 
-                // 2. Determinar el nivel del techo/losa superior para que la cota sea negativa (N. -X.XX)
-                Level nivelTecho = ObtenerNivelTecho(doc, view, el, puntoEje);
+                // 2. Determinar el nivel de referencia general elegido
+                Level nivelRef = ObtenerNivelReferencia(doc, view, el, puntoEje, opcionNivel);
 
                 // 3. Ubicación del texto / directriz (opcional: el usuario puede dar un 2do clic o presionar ESC para auto)
                 XYZ puntoUbicacion = null;
@@ -953,7 +2186,7 @@ namespace MiNamespace
                 {
                     puntoUbicacion = uidoc.Selection.PickPoint(
                         ObjectSnapTypes.None,
-                        "Clic para ubicar la directriz del nivel (o ESC para ubicación automática)"
+                        "Clic para ubicar la directriz de la cota (o ESC para ubicación automática)"
                     );
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -962,7 +2195,7 @@ namespace MiNamespace
                 }
 
                 // 4. Crear Spot Dimension en transacción
-                using (Transaction tx = new Transaction(doc, "Colocar Nivel de Elevación"))
+                using (Transaction tx = new Transaction(doc, "Colocar Cota de Nivel"))
                 {
                     tx.Start();
 
@@ -974,7 +2207,7 @@ namespace MiNamespace
                         puntoEje,
                         puntoUbicacion,
                         spotTypeId,
-                        nivelTecho,
+                        nivelRef,
                         collisionCtx
                     );
 
@@ -1014,18 +2247,24 @@ namespace MiNamespace
             return 0.0;
         }
 
-        public static int TaguearNivelesTodoEnVista(Document doc, Autodesk.Revit.DB.View view)
+        public static int TaguearNivelesTodoEnVista(Document doc, Autodesk.Revit.DB.View view, OpcionNivelReferencia opcionNivel = null)
         {
-            return TaguearNivelesTodoEnVista(null, doc, view);
+            return TaguearNivelesTodoEnVista(null, doc, view, opcionNivel);
         }
 
         /// <summary>
         /// Permite al usuario seleccionar múltiples elementos MEP (conduits, tuberías, bandejas, ductos)
-        /// y coloca cotas de elevación calculadas automáticamente en los elementos seleccionados.
+        /// y coloca cotas de nivel calculadas automáticamente en los elementos seleccionados.
         /// </summary>
-        public static int TaguearNivelesPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        public static int TaguearNivelesPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, OpcionNivelReferencia opcionNivel = null)
         {
             if (uidoc == null || doc == null || view == null) return 0;
+
+            if (opcionNivel == null)
+            {
+                opcionNivel = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+                if (opcionNivel == null) return 0;
+            }
 
             List<Element> elementos = new List<Element>();
 
@@ -1050,36 +2289,65 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección interactiva
+            // 2. Si no había preselección, solicitar selección por ventana de arrastre o clics
             if (elementos.Count == 0)
             {
-                IList<Reference> refs = null;
+                // Intento 1: Selección por ventana de arrastre (Rectángulo) - termina automáticamente al soltar el ratón
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
-                        ObjectType.Element,
+                    var rectElements = uidoc.Selection.PickElementsByRectangle(
                         new MepElementSelectionFilter(),
-                        "Selecciona los tramos de tuberías/conduits para colocar Cotas de Elevación (Presiona Finalizar o Esc):"
+                        "Arrastra un recuadro sobre las tuberías/conduits a acotar:"
                     );
+
+                    if (rectElements != null && rectElements.Count > 0)
+                    {
+                        elementos.AddRange(rectElements);
+                    }
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
-                    return 0;
+                    // Si el usuario cancela con ESC, no es error
                 }
                 catch { }
 
-                if (refs != null && refs.Count > 0)
+                // Intento 2 (Fallback): Si no usó ventana, permitir clics individuales finalizando con tecla ESC
+                if (elementos.Count == 0)
                 {
-                    elementos = refs
-                        .Select(r => doc.GetElement(r))
-                        .Where(e => e != null)
-                        .ToList();
+                    while (true)
+                    {
+                        try
+                        {
+                            Reference pick = uidoc.Selection.PickObject(
+                                ObjectType.Element,
+                                new MepElementSelectionFilter(),
+                                "Clic en tuberías a acotar (presiona ESC cuando termines para acotarlas):"
+                            );
+
+                            if (pick != null)
+                            {
+                                Element el = doc.GetElement(pick.ElementId);
+                                if (el != null && !elementos.Any(x => x.Id == el.Id))
+                                {
+                                    elementos.Add(el);
+                                }
+                            }
+                        }
+                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                        {
+                            break; // Al presionar ESC termina la selección y procede a acotar inmediatamente
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
                 }
             }
 
             if (elementos.Count == 0) return 0;
 
-            return ProcesarYColocarNivelesParaElementos(uidoc, doc, view, elementos, "Niveles de Elevación (Por Selección)");
+            return ProcesarYColocarNivelesParaElementos(uidoc, doc, view, elementos, "Cotas de Nivel (Por Selección)", opcionNivel);
         }
 
         /// <summary>
@@ -1088,8 +2356,14 @@ namespace MiNamespace
         /// (incluso si tienen cajas de paso intermedias) para colocar una única cota en la mitad de toda la tubería,
         /// omitiendo las cotas a la derecha y a la izquierda si tienen el mismo valor.
         /// </summary>
-        public static int TaguearNivelesTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        public static int TaguearNivelesTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, OpcionNivelReferencia opcionNivel = null)
         {
+            if (opcionNivel == null)
+            {
+                opcionNivel = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+                if (opcionNivel == null) return 0;
+            }
+
             var categorias = new[]
             {
                 BuiltInCategory.OST_PipeCurves,
@@ -1108,14 +2382,14 @@ namespace MiNamespace
                 elementos.AddRange(elems);
             }
 
-            return ProcesarYColocarNivelesParaElementos(uidoc, doc, view, elementos, "Niveles de Elevación MEP (Automático)");
+            return ProcesarYColocarNivelesParaElementos(uidoc, doc, view, elementos, "Cotas de Nivel MEP (Automático)", opcionNivel);
         }
 
         /// <summary>
         /// Procesa una lista de elementos MEP para agrupar tramos continuos y colocar Spot Elevations evitando duplicados y colisiones.
         /// </summary>
         public static int ProcesarYColocarNivelesParaElementos(
-            UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, List<Element> elementos, string nombreTransaccion = "Niveles de Elevación MEP")
+            UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, List<Element> elementos, string nombreTransaccion = "Cotas de Nivel MEP", OpcionNivelReferencia opcionNivel = null)
         {
             if (elementos == null || elementos.Count == 0) return 0;
 
@@ -1323,10 +2597,10 @@ namespace MiNamespace
                             continue;
                         }
 
-                        Level nivelTecho = ObtenerNivelTecho(doc, view, tramoSeleccionado.Elemento, puntoMedioCorrida);
+                        Level nivelRef = ObtenerNivelReferencia(doc, view, tramoSeleccionado.Elemento, puntoMedioCorrida, opcionNivel);
 
                         SpotDimension spot = ColocarSpotElevationAutomatico(
-                            doc, view, tramoSeleccionado.Elemento, puntoMedioCorrida, tramoSeleccionado.DirCurva, spotTypeId, nivelTecho, collisionCtx, logFallosSpot);
+                            doc, view, tramoSeleccionado.Elemento, puntoMedioCorrida, tramoSeleccionado.DirCurva, spotTypeId, nivelRef, collisionCtx, logFallosSpot);
 
                         if (spot != null)
                         {
@@ -2345,11 +3619,11 @@ namespace MiNamespace
         }
 
         /// <summary>
-        /// Obtiene el nivel de techo para la vista activa donde el usuario está trabajando.
-        /// En planos de planta (ej: N03), el techo es el nivel inmediatamente superior (Nivel 04),
-        /// de modo que al medir la cota relativa hacia dicho nivel, el valor resulta negativo (ej: N. -1.31).
+        /// Obtiene el nivel de referencia general elegido por el usuario (Nivel Superior o Nivel Inferior).
+        /// Lee la vista activa donde está parado el usuario para determinar con precisión el piso (GenLevel)
+        /// o el techo (nivel inmediatamente superior en Z).
         /// </summary>
-        private static Level ObtenerNivelTecho(Document doc, Autodesk.Revit.DB.View view, Element el, XYZ puntoEje)
+        private static Level ObtenerNivelReferencia(Document doc, Autodesk.Revit.DB.View view, Element el, XYZ puntoEje, OpcionNivelReferencia opcion = null)
         {
             try
             {
@@ -2361,7 +3635,10 @@ namespace MiNamespace
 
                 if (todosNiveles.Count == 0) return null;
 
-                // 1. Determinar la coordenada Z real de la tubería / conducto
+                // 1. Obtener nivel base de la vista activa donde está parado el usuario
+                Level nivelVistaActiva = view?.GenLevel;
+
+                // Determinar la coordenada Z real de la tubería / conducto
                 double? zElemento = null;
                 if (puntoEje != null)
                 {
@@ -2387,36 +3664,72 @@ namespace MiNamespace
                     }
                 }
 
-                // 2. Si tenemos la Z real de la tubería, buscar SIEMPRE el nivel inmediatamente superior en Z
-                if (zElemento.HasValue)
-                {
-                    var nivelInmediatamenteSuperior = todosNiveles
-                        .FirstOrDefault(l => l.Elevation > zElemento.Value + 0.05);
+                bool esInferior = opcion != null && opcion.Modo == ModoNivelReferencia.Inferior;
 
-                    if (nivelInmediatamenteSuperior != null)
+                if (esInferior)
+                {
+                    // Modo Nivel Inferior: Usar prioritariamente el nivel de la vista activa donde está parado el usuario
+                    if (nivelVistaActiva != null)
                     {
-                        return nivelInmediatamenteSuperior;
+                        return nivelVistaActiva;
                     }
 
-                    // Si la tubería está en la parte más alta sin niveles superiores, tomar el nivel más alto
+                    // Si la vista no tiene GenLevel, buscar el nivel inmediatamente inferior en Z
+                    if (zElemento.HasValue)
+                    {
+                        var nivelInferior = todosNiveles
+                            .OrderByDescending(l => l.Elevation)
+                            .FirstOrDefault(l => l.Elevation < zElemento.Value - 0.05);
+
+                        if (nivelInferior != null)
+                        {
+                            return nivelInferior;
+                        }
+                    }
+
+                    return todosNiveles.FirstOrDefault();
+                }
+                else
+                {
+                    // Modo Nivel Superior (Techo/Losa): Buscar el nivel inmediatamente superior al nivel de la vista activa
+                    if (nivelVistaActiva != null)
+                    {
+                        var supDeVista = todosNiveles
+                            .FirstOrDefault(l => l.Elevation > nivelVistaActiva.Elevation + 0.05);
+
+                        if (supDeVista != null)
+                        {
+                            return supDeVista;
+                        }
+                    }
+
+                    // Si no hay nivel de vista o es el más alto, buscar el nivel superior en Z al elemento
+                    if (zElemento.HasValue)
+                    {
+                        var nivelInmediatamenteSuperior = todosNiveles
+                            .FirstOrDefault(l => l.Elevation > zElemento.Value + 0.05);
+
+                        if (nivelInmediatamenteSuperior != null)
+                        {
+                            return nivelInmediatamenteSuperior;
+                        }
+                    }
+
                     return todosNiveles.LastOrDefault();
                 }
-
-                // 3. Fallback: Nivel base de la vista
-                Level nivelVista = view?.GenLevel;
-                if (nivelVista != null)
-                {
-                    var supVista = todosNiveles.FirstOrDefault(l => l.Elevation > nivelVista.Elevation + 0.05);
-                    if (supVista != null) return supVista;
-                    return nivelVista;
-                }
-
-                return todosNiveles.LastOrDefault();
             }
             catch
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Wrapper de compatibilidad para obtener el nivel de techo.
+        /// </summary>
+        private static Level ObtenerNivelTecho(Document doc, Autodesk.Revit.DB.View view, Element el, XYZ puntoEje)
+        {
+            return ObtenerNivelReferencia(doc, view, el, puntoEje, null);
         }
 
         /// <summary>
@@ -2529,12 +3842,13 @@ namespace MiNamespace
 
         /// <summary>
         /// Proyecta el punto del clic sobre el eje de la curva del elemento.
+        /// Garantiza un punto válido en 3D incluso si el punto de clic es nulo (selección por recuadro o preselección).
         /// </summary>
         private static XYZ ObtenerPuntoEjeDesdeClic(Element el, XYZ puntoClic)
         {
             try
             {
-                if (el.Location is LocationCurve lc && lc.Curve != null)
+                if (puntoClic != null && el.Location is LocationCurve lc && lc.Curve != null)
                 {
                     IntersectionResult ir = lc.Curve.Project(puntoClic);
                     if (ir != null)
@@ -2542,11 +3856,15 @@ namespace MiNamespace
                         return ir.XYZPoint;
                     }
                 }
-                else if (el.Location is LocationPoint lp)
+                if (el.Location is LocationPoint lp)
                 {
                     return lp.Point;
                 }
-                else if (el is FamilyInstance fi)
+                if (el.Location is LocationCurve lc2 && lc2.Curve != null)
+                {
+                    return lc2.Curve.Evaluate(0.5, true);
+                }
+                if (el is FamilyInstance fi)
                 {
                     BoundingBoxXYZ bb = fi.get_BoundingBox(null);
                     if (bb != null)
@@ -2557,7 +3875,7 @@ namespace MiNamespace
             }
             catch { }
 
-            return puntoClic;
+            return puntoClic ?? (el.Location is LocationPoint lpFallback ? lpFallback.Point : XYZ.Zero);
         }
 
         /// <summary>
@@ -2695,46 +4013,51 @@ namespace MiNamespace
             if (uidoc == null || doc == null || view == null) return 0;
 
             List<Element> conduits = new List<Element>();
+            var filter = new ConduitSelectionFilter();
+
+            // 1. Revisar si el usuario ya tenía conduits preseleccionados en la vista
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
             {
                 foreach (var id in preSelected)
                 {
                     Element e = doc.GetElement(id);
-                    if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Conduit)
+                    if (e != null && filter.AllowElement(e))
                     {
                         conduits.Add(e);
                     }
                 }
             }
 
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (conduits.Count == 0)
             {
-                IList<Reference> refs = null;
                 try
                 {
-                    refs = uidoc.Selection.PickObjects(
+                    var pickedRefs = uidoc.Selection.PickObjects(
                         ObjectType.Element,
-                        new ConduitSelectionFilter(),
-                        "Selecciona los conduits de las camas a taguear (Presiona Finalizar o ESC cuando termines):"
+                        filter,
+                        "Selecciona los conduits de las camas a taguear y haz clic en 'Finish':"
                     );
+                    if (pickedRefs != null && pickedRefs.Count > 0)
+                    {
+                        foreach (var r in pickedRefs)
+                        {
+                            Element e = doc.GetElement(r.ElementId);
+                            if (e != null && filter.AllowElement(e) && !conduits.Any(x => x.Id == e.Id))
+                            {
+                                conduits.Add(e);
+                            }
+                        }
+                    }
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
                     return 0;
                 }
-                catch { }
-
-                if (refs != null)
+                catch
                 {
-                    foreach (var r in refs)
-                    {
-                        Element e = doc.GetElement(r);
-                        if (e != null && e.Category != null && e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Conduit)
-                        {
-                            conduits.Add(e);
-                        }
-                    }
+                    return 0;
                 }
             }
 
@@ -3004,9 +4327,10 @@ namespace MiNamespace
                     {
                         var cama = bank.Camas[i];
                         int countTubos = cama.Conduits.Count;
-                        string valorComentario = $"({countTubos})-";
+                        // Solo colocar el número de tubos entre paréntesis si hay 2 o más conduits en la cama; si es 1, se deja vacío para no mostrar (1)
+                        string valorComentario = countTubos > 1 ? $"({countTubos})-" : string.Empty;
 
-                        // Asignar comentario "(N)-" a los conduits de esta cama para que la etiqueta tome la cantidad
+                        // Asignar comentario a los conduits de esta cama para que la etiqueta tome la cantidad
                         foreach (var cInfo in cama.Conduits)
                         {
                             try
@@ -3143,7 +4467,9 @@ namespace MiNamespace
         {
             public bool AllowElement(Element elem)
             {
-                return elem != null && elem.Category != null && elem.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Conduit;
+                if (elem == null || elem.Category == null) return false;
+                int catId = elem.Category.Id.IntegerValue;
+                return catId == (int)BuiltInCategory.OST_Conduit || catId == (int)BuiltInCategory.OST_ConduitRun;
             }
             public bool AllowReference(Reference reference, XYZ position) => true;
         }

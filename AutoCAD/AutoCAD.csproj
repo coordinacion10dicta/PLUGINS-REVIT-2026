@@ -37,17 +37,13 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 
-  <!-- COM Interop para Excel -->
+  <!-- Interop para Excel -->
   <ItemGroup>
-    <COMReference Include="Microsoft.Office.Interop.Excel">
-      <Guid>00020813-0000-0000-C000-000000000046</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>9</VersionMinor>
-      <WrapperTool>tlbimp</WrapperTool>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,6 +55,10 @@
     </None>
     <None Include="..\Resources\SGH - Carga de ocupacion.xlsx">
       <Link>Resources\SGH - Carga de ocupacion.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\SGH-INF-001.docx" Condition="Exists('..\Resources\SGH-INF-001.docx')">
+      <Link>Resources\SGH-INF-001.docx</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\Resources\Normas_NSR10_NFPA.xlsx" Condition="Exists('..\Resources\Normas_NSR10_NFPA.xlsx')">
@@ -81,6 +81,7 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BundleContentsDir)" OverwriteReadOnlyFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="Exists('$(TargetDir)$(TargetName).pdb')" SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(BundleContentsDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="Exists('$(ProjectDir)..\Resources\SGH - Carga de ocupacion.xlsx')" SourceFiles="$(ProjectDir)..\Resources\SGH - Carga de ocupacion.xlsx" DestinationFolder="$(BundleResourcesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    <Copy Condition="Exists('$(ProjectDir)..\Resources\SGH-INF-001.docx')" SourceFiles="$(ProjectDir)..\Resources\SGH-INF-001.docx" DestinationFolder="$(BundleResourcesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <Copy Condition="Exists('$(ProjectDir)..\Resources\Normas_NSR10_NFPA.xlsx')" SourceFiles="$(ProjectDir)..\Resources\Normas_NSR10_NFPA.xlsx" DestinationFolder="$(BundleResourcesDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
     <ItemGroup>
       <AutoCADImages Include="$(ProjectDir)Images\*.*" />

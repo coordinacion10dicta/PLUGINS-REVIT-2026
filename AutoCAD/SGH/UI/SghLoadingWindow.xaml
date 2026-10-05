@@ -1,0 +1,62 @@
+<Window x:Class="AutoCAD.SGH.UI.SghLoadingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DICTA - Generando Entregables"
+        Height="150" Width="360"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False">
+
+    <Border Background="#181825" BorderBrush="#3B82F6" BorderThickness="1.5" CornerRadius="12" Padding="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.6"/>
+        </Border.Effect>
+        <Grid VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Rueda de carga pequeña azul con animación suave de rotación -->
+            <Canvas Grid.Column="0" Width="36" Height="36" VerticalAlignment="Center">
+                <!-- Círculo base de fondo -->
+                <Ellipse Width="36" Height="36" Stroke="#313244" StrokeThickness="4"/>
+                <!-- Arco giratorio azul -->
+                <Path Stroke="#3B82F6" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                    <Path.Data>
+                        <PathGeometry>
+                            <PathFigure StartPoint="18,2">
+                                <ArcSegment Point="34,18" Size="16,16" SweepDirection="Clockwise" IsLargeArc="False"/>
+                            </PathFigure>
+                        </PathGeometry>
+                    </Path.Data>
+                    <Path.RenderTransform>
+                        <RotateTransform x:Name="SpinnerRotate" CenterX="18" CenterY="18"/>
+                    </Path.RenderTransform>
+                    <Path.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="SpinnerRotate"
+                                                     Storyboard.TargetProperty="Angle"
+                                                     From="0" To="360"
+                                                     Duration="0:0:0.9"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Path.Triggers>
+                </Path>
+            </Canvas>
+
+            <!-- Textos informativos -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="Generando entregables..." FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,3"/>
+                <TextBlock x:Name="TxtStatus" Text="Procesando datos y abriendo archivos Excel y Word..." FontSize="11" Foreground="#BAC2DE" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

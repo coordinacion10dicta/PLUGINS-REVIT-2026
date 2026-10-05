@@ -40,16 +40,22 @@ namespace MiNamespace
             {
                 // ==================== REDES SECAS ====================
                 case TagsCoorAction.NivelesPorSeleccion:
-                    int creadosSel = MyTAGS_Cotas_RedesSecas.TaguearNivelesPorSeleccion(uidoc, doc, view);
+                    OpcionNivelReferencia opcionSel = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+                    if (opcionSel == null) return Result.Cancelled;
+
+                    int creadosSel = MyTAGS_Cotas_RedesSecas.TaguearNivelesPorSeleccion(uidoc, doc, view, opcionSel);
                     if (creadosSel > 0)
                     {
-                        Autodesk.Revit.UI.TaskDialog.Show("Niveles de Elevación", $"Se crearon {creadosSel} cotas de elevación en los elementos seleccionados.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas de Nivel", $"Se crearon {creadosSel} cotas de nivel ({opcionSel.Descripcion}) en los elementos seleccionados.");
                     }
                     return Result.Succeeded;
 
                 case TagsCoorAction.NivelesTodaLaVista:
-                    int creados = MyTAGS_Cotas_RedesSecas.TaguearNivelesTodoEnVista(uidoc, doc, view);
-                    Autodesk.Revit.UI.TaskDialog.Show("Niveles de Elevación MEP", $"Se crearon {creados} cotas de elevación en la vista.");
+                    OpcionNivelReferencia opcionAuto = NivelReferenciaSelectorWindow.PedirNivel(doc, view);
+                    if (opcionAuto == null) return Result.Cancelled;
+
+                    int creados = MyTAGS_Cotas_RedesSecas.TaguearNivelesTodoEnVista(uidoc, doc, view, opcionAuto);
+                    Autodesk.Revit.UI.TaskDialog.Show("Cotas de Nivel", $"Se crearon {creados} cotas de nivel ({opcionAuto.Descripcion}) en la vista activa.");
                     return Result.Succeeded;
 
                 case TagsCoorAction.CambioDeNivelPorSeleccion:
@@ -65,11 +71,20 @@ namespace MiNamespace
                     Autodesk.Revit.UI.TaskDialog.Show("Tags \"C.N\" Automático", $"Se crearon {cambiosAuto} Tags \"C.N\" en la vista.");
                     return Result.Succeeded;
 
+                case TagsCoorAction.CotasAlineadasPorSeleccion:
                 case TagsCoorAction.NivelDeUbicacion:
-                    int ubicaciones = MyTAGS_Cotas_RedesSecas.TaguearNivelDeUbicacion(uidoc, doc, view);
-                    if (ubicaciones > 0)
+                    int cotasSel = MyTAGS_Cotas_RedesSecas.TaguearCotasAlineadasPorSeleccion(uidoc, doc, view);
+                    if (cotasSel > 0)
                     {
-                        Autodesk.Revit.UI.TaskDialog.Show("Cotas \"Ubicacion\"", $"Se colocaron {ubicaciones} cotas de ubicación.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas Alineadas", $"Se colocaron {cotasSel} cotas alineadas.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.CotasAlineadasAuto:
+                    int cotasAuto = MyTAGS_Cotas_RedesSecas.TaguearCotasAlineadasTodoEnVista(uidoc, doc, view);
+                    if (cotasAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas Alineadas Automático", $"Se colocaron {cotasAuto} cotas alineadas en la vista.");
                     }
                     return Result.Succeeded;
 
@@ -90,6 +105,10 @@ namespace MiNamespace
                     return Result.Succeeded;
 
                 // ==================== REDES HÚMEDAS (DESAGÜES) ====================
+                case TagsCoorAction.PendientesPorClic:
+                    MyTAGS_Tags_RedesHumedas.TaguearPendientePorClic(uidoc, doc, view);
+                    return Result.Succeeded;
+
                 case TagsCoorAction.PendientesPorSeleccion:
                     MyTAGS_Tags_RedesHumedas.TaguearPendientePorSeleccion(uidoc, doc, view);
                     return Result.Succeeded;

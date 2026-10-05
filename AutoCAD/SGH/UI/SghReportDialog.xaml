@@ -1,0 +1,691 @@
+<Window x:Class="AutoCAD.SGH.UI.SghReportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DICTA - Asistente de Exportación e Informe SGH" 
+        Height="830" Width="1060"
+        MinHeight="700" MinWidth="940"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        Background="#1E1E2E"
+        Foreground="#CDD6F4"
+        FontFamily="Segoe UI"
+        FontSize="13">
+
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#181825"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4" Margin="2,1">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#45475A"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#313244"/>
+                                <Setter Property="Foreground" Value="#89B4FA"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton" 
+                                          ClickMode="Press" 
+                                          Focusable="False" 
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Border" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Padding="10,7">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path x:Name="Arrow" Grid.Column="1" Fill="#BAC2DE" HorizontalAlignment="Right" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z" Margin="8,0,2,0"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="#89B4FA"/>
+                                                <Setter TargetName="Arrow" Property="Fill" Value="#89B4FA"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="#89B4FA"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ContentSite" 
+                                              IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}" 
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                              Margin="12,3,28,3" 
+                                              VerticalAlignment="Center" 
+                                              HorizontalAlignment="Left"
+                                              TextElement.Foreground="#CDD6F4"
+                                              TextElement.FontSize="13"/>
+                            <Popup x:Name="Popup" 
+                                   Placement="Bottom" 
+                                   IsOpen="{TemplateBinding IsDropDownOpen}" 
+                                   AllowsTransparency="True" 
+                                   Focusable="False" 
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown" 
+                                      SnapsToDevicePixels="True" 
+                                      MinWidth="{TemplateBinding ActualWidth}" 
+                                      MaxHeight="260">
+                                    <Border x:Name="DropDownBorder" 
+                                            Background="#181825" 
+                                            BorderBrush="#45475A" 
+                                            BorderThickness="1" 
+                                            CornerRadius="6" 
+                                            Margin="0,4,0,4"
+                                            Padding="4">
+                                        <ScrollViewer Margin="0" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <!-- Barra fija de pestañas en fila única protegida contra recortes -->
+                            <Border Grid.Row="0" BorderBrush="#45475A" BorderThickness="0,0,0,1" Margin="0,0,0,10">
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
+                                    <StackPanel Orientation="Horizontal" IsItemsHost="True"/>
+                                </ScrollViewer>
+                            </Border>
+                            <!-- Contenido fijo de la pestaña seleccionada -->
+                            <ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" Background="#181825" BorderBrush="#45475A" BorderThickness="1,1,1,0" CornerRadius="6,6,0,0" Padding="12,8" Margin="0,0,4,0">
+                            <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontWeight="SemiBold" TextElement.FontSize="12"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#313244"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#89B4FA"/>
+                                <Setter Property="Foreground" Value="#89B4FA"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Foreground" Value="#A6ADC8"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#262738"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Border Background="#89B4FA" CornerRadius="4" Padding="8,3" Margin="0,0,10,0">
+                        <TextBlock Text="DICTA SUITE" FontSize="11" FontWeight="Bold" Foreground="#11111B"/>
+                    </Border>
+                    <TextBlock Text="SEGURIDAD HUMANA (SGH)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Exportación de Cargas e Informe Técnico" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,2,0,0"/>
+                <TextBlock Text="Complete los datos de la portada, revise los parámetros y seleccione la carpeta de destino." FontSize="12" Foreground="#BAC2DE" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Badges resumen -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="ESPACIOS" FontSize="10" FontWeight="Bold" Foreground="#6C7086" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtBadgeEspacios" Text="0" FontSize="18" FontWeight="Bold" Foreground="#A6E3A1" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="14,8">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="ÁREA TOTAL" FontSize="10" FontWeight="Bold" Foreground="#6C7086" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtBadgeArea" Text="0.00 m²" FontSize="18" FontWeight="Bold" Foreground="#89B4FA" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Tab Control Principal -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderBrush="#45475A" BorderThickness="0,1,0,0">
+
+            <!-- TAB 1: Portada -->
+            <TabItem Header="📄 Portada">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel Margin="0,0,10,0">
+
+                        <!-- Datos del Proyecto -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="INFORMACIÓN DEL PROYECTO" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0">
+                                    <TextBlock Text="Nombre del Proyecto:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtProjectName"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="2">
+                                    <TextBlock Text="Versión del Documento:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtVersion" Text="01"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,10,0,0">
+                                    <TextBlock Text="Fecha del Informe (yyyy/MM/dd):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtReportDate"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,10,0,0">
+                                    <TextBlock Text="Fecha Base Arquitectura (yyyy/MM/dd):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtArchBaseDate"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0">
+                                    <TextBlock Text="Descripción General del Proyecto:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtProjectDescription" Height="68" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Equipo de Trabajo -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="EQUIPO DE TRABAJO" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0">
+                                    <TextBlock Text="Director del Proyecto:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtDirectorName"/>
+                                    <TextBlock Text="Certificaciones Director:" FontSize="11" Foreground="#6C7086" Margin="0,6,0,2"/>
+                                    <TextBox x:Name="TxtDirectorCert"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="2">
+                                    <TextBlock Text="Coordinador del Proyecto:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtCoordinatorName"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,10,0,0">
+                                    <TextBlock Text="Elaborado por:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtAuthorName"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,10,0,0">
+                                    <TextBlock Text="Colaborador:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtCollaboratorName"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: Parámetros del Edificio -->
+            <TabItem Header="🏢 Parámetros del Edificio">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel Margin="0,0,10,0">
+
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                <!-- 1. Selector de Norma de Referencia -->
+                                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="NORMA Y CLASIFICACIÓN GENERAL DE OCUPACIÓN" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,12"/>
+
+                                <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,14">
+                                    <TextBlock Text="Norma de Referencia para Grupos de Ocupación:" FontSize="12" FontWeight="SemiBold" Foreground="#BAC2DE" Margin="0,0,0,6"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="RbNormNsr" Content="NSR-10" Foreground="#CDD6F4" FontWeight="SemiBold" FontSize="12" IsChecked="True" Margin="0,0,24,0" Checked="RbNorm_Checked"/>
+                                        <RadioButton x:Name="RbNormNfpa" Content="NFPA" Foreground="#CDD6F4" FontWeight="SemiBold" FontSize="12" Checked="RbNorm_Checked"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- 2. Clasificación Principal y Secundaria -->
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <TextBlock Text="Clasificación Principal:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <ComboBox x:Name="CmbBuildingClassification" SelectionChanged="CmbBuildingClassification_SelectionChanged"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                    <TextBlock Text="Clasificación Secundaria (Selección Múltiple):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <Grid>
+                                        <Border x:Name="BrdSecondarySelector" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Height="34" Cursor="Hand" MouseLeftButtonDown="BtnToggleSecondaryMenu_Click">
+                                            <Grid Margin="10,0,8,0">
+                                                <TextBlock x:Name="TxtSecondaryClassification" Text="Seleccionar usos secundarios..." Foreground="#CDD6F4" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,20,0"/>
+                                                <TextBlock Text="▾" Foreground="#89B4FA" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Popup x:Name="PopupSecondaryGroups" StaysOpen="True" AllowsTransparency="True" Placement="Bottom" PlacementTarget="{Binding ElementName=BrdSecondarySelector}" Width="{Binding ActualWidth, ElementName=BrdSecondarySelector}" MinWidth="340" MaxHeight="280">
+                                            <Border Background="#181825" BorderBrush="#89B4FA" BorderThickness="1.5" CornerRadius="8" Padding="12" Margin="0,4,0,4">
+                                                <Border.Effect>
+                                                    <DropShadowEffect BlurRadius="12" ShadowDepth="4" Color="#000000" Opacity="0.5"/>
+                                                </Border.Effect>
+                                                <StackPanel>
+                                                    <TextBlock Text="Seleccione los grupos de ocupación:" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" Margin="0,0,0,8"/>
+                                                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+                                                        <StackPanel x:Name="PnlSecondaryCheckboxes"/>
+                                                    </ScrollViewer>
+                                                    <Border BorderBrush="#45475A" BorderThickness="0,1,0,0" Margin="0,8,0,0" Padding="0,8,0,0">
+                                                        <Button Content="✓ Listo / Cerrar" HorizontalAlignment="Right" Padding="14,5" Background="#2563EB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" BorderThickness="0" Click="BtnCloseSecondaryPopup_Click" Cursor="Hand"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- 3. Categoría de Riesgo y Rociadores Automáticos -->
+                                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock x:Name="LblRiskCategoryTitle" Text="Categoría de Riesgo (J.3.4):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <ComboBox x:Name="CmbRiskCategory"/>
+                                    <TextBlock x:Name="TxtRiskTableHint" Text="ℹ Se incluirá la Tabla J.3.4-3 en el informe Word." FontSize="11" Foreground="#6C7086" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,14,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Protección Activa Contra Incendios:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,6"/>
+                                    <CheckBox x:Name="ChkSprinklers" Content="Cuenta con Sistema de Rociadores Automáticos" Foreground="#CDD6F4" FontWeight="SemiBold" FontSize="12" Checked="ChkSprinklers_Changed" Unchecked="ChkSprinklers_Changed"/>
+                                    <TextBlock Text="Permite reducir el factor de separación de salidas de 1/2 a 1/3 de la diagonal." FontSize="11" Foreground="#6C7086" Margin="22,3,0,0"/>
+                                </StackPanel>
+
+                                <!-- 4. Altura del Edificio -->
+                                <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock Text="Altura de la Edificación (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" x:Name="TxtBuildingHeight" Text="15.0" TextChanged="TxtBuildingHeight_TextChanged"/>
+                                        <TextBlock Grid.Column="1" Text="m" Foreground="#6C7086" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock x:Name="TxtHighRiseIndicator" Text="ℹ Edificio de Altura Convencional (≤ 23m)" FontSize="11" Foreground="#A6E3A1" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 3: Salidas y Evacuación -->
+            <TabItem Header="🚪 Salidas y Evacuación">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel Margin="0,0,10,0">
+
+                        <!-- Cantidad y Separación de Salidas -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="CANTIDAD DE SALIDAS POR PISO (NSR-10 K.3.4)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+
+                                <!-- Encabezado de la Tabla de Salidas -->
+                                <Border Background="#11111B" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6,6,0,0" Padding="10,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Nivel / Piso" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" Margin="6,0,0,0"/>
+                                        <TextBlock Grid.Column="1" Text="Ocupación Total (p)" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="# Salidas Requeridas" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="# Salidas Existentes" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="Evaluación" FontWeight="Bold" Foreground="#89B4FA" FontSize="11" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Filas de Pisos generadas dinámicamente -->
+                                <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" Padding="6,4" Margin="0,0,0,12">
+                                    <StackPanel x:Name="PnlFloorExitRows"/>
+                                </Border>
+
+                                <TextBlock Text="ℹ Salidas requeridas: ≤100: 1 | 101-500: 2 | 501-1000: 3 | >1000: 4 (NSR-10 K.3.4). Al editar ocupación o salidas, el cumplimiento se recalcula automáticamente." FontSize="11" Foreground="#6C7086" Margin="0,0,0,14"/>
+
+                                <Border BorderBrush="#45475A" BorderThickness="0,1,0,0" Margin="0,0,0,12"/>
+
+                                <!-- Separación de Salidas -->
+                                <TextBlock Text="SEPARACIÓN DE SALIDAS (NSR-10 K.3.4.1.1)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid Grid.Column="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Diagonal Mayor D (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="TxtDiagonalEdificio" Text="45.0" TextChanged="TxtSeparacion_TextChanged"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Separación de Salida (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="TxtSeparacionSalidas" Text="22.5" TextChanged="TxtSeparacion_TextChanged"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Evaluación Separación entre Salidas:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="CmbCumplimientoSeparacion" SelectedIndex="0">
+                                            <ComboBoxItem Content="Cumple"/>
+                                            <ComboBoxItem Content="No Cumple"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Descarga, Distancias de Recorrido y Capacidad -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="DESCARGA, DISTANCIAS DE RECORRIDO Y CAPACIDAD (NSR-10 K.3.3 / K.3.5 / K.3.6)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+
+                                <!-- Distancia de Recorrido -->
+                                <StackPanel Grid.Row="1" Grid.Column="0">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Distancia Máx. Perm. (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="TxtDistanciaMax" Text="45.0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Distancia Existente (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="TxtDistanciaExistente" Text="32.0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Text="Evaluación Distancia de Recorrido:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <ComboBox x:Name="CmbCumplimientoDistancia" SelectedIndex="0">
+                                        <ComboBoxItem Content="Cumple"/>
+                                        <ComboBoxItem Content="No Cumple"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Descarga y Capacidad -->
+                                <StackPanel Grid.Row="1" Grid.Column="2">
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="Evaluación Descarga de Salidas (K.3.5):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="CmbCumplimientoDescarga" SelectedIndex="0">
+                                            <ComboBoxItem Content="Cumple"/>
+                                            <ComboBoxItem Content="No Cumple"/>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Evaluación Capacidad de Medios (K.3.3):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                    <ComboBox x:Name="CmbCumplimientoCapacidad" SelectedIndex="0">
+                                        <ComboBoxItem Content="Cumple"/>
+                                        <ComboBoxItem Content="No Cumple"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 4: Conclusiones y Observaciones -->
+            <TabItem Header="📝 Conclusiones">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel Margin="0,0,10,0">
+
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="CONCLUSIONES DEL INFORME TÉCNICO" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Edite o redacte las conclusiones y recomendaciones normativas que se incluirán al final del documento." FontSize="11" Foreground="#BAC2DE"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="💾 Guardar como Predeterminadas" Padding="10,6" Background="#313244" Foreground="#A6E3A1" BorderBrush="#45475A" BorderThickness="1" Click="BtnSaveConclusionsAsDefault_Click" Cursor="Hand" Margin="0,0,8,0" ToolTip="Guarda el texto actual como la plantilla de conclusiones por defecto para futuros proyectos"/>
+                                        <Button Content="🔄 Restablecer Sugeridas" Padding="12,6" Background="#313244" Foreground="#89B4FA" BorderBrush="#45475A" BorderThickness="1" Click="BtnResetConclusions_Click" Cursor="Hand" Margin="0,0,8,0" ToolTip="Carga las 8 conclusiones técnicas estándar basadas en NSR-10 y NFPA"/>
+                                        <Button Content="🧹 Limpiar" Padding="10,6" Background="#313244" Foreground="#F38BA8" BorderBrush="#45475A" BorderThickness="1" Click="BtnClearConclusions_Click" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBox x:Name="TxtConclusiones" 
+                                         Height="340" 
+                                         TextWrapping="Wrap" 
+                                         AcceptsReturn="True" 
+                                         VerticalScrollBarVisibility="Auto"
+                                         VerticalContentAlignment="Top"
+                                         FontFamily="Segoe UI"
+                                         FontSize="12.5"
+                                         Padding="12,10"/>
+
+                                <TextBlock Text="ℹ Cada línea que comience con • o guión se formateará como una viñeta profesional en el informe de Word." FontSize="11" Foreground="#6C7086" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 5: Imágenes del Proyecto -->
+            <TabItem Header="🖼 Imágenes del Proyecto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <Grid Margin="0,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="18"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Imagen 1: Implantación -->
+                        <Border Grid.Column="0" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="IMAGEN 1: IMPLANTACIÓN INICIAL" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,8"/>
+                                <TextBlock Text="Foto o esquema de implantación general del proyecto (se insertará en la sección 3)." FontSize="11" Foreground="#BAC2DE" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                <Border Height="180" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10">
+                                    <Grid>
+                                        <TextBlock x:Name="TxtPlaceholderImplantacion" Text="🖼 Sin imagen cargada" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#6C7086" FontSize="12"/>
+                                        <Image x:Name="ImgPreviewImplantacion" Stretch="Uniform" Margin="4"/>
+                                    </Grid>
+                                </Border>
+
+                                <TextBox x:Name="TxtImplantacionPath" IsReadOnly="True" FontSize="11" Margin="0,0,0,8" ToolTip="Ruta de la imagen de implantación"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="🖼 Cargar Imagen..." Padding="12,6" Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" BorderThickness="1" Click="BtnBrowseImplantacion_Click" Cursor="Hand"/>
+                                    <Button Grid.Column="2" Content="✖ Quitar" Padding="10,6" Background="#313244" Foreground="#F38BA8" BorderBrush="#45475A" BorderThickness="1" Click="BtnClearImplantacion_Click" Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Imagen 2: Localización / Edificio -->
+                        <Border Grid.Column="2" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="IMAGEN 2: LOCALIZACIÓN / EDIFICIO" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,8"/>
+                                <TextBlock Text="Foto o vista del edificio / localización satelital (se insertará en la sección 3)." FontSize="11" Foreground="#BAC2DE" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                <Border Height="180" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10">
+                                    <Grid>
+                                        <TextBlock x:Name="TxtPlaceholderLocalizacion" Text="🖼 Sin imagen cargada" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#6C7086" FontSize="12"/>
+                                        <Image x:Name="ImgPreviewLocalizacion" Stretch="Uniform" Margin="4"/>
+                                    </Grid>
+                                </Border>
+
+                                <TextBox x:Name="TxtLocalizacionPath" IsReadOnly="True" FontSize="11" Margin="0,0,0,8" ToolTip="Ruta de la imagen de localización"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="🖼 Cargar Imagen..." Padding="12,6" Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" BorderThickness="1" Click="BtnBrowseLocalizacion_Click" Cursor="Hand"/>
+                                    <Button Grid.Column="2" Content="✖ Quitar" Padding="10,6" Background="#313244" Foreground="#F38BA8" BorderBrush="#45475A" BorderThickness="1" Click="BtnClearLocalizacion_Click" Cursor="Hand"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Footer / Botones Principales -->
+        <Grid Grid.Row="2" Margin="0,18,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" x:Name="BtnSaveDefaults" Content="💾 Guardar como Predeterminado" Padding="14,10" Background="#313244" Foreground="#BAC2DE" BorderBrush="#45475A" BorderThickness="1" Click="BtnSaveDefaults_Click" Cursor="Hand" ToolTip="Guarda los nombres del equipo y cargos para futuros proyectos"/>
+
+            <Button Grid.Column="2" x:Name="BtnCancel" Content="Cancelar" Padding="20,10" Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" BorderThickness="1" Click="BtnCancel_Click" Cursor="Hand"/>
+
+            <Button Grid.Column="4" x:Name="BtnGenerate" Content="🚀 Generar Entregables" Padding="26,10" Background="#2563EB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="14" BorderThickness="0" Click="BtnGenerate_Click" Cursor="Hand"/>
+        </Grid>
+    </Grid>
+</Window>

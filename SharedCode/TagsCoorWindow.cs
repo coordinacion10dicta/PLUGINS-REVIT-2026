@@ -13,10 +13,13 @@ namespace MiNamespace
         NivelesTodaLaVista,
         CambioDeNivelPorSeleccion,
         CambioDeNivelAuto,
+        CotasAlineadasPorSeleccion,
+        CotasAlineadasAuto,
         NivelDeUbicacion,
         CamasConduitsPorSeleccion,
         CamasConduitsAuto,
         // Redes Húmedas (Desagües)
+        PendientesPorClic,
         PendientesPorSeleccion,
         PendientesTodoEnVista,
         MaterialPorSeleccion,
@@ -128,7 +131,7 @@ namespace MiNamespace
             Color secasBorder = Color.FromArgb(145, 190, 240);
             Color secasHover = Color.FromArgb(228, 240, 255);
 
-            // --- BOTÓN 1: Cotas de Elevación (Desplegable) ---
+            // --- BOTÓN 1: Cotas de Nivel (Desplegable) ---
             ContextMenuStrip menuNiveles = new ContextMenuStrip();
             ToolStripMenuItem itemPorSeleccion = new ToolStripMenuItem("Por Selección Múltiple");
             itemPorSeleccion.Click += (s, e) =>
@@ -150,8 +153,8 @@ namespace MiNamespace
             menuNiveles.Items.Add(itemAuto);
             ConfigureModernMenu(menuNiveles, secasFore, secasHover);
 
-            Button btnNivelesDropdown = CreateDropdownButton("Cotas Elevación", btnSize, secasBack, secasFore, menuNiveles, secasBorder);
-            toolTip.SetToolTip(btnNivelesDropdown, "Selecciona 'Por Selección Múltiple' o 'Cotas Automático' para redes secas.");
+            Button btnNivelesDropdown = CreateDropdownButton("Cotas Nivel", btnSize, secasBack, secasFore, menuNiveles, secasBorder);
+            toolTip.SetToolTip(btnNivelesDropdown, "Selecciona 'Por Selección Múltiple' o 'Cotas Automático' para generar cotas de nivel en redes secas.");
 
             // --- BOTÓN 2: Tags "C.N" (Desplegable) ---
             ContextMenuStrip menuCambioNivel = new ContextMenuStrip();
@@ -178,27 +181,30 @@ namespace MiNamespace
             Button btnCambioNivel = CreateDropdownButton("Tags \"C.N\"", btnSize, secasBack, secasFore, menuCambioNivel, secasBorder);
             toolTip.SetToolTip(btnCambioNivel, "Selecciona 'Por Selección Múltiple' o 'Tag Automático' para cambios de nivel en redes secas.");
 
-            // --- BOTÓN 3: Cotas "Ubicacion" ---
-            Button btnNivelUbicacion = new Button
+            // --- BOTÓN 3: Cotas Alineadas (Desplegable) ---
+            ContextMenuStrip menuCotasAlineadas = new ContextMenuStrip();
+            ToolStripMenuItem itemCotasAlineadasSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemCotasAlineadasSel.Click += (s, e) =>
             {
-                Text = "Cotas Ubicación",
-                Size = btnSize,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = secasBack,
-                ForeColor = secasFore,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand,
-                Margin = new Padding(3, 2, 3, 2)
-            };
-            btnNivelUbicacion.FlatAppearance.BorderSize = 0;
-            ApplyRoundedStyle(btnNivelUbicacion, 8, secasBorder);
-            toolTip.SetToolTip(btnNivelUbicacion, "Coloca cotas de ubicación según las coordenadas del proyecto.");
-            btnNivelUbicacion.Click += (s, e) =>
-            {
-                SelectedAction = TagsCoorAction.NivelDeUbicacion;
+                SelectedAction = TagsCoorAction.CotasAlineadasPorSeleccion;
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             };
+
+            ToolStripMenuItem itemCotasAlineadasAuto = new ToolStripMenuItem("Cotas Automático");
+            itemCotasAlineadasAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.CotasAlineadasAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuCotasAlineadas.Items.Add(itemCotasAlineadasSel);
+            menuCotasAlineadas.Items.Add(itemCotasAlineadasAuto);
+            ConfigureModernMenu(menuCotasAlineadas, secasFore, secasHover);
+
+            Button btnCotasAlineadas = CreateDropdownButton("Cotas Alineadas", btnSize, secasBack, secasFore, menuCotasAlineadas, secasBorder);
+            toolTip.SetToolTip(btnCotasAlineadas, "Coloca cotas alineadas en cadenas entre referencias paralelas (ejes en instalaciones, caras en arquitectura).");
 
             // --- BOTÓN 4: Camas Conduits (Desplegable) ---
             ContextMenuStrip menuCamas = new ContextMenuStrip();
@@ -227,7 +233,7 @@ namespace MiNamespace
 
             flowSecas.Controls.Add(btnNivelesDropdown);
             flowSecas.Controls.Add(btnCambioNivel);
-            flowSecas.Controls.Add(btnNivelUbicacion);
+            flowSecas.Controls.Add(btnCotasAlineadas);
             flowSecas.Controls.Add(btnCamas);
             pnlSecas.Controls.Add(flowSecas);
             this.Controls.Add(pnlSecas);
@@ -270,6 +276,14 @@ namespace MiNamespace
 
             // --- BOTÓN 1: Tag Pendientes (Desplegable) ---
             ContextMenuStrip menuPendientes = new ContextMenuStrip();
+            ToolStripMenuItem itemPendClic = new ToolStripMenuItem("Por Clic Individual");
+            itemPendClic.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.PendientesPorClic;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
             ToolStripMenuItem itemPendSeleccion = new ToolStripMenuItem("Por Selección Múltiple");
             itemPendSeleccion.Click += (s, e) =>
             {
@@ -278,20 +292,12 @@ namespace MiNamespace
                 this.Close();
             };
 
-            ToolStripMenuItem itemPendAuto = new ToolStripMenuItem("Pendientes Automático");
-            itemPendAuto.Click += (s, e) =>
-            {
-                SelectedAction = TagsCoorAction.PendientesTodoEnVista;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            };
-
+            menuPendientes.Items.Add(itemPendClic);
             menuPendientes.Items.Add(itemPendSeleccion);
-            menuPendientes.Items.Add(itemPendAuto);
             ConfigureModernMenu(menuPendientes, humedasFore, humedasHover);
 
             Button btnPendientes = CreateDropdownButton("Tag Pendientes", btnSize, humedasBack, humedasFore, menuPendientes, humedasBorder);
-            toolTip.SetToolTip(btnPendientes, "Etiqueta pendientes (%) en tuberías de desagüe.");
+            toolTip.SetToolTip(btnPendientes, "Etiqueta pendientes (%) con flecha de flujo en tuberías de desagüe.");
 
             // --- BOTÓN 2: Tag Material (Desplegable) ---
             ContextMenuStrip menuMaterial = new ContextMenuStrip();
