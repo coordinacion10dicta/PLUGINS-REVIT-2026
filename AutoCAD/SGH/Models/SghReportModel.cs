@@ -126,34 +126,76 @@ namespace AutoCAD.SGH.Models
             }
         }
 
-        public void SaveDefaults()
+        private static string GetDrawingStateFilePath(string drawingName)
+        {
+            if (string.IsNullOrWhiteSpace(drawingName)) return null;
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string drawingsDir = Path.Combine(appData, "DICTA", "Drawings");
+                if (!Directory.Exists(drawingsDir))
+                {
+                    Directory.CreateDirectory(drawingsDir);
+                }
+
+                string safeName = Path.GetFileNameWithoutExtension(drawingName);
+                if (string.IsNullOrWhiteSpace(safeName)) safeName = "Drawing";
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
+                    safeName = safeName.Replace(c, '_');
+                }
+
+                int hash = drawingName.ToLowerInvariant().GetHashCode();
+                return Path.Combine(drawingsDir, $"{safeName}_{hash:X8}.xml");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public void SaveDefaults(string drawingName = null)
         {
             try
             {
-                string path = GetConfigFilePath();
-                if (string.IsNullOrEmpty(path)) return;
-
                 var defaults = new SghReportDefaults
                 {
+                    ProjectName = this.ProjectName,
+                    ProjectDescription = this.ProjectDescription,
+                    Version = this.Version,
+                    VersionDescription = this.VersionDescription,
+                    ReportDate = this.ReportDate,
+                    ArchBaseDate = this.ArchBaseDate,
+
                     DirectorName = this.DirectorName,
                     DirectorCert = this.DirectorCert,
                     CoordinatorName = this.CoordinatorName,
                     AuthorName = this.AuthorName,
                     CollaboratorName = this.CollaboratorName,
+
                     ElaboroCargo = this.ElaboroCargo,
                     ElaboroNombre = this.ElaboroNombre,
+                    ElaboroFecha = this.ElaboroFecha,
                     RevisoCargo = this.RevisoCargo,
                     RevisoNombre = this.RevisoNombre,
+                    RevisoFecha = this.RevisoFecha,
                     AproboCargo = this.AproboCargo,
                     AproboNombre = this.AproboNombre,
+                    AproboFecha = this.AproboFecha,
+
+                    SelectedNorm = this.SelectedNorm,
+                    BuildingHeight = this.BuildingHeight,
                     RiskCategory = this.RiskCategory,
                     GeneralFireResistance = this.GeneralFireResistance,
                     BuildingClassification = this.BuildingClassification,
                     SecondaryClassification = this.SecondaryClassification,
                     HasSprinklers = this.HasSprinklers,
+
                     SalidasRequeridas = this.SalidasRequeridas,
                     SalidasExistentes = this.SalidasExistentes,
                     CumplimientoCantidadSalidas = this.CumplimientoCantidadSalidas,
+                    FloorExits = this.FloorExits != null ? new System.Collections.Generic.List<SghFloorExitItem>(this.FloorExits) : new System.Collections.Generic.List<SghFloorExitItem>(),
+
                     DiagonalEdificioM = this.DiagonalEdificioM,
                     SeparacionSalidasExistenteM = this.SeparacionSalidasExistenteM,
                     CumplimientoSeparacionSalidas = this.CumplimientoSeparacionSalidas,
@@ -162,13 +204,37 @@ namespace AutoCAD.SGH.Models
                     DistanciaRecorridoExistenteM = this.DistanciaRecorridoExistenteM,
                     CumplimientoDistanciaRecorrido = this.CumplimientoDistanciaRecorrido,
                     CumplimientoCapacidadMedios = this.CumplimientoCapacidadMedios,
-                    Conclusiones = this.Conclusiones
+                    Conclusiones = this.Conclusiones,
+
+                    ImplantacionImagePath = this.ImplantacionImagePath,
+                    LocalizacionImagePath = this.LocalizacionImagePath,
+                    GenerateExcel = this.GenerateExcel,
+                    GenerateWord = this.GenerateWord
                 };
 
                 var serializer = new XmlSerializer(typeof(SghReportDefaults));
-                using (var writer = new StreamWriter(path))
+
+                // 1. Guardar en preferencias globales
+                string globalPath = GetConfigFilePath();
+                if (!string.IsNullOrEmpty(globalPath))
                 {
-                    serializer.Serialize(writer, defaults);
+                    using (var writer = new StreamWriter(globalPath))
+                    {
+                        serializer.Serialize(writer, defaults);
+                    }
+                }
+
+                // 2. Si hay dibujo asociado, guardar también estado específico del dibujo
+                if (!string.IsNullOrWhiteSpace(drawingName))
+                {
+                    string dwgPath = GetDrawingStateFilePath(drawingName);
+                    if (!string.IsNullOrEmpty(dwgPath))
+                    {
+                        using (var writer = new StreamWriter(dwgPath))
+                        {
+                            serializer.Serialize(writer, defaults);
+                        }
+                    }
                 }
             }
             catch { }
@@ -190,53 +256,106 @@ namespace AutoCAD.SGH.Models
 
             try
             {
-                string path = GetConfigFilePath();
-                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                SghReportDefaults defaults = null;
+                var serializer = new XmlSerializer(typeof(SghReportDefaults));
+
+                // 1. Intentar cargar estado específico del dibujo si existe
+                if (!string.IsNullOrWhiteSpace(drawingName))
                 {
-                    var serializer = new XmlSerializer(typeof(SghReportDefaults));
-                    using (var reader = new StreamReader(path))
+                    string dwgPath = GetDrawingStateFilePath(drawingName);
+                    if (!string.IsNullOrEmpty(dwgPath) && File.Exists(dwgPath))
                     {
-                        var defaults = (SghReportDefaults)serializer.Deserialize(reader);
-                        if (defaults != null)
+                        using (var reader = new StreamReader(dwgPath))
                         {
-                            if (!string.IsNullOrEmpty(defaults.DirectorName)) model.DirectorName = defaults.DirectorName;
-                            if (!string.IsNullOrEmpty(defaults.DirectorCert)) model.DirectorCert = defaults.DirectorCert;
-                            if (!string.IsNullOrEmpty(defaults.CoordinatorName)) model.CoordinatorName = defaults.CoordinatorName;
-                            if (!string.IsNullOrEmpty(defaults.AuthorName)) model.AuthorName = defaults.AuthorName;
-                            if (!string.IsNullOrEmpty(defaults.CollaboratorName)) model.CollaboratorName = defaults.CollaboratorName;
-
-                            if (!string.IsNullOrEmpty(defaults.ElaboroCargo)) model.ElaboroCargo = defaults.ElaboroCargo;
-                            if (!string.IsNullOrEmpty(defaults.ElaboroNombre)) model.ElaboroNombre = defaults.ElaboroNombre;
-                            if (!string.IsNullOrEmpty(defaults.RevisoCargo)) model.RevisoCargo = defaults.RevisoCargo;
-                            if (!string.IsNullOrEmpty(defaults.RevisoNombre)) model.RevisoNombre = defaults.RevisoNombre;
-                            if (!string.IsNullOrEmpty(defaults.AproboCargo)) model.AproboCargo = defaults.AproboCargo;
-                            if (!string.IsNullOrEmpty(defaults.AproboNombre)) model.AproboNombre = defaults.AproboNombre;
-
-                            if (!string.IsNullOrEmpty(defaults.RiskCategory)) model.RiskCategory = defaults.RiskCategory;
-                            if (!string.IsNullOrEmpty(defaults.GeneralFireResistance)) model.GeneralFireResistance = defaults.GeneralFireResistance;
-                            if (!string.IsNullOrEmpty(defaults.BuildingClassification)) model.BuildingClassification = defaults.BuildingClassification;
-                            if (!string.IsNullOrEmpty(defaults.SecondaryClassification)) model.SecondaryClassification = defaults.SecondaryClassification;
-                            model.HasSprinklers = defaults.HasSprinklers;
-
-                            if (defaults.SalidasRequeridas > 0) model.SalidasRequeridas = defaults.SalidasRequeridas;
-                            if (defaults.SalidasExistentes > 0) model.SalidasExistentes = defaults.SalidasExistentes;
-                            if (!string.IsNullOrEmpty(defaults.CumplimientoCantidadSalidas)) model.CumplimientoCantidadSalidas = defaults.CumplimientoCantidadSalidas;
-
-                            if (defaults.DiagonalEdificioM > 0) model.DiagonalEdificioM = defaults.DiagonalEdificioM;
-                            if (defaults.SeparacionSalidasExistenteM > 0) model.SeparacionSalidasExistenteM = defaults.SeparacionSalidasExistenteM;
-                            if (!string.IsNullOrEmpty(defaults.CumplimientoSeparacionSalidas)) model.CumplimientoSeparacionSalidas = defaults.CumplimientoSeparacionSalidas;
-
-                            if (!string.IsNullOrEmpty(defaults.CumplimientoDescargaSalidas)) model.CumplimientoDescargaSalidas = defaults.CumplimientoDescargaSalidas;
-
-                            if (defaults.DistanciaRecorridoMaxPermitidaM > 0) model.DistanciaRecorridoMaxPermitidaM = defaults.DistanciaRecorridoMaxPermitidaM;
-                            if (defaults.DistanciaRecorridoExistenteM > 0) model.DistanciaRecorridoExistenteM = defaults.DistanciaRecorridoExistenteM;
-                            if (!string.IsNullOrEmpty(defaults.CumplimientoDistanciaRecorrido)) model.CumplimientoDistanciaRecorrido = defaults.CumplimientoDistanciaRecorrido;
-
-                            if (!string.IsNullOrEmpty(defaults.CumplimientoCapacidadMedios)) model.CumplimientoCapacidadMedios = defaults.CumplimientoCapacidadMedios;
-
-                            if (!string.IsNullOrEmpty(defaults.Conclusiones)) model.Conclusiones = defaults.Conclusiones;
+                            defaults = (SghReportDefaults)serializer.Deserialize(reader);
                         }
                     }
+                }
+
+                // 2. Si no hay estado de dibujo, cargar predeterminados globales
+                if (defaults == null)
+                {
+                    string globalPath = GetConfigFilePath();
+                    if (!string.IsNullOrEmpty(globalPath) && File.Exists(globalPath))
+                    {
+                        using (var reader = new StreamReader(globalPath))
+                        {
+                            defaults = (SghReportDefaults)serializer.Deserialize(reader);
+                        }
+                    }
+                }
+
+                if (defaults != null)
+                {
+                    if (!string.IsNullOrEmpty(defaults.ProjectName)) model.ProjectName = defaults.ProjectName;
+                    if (!string.IsNullOrEmpty(defaults.ProjectDescription)) model.ProjectDescription = defaults.ProjectDescription;
+                    if (!string.IsNullOrEmpty(defaults.Version)) model.Version = defaults.Version;
+                    if (!string.IsNullOrEmpty(defaults.VersionDescription)) model.VersionDescription = defaults.VersionDescription;
+                    // Fecha del informe siempre predeterminada al día actual
+                    model.ReportDate = DateTime.Now.ToString("yyyy/MM/dd");
+                    if (!string.IsNullOrEmpty(defaults.ArchBaseDate)) model.ArchBaseDate = defaults.ArchBaseDate;
+
+                    if (!string.IsNullOrEmpty(defaults.DirectorName)) model.DirectorName = defaults.DirectorName;
+                    if (!string.IsNullOrEmpty(defaults.DirectorCert)) model.DirectorCert = defaults.DirectorCert;
+                    if (!string.IsNullOrEmpty(defaults.CoordinatorName)) model.CoordinatorName = defaults.CoordinatorName;
+                    if (!string.IsNullOrEmpty(defaults.AuthorName)) model.AuthorName = defaults.AuthorName;
+                    if (!string.IsNullOrEmpty(defaults.CollaboratorName)) model.CollaboratorName = defaults.CollaboratorName;
+
+                    if (!string.IsNullOrEmpty(defaults.ElaboroCargo)) model.ElaboroCargo = defaults.ElaboroCargo;
+                    if (!string.IsNullOrEmpty(defaults.ElaboroNombre)) model.ElaboroNombre = defaults.ElaboroNombre;
+                    if (!string.IsNullOrEmpty(defaults.ElaboroFecha)) model.ElaboroFecha = defaults.ElaboroFecha;
+
+                    if (!string.IsNullOrEmpty(defaults.RevisoCargo)) model.RevisoCargo = defaults.RevisoCargo;
+                    if (!string.IsNullOrEmpty(defaults.RevisoNombre)) model.RevisoNombre = defaults.RevisoNombre;
+                    if (!string.IsNullOrEmpty(defaults.RevisoFecha)) model.RevisoFecha = defaults.RevisoFecha;
+
+                    if (!string.IsNullOrEmpty(defaults.AproboCargo)) model.AproboCargo = defaults.AproboCargo;
+                    if (!string.IsNullOrEmpty(defaults.AproboNombre)) model.AproboNombre = defaults.AproboNombre;
+                    if (!string.IsNullOrEmpty(defaults.AproboFecha)) model.AproboFecha = defaults.AproboFecha;
+
+                    if (!string.IsNullOrEmpty(defaults.SelectedNorm)) model.SelectedNorm = defaults.SelectedNorm;
+                    if (defaults.BuildingHeight > 0) model.BuildingHeight = defaults.BuildingHeight;
+
+                    if (!string.IsNullOrEmpty(defaults.RiskCategory)) model.RiskCategory = defaults.RiskCategory;
+                    if (!string.IsNullOrEmpty(defaults.GeneralFireResistance)) model.GeneralFireResistance = defaults.GeneralFireResistance;
+                    if (!string.IsNullOrEmpty(defaults.BuildingClassification)) model.BuildingClassification = defaults.BuildingClassification;
+                    if (!string.IsNullOrEmpty(defaults.SecondaryClassification)) model.SecondaryClassification = defaults.SecondaryClassification;
+                    model.HasSprinklers = defaults.HasSprinklers;
+
+                    if (defaults.SalidasRequeridas > 0) model.SalidasRequeridas = defaults.SalidasRequeridas;
+                    if (defaults.SalidasExistentes > 0) model.SalidasExistentes = defaults.SalidasExistentes;
+                    if (!string.IsNullOrEmpty(defaults.CumplimientoCantidadSalidas)) model.CumplimientoCantidadSalidas = defaults.CumplimientoCantidadSalidas;
+
+                    if (defaults.FloorExits != null && defaults.FloorExits.Count > 0)
+                    {
+                        model.FloorExits = new System.Collections.Generic.List<SghFloorExitItem>(defaults.FloorExits);
+                    }
+
+                    if (defaults.DiagonalEdificioM > 0) model.DiagonalEdificioM = defaults.DiagonalEdificioM;
+                    if (defaults.SeparacionSalidasExistenteM > 0) model.SeparacionSalidasExistenteM = defaults.SeparacionSalidasExistenteM;
+                    if (!string.IsNullOrEmpty(defaults.CumplimientoSeparacionSalidas)) model.CumplimientoSeparacionSalidas = defaults.CumplimientoSeparacionSalidas;
+
+                    if (!string.IsNullOrEmpty(defaults.CumplimientoDescargaSalidas)) model.CumplimientoDescargaSalidas = defaults.CumplimientoDescargaSalidas;
+
+                    if (defaults.DistanciaRecorridoMaxPermitidaM > 0) model.DistanciaRecorridoMaxPermitidaM = defaults.DistanciaRecorridoMaxPermitidaM;
+                    if (defaults.DistanciaRecorridoExistenteM > 0) model.DistanciaRecorridoExistenteM = defaults.DistanciaRecorridoExistenteM;
+                    if (!string.IsNullOrEmpty(defaults.CumplimientoDistanciaRecorrido)) model.CumplimientoDistanciaRecorrido = defaults.CumplimientoDistanciaRecorrido;
+
+                    if (!string.IsNullOrEmpty(defaults.CumplimientoCapacidadMedios)) model.CumplimientoCapacidadMedios = defaults.CumplimientoCapacidadMedios;
+
+                    if (!string.IsNullOrEmpty(defaults.Conclusiones)) model.Conclusiones = defaults.Conclusiones;
+
+                    if (!string.IsNullOrEmpty(defaults.ImplantacionImagePath) && File.Exists(defaults.ImplantacionImagePath))
+                    {
+                        model.ImplantacionImagePath = defaults.ImplantacionImagePath;
+                    }
+                    if (!string.IsNullOrEmpty(defaults.LocalizacionImagePath) && File.Exists(defaults.LocalizacionImagePath))
+                    {
+                        model.LocalizacionImagePath = defaults.LocalizacionImagePath;
+                    }
+
+                    model.GenerateExcel = defaults.GenerateExcel;
+                    model.GenerateWord = defaults.GenerateWord;
                 }
             }
             catch { }
@@ -247,6 +366,13 @@ namespace AutoCAD.SGH.Models
 
     public class SghReportDefaults
     {
+        public string ProjectName { get; set; }
+        public string ProjectDescription { get; set; }
+        public string Version { get; set; }
+        public string VersionDescription { get; set; }
+        public string ReportDate { get; set; }
+        public string ArchBaseDate { get; set; }
+
         public string DirectorName { get; set; }
         public string DirectorCert { get; set; }
         public string CoordinatorName { get; set; }
@@ -255,10 +381,16 @@ namespace AutoCAD.SGH.Models
 
         public string ElaboroCargo { get; set; }
         public string ElaboroNombre { get; set; }
+        public string ElaboroFecha { get; set; }
         public string RevisoCargo { get; set; }
         public string RevisoNombre { get; set; }
+        public string RevisoFecha { get; set; }
         public string AproboCargo { get; set; }
         public string AproboNombre { get; set; }
+        public string AproboFecha { get; set; }
+
+        public string SelectedNorm { get; set; }
+        public double BuildingHeight { get; set; } = 15.0;
 
         public string RiskCategory { get; set; }
         public string GeneralFireResistance { get; set; }
@@ -269,6 +401,7 @@ namespace AutoCAD.SGH.Models
         public int SalidasRequeridas { get; set; } = 2;
         public int SalidasExistentes { get; set; } = 2;
         public string CumplimientoCantidadSalidas { get; set; } = "Cumple";
+        public System.Collections.Generic.List<SghFloorExitItem> FloorExits { get; set; } = new System.Collections.Generic.List<SghFloorExitItem>();
 
         public double DiagonalEdificioM { get; set; } = 45.0;
         public double SeparacionSalidasExistenteM { get; set; } = 22.5;
@@ -282,6 +415,11 @@ namespace AutoCAD.SGH.Models
 
         public string CumplimientoCapacidadMedios { get; set; } = "Cumple";
         public string Conclusiones { get; set; }
+
+        public string ImplantacionImagePath { get; set; }
+        public string LocalizacionImagePath { get; set; }
+        public bool GenerateExcel { get; set; } = true;
+        public bool GenerateWord { get; set; } = true;
     }
 
     public class SghFloorExitItem

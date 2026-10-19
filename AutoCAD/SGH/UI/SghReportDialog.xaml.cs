@@ -20,15 +20,21 @@ namespace AutoCAD.SGH.UI
         public bool Confirmed { get; private set; } = false;
         private string _targetFolder;
         private bool _isInitializing = true;
+        private readonly string _drawingName;
 
         private readonly List<FloorRowControlItem> _floorRowControls = new List<FloorRowControlItem>();
+        private readonly List<SghSpace> _spaces;
 
         public SghReportDialog(List<SghSpace> spaces, string drawingName)
         {
+            _drawingName = drawingName;
+            _spaces = spaces ?? new List<SghSpace>();
             InitializeComponent();
 
             // Cargar modelo con datos previos / predeterminados
             Model = SghReportModel.LoadWithDefaults(drawingName);
+            // La fecha del informe siempre predeterminada al día actual
+            Model.ReportDate = DateTime.Now.ToString("yyyy/MM/dd");
 
             // Calcular resumen de espacios y pisos
             int totalSpaces = spaces?.Count ?? 0;
@@ -58,6 +64,8 @@ namespace AutoCAD.SGH.UI
             // Vincular a los controles
             BindModelToUI();
             _isInitializing = false;
+            HookLivePreviewEvents();
+            UpdateLivePreview();
         }
 
         private void InitializeFloorExitsData(List<SghSpace> spaces)
@@ -327,6 +335,7 @@ namespace AutoCAD.SGH.UI
         private void SecondaryCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             UpdateSecondaryTextFromCheckboxes();
+            UpdateLivePreview();
         }
 
         private void UpdateSecondaryTextFromCheckboxes()
@@ -360,6 +369,54 @@ namespace AutoCAD.SGH.UI
         private void BtnCloseSecondaryPopup_Click(object sender, RoutedEventArgs e)
         {
             PopupSecondaryGroups.IsOpen = false;
+        }
+
+        private void BtnCalReportDate_Click(object sender, RoutedEventArgs e)
+        {
+            if (DateTime.TryParse(TxtReportDate.Text, out DateTime dt))
+            {
+                CalReportDate.SelectedDate = dt;
+                CalReportDate.DisplayDate = dt;
+            }
+            else
+            {
+                CalReportDate.SelectedDate = DateTime.Today;
+                CalReportDate.DisplayDate = DateTime.Today;
+            }
+            PopupCalReportDate.IsOpen = true;
+        }
+
+        private void CalReportDate_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CalReportDate.SelectedDate.HasValue)
+            {
+                TxtReportDate.Text = CalReportDate.SelectedDate.Value.ToString("yyyy/MM/dd");
+                PopupCalReportDate.IsOpen = false;
+            }
+        }
+
+        private void BtnCalArchBaseDate_Click(object sender, RoutedEventArgs e)
+        {
+            if (DateTime.TryParse(TxtArchBaseDate.Text, out DateTime dt))
+            {
+                CalArchBaseDate.SelectedDate = dt;
+                CalArchBaseDate.DisplayDate = dt;
+            }
+            else
+            {
+                CalArchBaseDate.SelectedDate = DateTime.Today;
+                CalArchBaseDate.DisplayDate = DateTime.Today;
+            }
+            PopupCalArchBaseDate.IsOpen = true;
+        }
+
+        private void CalArchBaseDate_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CalArchBaseDate.SelectedDate.HasValue)
+            {
+                TxtArchBaseDate.Text = CalArchBaseDate.SelectedDate.Value.ToString("yyyy/MM/dd");
+                PopupCalArchBaseDate.IsOpen = false;
+            }
         }
 
         private void SelectComboBoxItem(System.Windows.Controls.ComboBox combo, string text)
@@ -667,6 +724,7 @@ namespace AutoCAD.SGH.UI
                     SelectComboBoxItem(row.CmbEvaluacion, "No Cumple");
                 }
             }
+            UpdateLivePreview();
         }
 
         private void RecalculateTotalFloorRow()
@@ -813,6 +871,7 @@ namespace AutoCAD.SGH.UI
                 TxtPlaceholderLocalizacion.Visibility = Visibility.Visible;
                 TxtLocalizacionPath.Text = string.Empty;
             }
+            UpdateLivePreview();
         }
 
         private void BtnBrowseImplantacion_Click(object sender, RoutedEventArgs e)
@@ -858,10 +917,10 @@ namespace AutoCAD.SGH.UI
         private void BtnSaveDefaults_Click(object sender, RoutedEventArgs e)
         {
             BindUIToModel();
-            Model.SaveDefaults();
+            Model.SaveDefaults(_drawingName);
             MessageBox.Show(
-                "Los datos del equipo, cargos y parámetros por defecto han sido guardados correctamente para próximos proyectos.",
-                "SGH - Preferencias Guardadas",
+                "Los datos del proyecto, equipo, normativas y parámetros han sido guardados correctamente.\n\nSi cierra y vuelve a abrir AutoCAD, sus datos continuarán guardados para este dibujo y para nuevos proyectos.",
+                "SGH - Datos Guardados Correctamente",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }
@@ -869,9 +928,9 @@ namespace AutoCAD.SGH.UI
         private void BtnSaveConclusionsAsDefault_Click(object sender, RoutedEventArgs e)
         {
             BindUIToModel();
-            Model.SaveDefaults();
+            Model.SaveDefaults(_drawingName);
             MessageBox.Show(
-                "Las conclusiones actuales han sido guardadas como la plantilla predeterminada para todos los nuevos proyectos.",
+                "Las conclusiones actuales han sido guardadas como la plantilla predeterminada para todos los proyectos.",
                 "SGH - Conclusiones Predeterminadas Guardadas",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -928,6 +987,89 @@ namespace AutoCAD.SGH.UI
 
             Confirmed = true;
             Close();
+        }
+
+        private void HookLivePreviewEvents()
+        {
+            TxtProjectName.TextChanged += (s, e) => UpdateLivePreview();
+            TxtProjectDescription.TextChanged += (s, e) => UpdateLivePreview();
+            TxtVersion.TextChanged += (s, e) => UpdateLivePreview();
+            TxtReportDate.TextChanged += (s, e) => UpdateLivePreview();
+            TxtArchBaseDate.TextChanged += (s, e) => UpdateLivePreview();
+
+            TxtDirectorName.TextChanged += (s, e) => UpdateLivePreview();
+            TxtDirectorCert.TextChanged += (s, e) => UpdateLivePreview();
+            TxtCoordinatorName.TextChanged += (s, e) => UpdateLivePreview();
+            TxtAuthorName.TextChanged += (s, e) => UpdateLivePreview();
+            TxtCollaboratorName.TextChanged += (s, e) => UpdateLivePreview();
+
+            TxtBuildingHeight.TextChanged += (s, e) => UpdateLivePreview();
+            CmbBuildingClassification.SelectionChanged += (s, e) => UpdateLivePreview();
+            CmbRiskCategory.SelectionChanged += (s, e) => UpdateLivePreview();
+            ChkSprinklers.Checked += (s, e) => UpdateLivePreview();
+            ChkSprinklers.Unchecked += (s, e) => UpdateLivePreview();
+
+            TxtDiagonalEdificio.TextChanged += (s, e) => UpdateLivePreview();
+            TxtSeparacionSalidas.TextChanged += (s, e) => UpdateLivePreview();
+            CmbCumplimientoSeparacion.SelectionChanged += (s, e) => UpdateLivePreview();
+            TxtDistanciaMax.TextChanged += (s, e) => UpdateLivePreview();
+            TxtDistanciaExistente.TextChanged += (s, e) => UpdateLivePreview();
+            CmbCumplimientoDistancia.SelectionChanged += (s, e) => UpdateLivePreview();
+
+            TxtConclusiones.TextChanged += (s, e) => UpdateLivePreview();
+        }
+
+        private bool _isUpdatingLivePreview = false;
+
+        public void UpdateLivePreview()
+        {
+            if (_isInitializing || _isUpdatingLivePreview) return;
+            try
+            {
+                _isUpdatingLivePreview = true;
+                BindUIToModel();
+                SideWordPreview?.RefreshPreview(Model);
+            }
+            finally
+            {
+                _isUpdatingLivePreview = false;
+            }
+        }
+
+        private void BtnToggleSidePreview_Click(object sender, RoutedEventArgs e)
+        {
+            bool isExpanded = BtnToggleSidePreview.IsChecked == true;
+            if (isExpanded)
+            {
+                PnlSidePreview.Visibility = Visibility.Visible;
+                PreviewSplitter.Visibility = Visibility.Visible;
+                if (this.Width < 1440)
+                {
+                    this.Width = 1480;
+                }
+                UpdateLivePreview();
+                SideWordPreview?.ScrollToSection(MainTabControl.SelectedIndex);
+            }
+            else
+            {
+                PnlSidePreview.Visibility = Visibility.Collapsed;
+                PreviewSplitter.Visibility = Visibility.Collapsed;
+                if (this.Width > 1150)
+                {
+                    this.Width = 1080;
+                }
+                UpdateLivePreview();
+            }
+        }
+
+        private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+            if (PnlSidePreview?.Visibility == Visibility.Visible)
+            {
+                UpdateLivePreview();
+                SideWordPreview?.ScrollToSection(MainTabControl.SelectedIndex);
+            }
         }
     }
 }

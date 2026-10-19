@@ -637,44 +637,29 @@ namespace MiNamespace
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var picked = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         codoFilter,
-                        "Arrastra un recuadro sobre los codos (o haz clics individuales):");
-                    if (rectElements != null && rectElements.Count > 0)
+                        "Selecciona codos a taguear y haz clic en 'Finish':"
+                    );
+                    if (picked != null && picked.Count > 0)
                     {
-                        foreach (var el in rectElements)
+                        foreach (var r in picked)
                         {
-                            refs.Add(new Reference(el));
+                            if (!refs.Any(x => x.ElementId == r.ElementId))
+                            {
+                                refs.Add(r);
+                            }
                         }
                     }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-            }
-
-            if (refs.Count == 0)
-            {
-                while (true)
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
-                    try
-                    {
-                        Reference pick = uidoc.Selection.PickObject(
-                            ObjectType.Element,
-                            codoFilter,
-                            "Selecciona codos a taguear (clics sucesivos). Pulsa ESC para terminar y colocar tags.");
-                        if (pick != null && !refs.Any(r => r.ElementId == pick.ElementId))
-                        {
-                            refs.Add(pick);
-                        }
-                    }
-                    catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                    {
-                        break; // Al presionar ESC termina la selección y procede
-                    }
-                    catch
-                    {
-                        break;
-                    }
+                    return Result.Cancelled;
+                }
+                catch
+                {
+                    return Result.Cancelled;
                 }
             }
 

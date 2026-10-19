@@ -121,7 +121,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Content="Cancelar" Height="36" Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" FontWeight="Medium" Click="BtnCancelar_Click" Cursor="Hand"/>
-            <Button Grid.Column="2" x:Name="BtnExportar" Content="  Continuar a Generar Entregables  " Height="36" Background="#89B4FA" Foreground="#11111B" BorderThickness="0" FontWeight="Bold" Click="BtnExportar_Click" Cursor="Hand"/>
+            <Button Grid.Column="2" x:Name="BtnExportar" Content="  Continuar y generar informe  " Height="36" Background="#89B4FA" Foreground="#11111B" BorderThickness="0" FontWeight="Bold" Click="BtnExportar_Click" Cursor="Hand"/>
         </Grid>
 
     </Grid>

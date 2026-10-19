@@ -1,0 +1,543 @@
+<UserControl x:Class="AutoCAD.SGH.UI.SghWordPreviewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="1200" d:DesignWidth="680"
+             Background="#181825"
+             FontFamily="Segoe UI"
+             FontSize="12">
+
+    <UserControl.Resources>
+        <DropShadowEffect x:Key="PaperShadow" BlurRadius="16" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.45"/>
+        <Style x:Key="SectionJumpButtonStyle" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#313244"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="7,4"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#45475A"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#89B4FA"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Barra de navegación y herramientas superior -->
+            <RowDefinition Height="Auto"/>
+            <!-- Contenedor con scroll para visualizar todo el documento A4 continuo -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Barra de herramientas superior -->
+        <Border Grid.Row="0" Background="#1E1E2E" BorderBrush="#45475A" BorderThickness="0,0,0,1" Padding="12,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📄 VISTA PREVIA EN VIVO" FontWeight="Bold" FontSize="11.5" Foreground="#89B4FA" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Border Background="#313244" CornerRadius="4" Padding="6,2">
+                        <TextBlock Text="Documento A4" FontSize="10" FontWeight="SemiBold" Foreground="#A6E3A1"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Chips de navegación rápida sincronizada -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Ir a:" FontSize="10.5" Foreground="#6C7086" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <Button x:Name="BtnNav1" Style="{StaticResource SectionJumpButtonStyle}" Content="1. Portada" Click="BtnJumpSection_Click" Tag="1" ToolTip="Ir a la Portada y Aprobaciones"/>
+                    <Button x:Name="BtnNav2" Style="{StaticResource SectionJumpButtonStyle}" Content="2. Contenido" Click="BtnJumpSection_Click" Tag="2" ToolTip="Ir a la Tabla de Contenido e Introducción"/>
+                    <Button x:Name="BtnNav3" Style="{StaticResource SectionJumpButtonStyle}" Content="3. Edificio" Click="BtnJumpSection_Click" Tag="3" ToolTip="Ir a Clasificación y Altura"/>
+                    <Button x:Name="BtnNav4" Style="{StaticResource SectionJumpButtonStyle}" Content="4. Evacuación" Click="BtnJumpSection_Click" Tag="4" ToolTip="Ir a Salidas por Piso"/>
+                    <Button x:Name="BtnNav5" Style="{StaticResource SectionJumpButtonStyle}" Content="5. Conclusiones" Click="BtnJumpSection_Click" Tag="5" ToolTip="Ir a Conclusiones e Imágenes"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Contenedor de la vista continua del Documento -->
+        <ScrollViewer x:Name="DocScrollViewer" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#11111B">
+            <StackPanel HorizontalAlignment="Center" Margin="16,18">
+
+                <!-- ============================================================== -->
+                <!-- HOJA 1: PORTADA & CONTROL DE APROBACIONES                      -->
+                <!-- ============================================================== -->
+                <Border x:Name="Sheet1" Width="580" MinHeight="800" Background="#FFFFFF" CornerRadius="3" Effect="{StaticResource PaperShadow}" Padding="36,28,36,28" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Encabezado Word -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DICTA S.A.S. - INGENIERÍA &amp; CONSULTORÍA" FontSize="9" FontWeight="Bold" Foreground="#1B365D"/>
+                                <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="8" Foreground="#666666"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="SGH-INF-001" FontSize="9" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtHeaderVersion1" Text="Versión 01" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                            <Rectangle Grid.ColumnSpan="2" Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom" Margin="0,18,0,0"/>
+                        </Grid>
+
+                        <!-- Cuerpo Hoja 1 -->
+                        <StackPanel Grid.Row="1">
+                            <Border Background="#1B365D" CornerRadius="3" Padding="14,10" Margin="0,10,0,16">
+                                <TextBlock Text="INFORME TÉCNICO" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                            </Border>
+
+                            <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="18" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Center" Margin="0,4,0,2"/>
+                            <TextBlock Text="EVALUACIÓN BAJO NORMATIVA NSR-10 Y NFPA 101" FontSize="10" FontWeight="SemiBold" Foreground="#666666" HorizontalAlignment="Center" Margin="0,0,0,18"/>
+
+                            <!-- Caja del Proyecto -->
+                            <Border BorderBrush="#1B365D" BorderThickness="1.5" CornerRadius="4" Padding="14,12" Background="#F8FAFC" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="PROYECTO:" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock x:Name="TxtPrevProjectName" Text="NOMBRE DEL PROYECTO" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,2,0,6" TextWrapping="Wrap"/>
+                                    <TextBlock Text="DESCRIPCIÓN:" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock x:Name="TxtPrevProjectDesc" Text="Descripción del proyecto y alcances de la edificación analizada." FontSize="10.5" Foreground="#334155" TextWrapping="Wrap" LineHeight="14"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Cuadrícula de Datos de Equipo -->
+                            <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="12,10" Background="#FFFFFF" Margin="0,0,0,14">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Director del proyecto:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TxtPrevDirector" Text="Ing. Pedro Diaz" FontSize="10" Foreground="#0F172A" Margin="0,2"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Certificado NFPA:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TxtPrevCert" Text="Certificado NFPA 1 &amp; 101 &amp; 72" FontSize="9.5" Foreground="#2563EB" Margin="0,2"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Coordinador del proyecto:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtPrevCoordinator" Text="COORDINADOR" FontSize="10" Foreground="#0F172A" Margin="0,2"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Elaborado por:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtPrevAuthor" Text="ELABORADOR" FontSize="10" Foreground="#0F172A" Margin="0,2"/>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Colaborador:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="TxtPrevCollaborator" Text="COLABORADOR" FontSize="10" Foreground="#0F172A" Margin="0,2"/>
+
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Fecha del Informe:" FontWeight="Bold" FontSize="10" Foreground="#1E293B" Margin="0,2"/>
+                                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TxtPrevDate" Text="2026/10/19" FontWeight="Bold" FontSize="10" Foreground="#0F172A" Margin="0,2"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Tabla de Aprobaciones Oficial Word -->
+                            <TextBlock Text="CONTROL DE APROBACIONES" FontSize="9" FontWeight="Bold" Foreground="#475569" Margin="0,4,0,4"/>
+                            <Border BorderBrush="#94A3B8" BorderThickness="1" CornerRadius="2">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Header -->
+                                    <Border Grid.Row="0" Grid.ColumnSpan="4" Background="#E2E8F0" BorderBrush="#94A3B8" BorderThickness="0,0,0,1" Padding="4,4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="130"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Rol" FontWeight="Bold" FontSize="9" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="Cargo" FontWeight="Bold" FontSize="9" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="Nombre" FontWeight="Bold" FontSize="9" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="Fecha" FontWeight="Bold" FontSize="9" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Fila Elaboró -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Elaboró" FontWeight="Bold" FontSize="9" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TxtPrevElabCargo" Text="Coordinadora Senior" FontSize="8.5" Foreground="#334155" Margin="4,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" x:Name="TxtPrevElabNombre" Text="Alejandra Velandia" FontSize="8.5" Foreground="#0F172A" Margin="4,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="3" x:Name="TxtPrevElabFecha" Text="2026/10/19" FontSize="8.5" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+
+                                    <!-- Fila Revisó -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Revisó" FontWeight="Bold" FontSize="9" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtPrevRevCargo" Text="Responsable de SGC" FontSize="8.5" Foreground="#334155" Margin="4,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" x:Name="TxtPrevRevNombre" Text="Catherin Zamora" FontSize="8.5" Foreground="#0F172A" Margin="4,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="3" x:Name="TxtPrevRevFecha" Text="2026/10/19" FontSize="8.5" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+
+                                    <!-- Fila Aprobó -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Aprobó" FontWeight="Bold" FontSize="9" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtPrevAproCargo" Text="Responsable de SGC" FontSize="8.5" Foreground="#334155" Margin="4,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="2" x:Name="TxtPrevAproNombre" Text="Catherin Zamora" FontSize="8.5" Foreground="#0F172A" Margin="4,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="3" x:Name="TxtPrevAproFecha" Text="2026/10/19" FontSize="8.5" Foreground="#334155" Margin="4,3" HorizontalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Pie de página Hoja 1 -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Rectangle Height="1" Fill="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Estudio de Seguridad Humana y Medios de Evacuación" FontSize="8" Foreground="#666666"/>
+                                <TextBlock Grid.Column="1" Text="Página 1 de 5" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ============================================================== -->
+                <!-- HOJA 2: TABLA DE CONTENIDO & 1. INTRODUCCIÓN                   -->
+                <!-- ============================================================== -->
+                <Border x:Name="Sheet2" Width="580" MinHeight="800" Background="#FFFFFF" CornerRadius="3" Effect="{StaticResource PaperShadow}" Padding="36,28,36,28" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Encabezado Word -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DICTA S.A.S. - INGENIERÍA &amp; CONSULTORÍA" FontSize="9" FontWeight="Bold" Foreground="#1B365D"/>
+                                <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="8" Foreground="#666666"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="SGH-INF-001" FontSize="9" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtHeaderVersion2" Text="Versión 01" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                            <Rectangle Grid.ColumnSpan="2" Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom" Margin="0,18,0,0"/>
+                        </Grid>
+
+                        <!-- Cuerpo Hoja 2 -->
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="TABLA DE CONTENIDO" FontSize="14" FontWeight="Bold" Foreground="#1B365D" Margin="0,6,0,10"/>
+
+                            <Border BorderBrush="#E2E8F0" BorderThickness="1" Background="#F8FAFC" Padding="12,10" CornerRadius="4" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,2"><TextBlock Text="1. INTRODUCCIÓN" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 3" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="0,2"><TextBlock Text="2. OBJETIVOS" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 3" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="0,2"><TextBlock Text="3. DESCRIPCIÓN DEL PROYECTO" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 3" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="0,2"><TextBlock Text="4. METODOLOGÍA" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 4" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="0,2"><TextBlock Text="5. ANÁLISIS DE SEGURIDAD HUMANA" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 4" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="12,2,0,2"><TextBlock Text="5.1. Clasificación general de la edificación" FontSize="9" Foreground="#334155"/><TextBlock Text=".............................................................................................  pág. 4" HorizontalAlignment="Right" FontSize="9" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="12,2,0,2"><TextBlock Text="5.2. Clasificación de riesgo de contenidos" FontSize="9" Foreground="#334155"/><TextBlock Text=".............................................................................................  pág. 5" HorizontalAlignment="Right" FontSize="9" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="12,2,0,2"><TextBlock Text="5.3. Determinación de cargas de ocupación" FontSize="9" Foreground="#334155"/><TextBlock Text=".............................................................................................  pág. 5" HorizontalAlignment="Right" FontSize="9" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="12,2,0,2"><TextBlock Text="5.4. Salidas y medios de evacuación" FontSize="9" Foreground="#334155"/><TextBlock Text=".............................................................................................  pág. 6" HorizontalAlignment="Right" FontSize="9" Foreground="#64748B"/></Grid>
+                                    <Grid Margin="0,2"><TextBlock Text="6. CONCLUSIONES" FontWeight="SemiBold" FontSize="9.5" Foreground="#1E293B"/><TextBlock Text=".........................................................................................................  pág. 7" HorizontalAlignment="Right" FontSize="9.5" Foreground="#64748B"/></Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="1. INTRODUCCIÓN" FontSize="12" FontWeight="Bold" Foreground="#1B365D" Margin="0,4,0,4"/>
+                            <TextBlock x:Name="TxtPrevIntro" FontSize="10" Foreground="#334155" TextWrapping="Wrap" LineHeight="14" Margin="0,0,0,10">
+                                En el proyecto <Bold><Run x:Name="RunIntroProjName">PROYECTO</Run></Bold> se realiza el análisis de protección contra fuego y medios de evacuación bajo el marco normativo del Reglamento NSR-10 (Títulos J y K) y directrices NFPA 101.
+                            </TextBlock>
+
+                            <!-- Previsualización de Imagen 1 (Implantación) -->
+                            <TextBlock Text="IMPLANTACIÓN INICIAL DEL PROYECTO" FontSize="9" FontWeight="Bold" Foreground="#475569" Margin="0,4,0,4"/>
+                            <Border BorderBrush="#CBD5E1" BorderThickness="1" Background="#F1F5F9" Height="150" CornerRadius="3">
+                                <Grid>
+                                    <TextBlock x:Name="TxtPrevNoImg1" Text="[Sin imagen de implantación seleccionada]" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="10"/>
+                                    <Image x:Name="ImgPrevImplantacion" Stretch="Uniform" Margin="4"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Pie de página Hoja 2 -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Rectangle Height="1" Fill="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Estudio de Seguridad Humana y Medios de Evacuación" FontSize="8" Foreground="#666666"/>
+                                <TextBlock Text="Página 2 de 5" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ============================================================== -->
+                <!-- HOJA 3: CLASIFICACIÓN, ALTURA & RESISTENCIA AL FUEGO           -->
+                <!-- ============================================================== -->
+                <Border x:Name="Sheet3" Width="580" MinHeight="800" Background="#FFFFFF" CornerRadius="3" Effect="{StaticResource PaperShadow}" Padding="36,28,36,28" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Encabezado Word -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DICTA S.A.S. - INGENIERÍA &amp; CONSULTORÍA" FontSize="9" FontWeight="Bold" Foreground="#1B365D"/>
+                                <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="8" Foreground="#666666"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="SGH-INF-001" FontSize="9" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtHeaderVersion3" Text="Versión 01" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                            <Rectangle Grid.ColumnSpan="2" Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom" Margin="0,18,0,0"/>
+                        </Grid>
+
+                        <!-- Cuerpo Hoja 3 -->
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="5. ANÁLISIS DE SEGURIDAD HUMANA" FontSize="13" FontWeight="Bold" Foreground="#1B365D" Margin="0,4,0,4"/>
+                            
+                            <TextBlock Text="5.1. Clasificación general de la edificación" FontSize="11" FontWeight="Bold" Foreground="#1E293B" Margin="0,2,0,4"/>
+                            <TextBlock x:Name="TxtPrevClassifText" FontSize="10" Foreground="#334155" TextWrapping="Wrap" LineHeight="14" Margin="0,0,0,8"/>
+
+                            <!-- Tabla de Clasificación -->
+                            <TextBlock Text="TABLA 1. CLASIFICACIÓN DE OCUPACIÓN DEL PROYECTO" FontSize="8.5" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <Border BorderBrush="#64748B" BorderThickness="1" Margin="0,0,0,12">
+                                <StackPanel x:Name="PnlPrevClassificationTable"/>
+                            </Border>
+
+                            <!-- Altura de Edificación -->
+                            <TextBlock Text="ALTURA Y CONSIDERACIÓN DE GRAN ALTURA" FontSize="10" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,2"/>
+                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" Padding="10,8" CornerRadius="4" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock x:Name="TxtPrevHeightParagraph" FontSize="10" Foreground="#1E293B" TextWrapping="Wrap" LineHeight="14"/>
+                                    <Border x:Name="BadgePrevHighRise" Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="3" Padding="8,4" Margin="0,6,0,0" HorizontalAlignment="Left">
+                                        <TextBlock x:Name="TxtPrevHighRiseBadge" Text="✓ Altura Convencional (≤ 23m)" FontSize="9" FontWeight="Bold" Foreground="#166534"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Resistencia al Fuego -->
+                            <TextBlock Text="5.2. Clasificación de riesgo y resistencia al fuego" FontSize="11" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,4"/>
+                            <TextBlock x:Name="TxtPrevFireText" FontSize="10" Foreground="#334155" TextWrapping="Wrap" LineHeight="14" Margin="0,0,0,6"/>
+                        </StackPanel>
+
+                        <!-- Pie de página Hoja 3 -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Rectangle Height="1" Fill="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Estudio de Seguridad Humana y Medios de Evacuación" FontSize="8" Foreground="#666666"/>
+                                <TextBlock Text="Página 3 de 5" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ============================================================== -->
+                <!-- HOJA 4: SALIDAS & MEDIOS DE EVACUACIÓN                         -->
+                <!-- ============================================================== -->
+                <Border x:Name="Sheet4" Width="580" MinHeight="800" Background="#FFFFFF" CornerRadius="3" Effect="{StaticResource PaperShadow}" Padding="36,28,36,28" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Encabezado Word -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DICTA S.A.S. - INGENIERÍA &amp; CONSULTORÍA" FontSize="9" FontWeight="Bold" Foreground="#1B365D"/>
+                                <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="8" Foreground="#666666"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="SGH-INF-001" FontSize="9" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtHeaderVersion4" Text="Versión 01" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                            <Rectangle Grid.ColumnSpan="2" Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom" Margin="0,18,0,0"/>
+                        </Grid>
+
+                        <!-- Cuerpo Hoja 4 -->
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="5.4. Salidas y Medios de Evacuación" FontSize="13" FontWeight="Bold" Foreground="#1B365D" Margin="0,4,0,4"/>
+                            <TextBlock Text="Cálculo de ocupación y verificación de cantidad mínima de salidas por nivel:" FontSize="10" Foreground="#334155" Margin="0,0,0,8"/>
+
+                            <!-- Grilla de Salidas por Piso -->
+                            <Border BorderBrush="#64748B" BorderThickness="1" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Background="#D9D9D9">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Nivel / Piso" FontWeight="Bold" FontSize="9" Foreground="#000000" HorizontalAlignment="Center" Margin="2,4"/>
+                                        <TextBlock Grid.Column="1" Text="Ocupación" FontWeight="Bold" FontSize="9" Foreground="#000000" HorizontalAlignment="Center" Margin="2,4"/>
+                                        <TextBlock Grid.Column="2" Text="Salidas Req." FontWeight="Bold" FontSize="9" Foreground="#000000" HorizontalAlignment="Center" Margin="2,4"/>
+                                        <TextBlock Grid.Column="3" Text="Salidas Exist." FontWeight="Bold" FontSize="9" Foreground="#000000" HorizontalAlignment="Center" Margin="2,4"/>
+                                        <TextBlock Grid.Column="4" Text="Evaluación" FontWeight="Bold" FontSize="9" Foreground="#000000" HorizontalAlignment="Center" Margin="2,4"/>
+                                    </Grid>
+                                    <StackPanel x:Name="PnlPrevFloorRows"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Separación entre salidas -->
+                            <TextBlock Text="SEPARACIÓN ENTRE SALIDAS" FontSize="10" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,2"/>
+                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" Padding="10,8" CornerRadius="4" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock x:Name="TxtPrevSeparationCalc" FontSize="9.5" Foreground="#334155" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" x:Name="BadgePrevSeparation" Background="#DCFCE7" CornerRadius="3" Padding="8,4" VerticalAlignment="Center">
+                                        <TextBlock x:Name="TxtPrevSeparationResult" Text="Cumple" FontSize="9" FontWeight="Bold" Foreground="#166534"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Distancia máxima de recorrido -->
+                            <TextBlock Text="DISTANCIA DE RECORRIDO" FontSize="10" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,2"/>
+                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" Padding="10,8" CornerRadius="4">
+                                <TextBlock x:Name="TxtPrevDistanceText" FontSize="9.5" Foreground="#334155" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Pie de página Hoja 4 -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Rectangle Height="1" Fill="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Estudio de Seguridad Humana y Medios de Evacuación" FontSize="8" Foreground="#666666"/>
+                                <TextBlock Text="Página 4 de 5" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ============================================================== -->
+                <!-- HOJA 5: CONCLUSIONES & LOCALIZACIÓN SATELITAL                  -->
+                <!-- ============================================================== -->
+                <Border x:Name="Sheet5" Width="580" MinHeight="800" Background="#FFFFFF" CornerRadius="3" Effect="{StaticResource PaperShadow}" Padding="36,28,36,28">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Encabezado Word -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DICTA S.A.S. - INGENIERÍA &amp; CONSULTORÍA" FontSize="9" FontWeight="Bold" Foreground="#1B365D"/>
+                                <TextBlock Text="ESTUDIO DE SEGURIDAD HUMANA" FontSize="8" Foreground="#666666"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="SGH-INF-001" FontSize="9" FontWeight="Bold" Foreground="#1B365D" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtHeaderVersion5" Text="Versión 01" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                            <Rectangle Grid.ColumnSpan="2" Height="1" Fill="#CCCCCC" VerticalAlignment="Bottom" Margin="0,18,0,0"/>
+                        </Grid>
+
+                        <!-- Cuerpo Hoja 5 -->
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="6. CONCLUSIONES" FontSize="14" FontWeight="Bold" Foreground="#1B365D" Margin="0,6,0,10"/>
+                            
+                            <!-- Viñetas de Conclusiones -->
+                            <StackPanel x:Name="PnlPrevConclusionsList" Margin="0,0,0,14"/>
+
+                            <!-- Imagen 2 (Localización) -->
+                            <TextBlock Text="LOCALIZACIÓN SATELITAL / EDIFICIO" FontSize="9" FontWeight="Bold" Foreground="#475569" Margin="0,4,0,4"/>
+                            <Border BorderBrush="#CBD5E1" BorderThickness="1" Background="#F1F5F9" Height="150" CornerRadius="3" Margin="0,0,0,16">
+                                <Grid>
+                                    <TextBlock x:Name="TxtPrevNoImg2" Text="[Sin imagen de localización seleccionada]" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#94A3B8" FontSize="10"/>
+                                    <Image x:Name="ImgPrevLocalizacion" Stretch="Uniform" Margin="4"/>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock Text="--- Fin del documento ---" FontSize="9.5" FontStyle="Italic" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <!-- Pie de página Hoja 5 -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Rectangle Height="1" Fill="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Estudio de Seguridad Humana y Medios de Evacuación" FontSize="8" Foreground="#666666"/>
+                                <TextBlock Text="Página 5 de 5" FontSize="8" Foreground="#666666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

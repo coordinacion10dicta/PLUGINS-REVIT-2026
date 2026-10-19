@@ -12,7 +12,6 @@ namespace MiNamespace
     /// Módulo encargado de la colocación de etiquetas y cotas en Redes Húmedas (Desagües / Tuberías):
     /// 1. Tag Pendientes (Spot Slope / OST_SpotSlopes)
     /// 2. Tag Material
-    /// 3. Tag Cambio de Nivel (Desagües)
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     public class MyTAGS_Tags_RedesHumedas : IExternalCommand
@@ -145,7 +144,7 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, permitir selección con PickObjects (+, -, Finish) o recuadro
+            // 2. Si no había preselección, permitir selección con PickObjects (+, -, Finish)
             if (refsList.Count == 0)
             {
                 try
@@ -160,27 +159,13 @@ namespace MiNamespace
                         refsList.AddRange(picked);
                     }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (refsList.Count == 0)
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
-                    try
-                    {
-                        var rectElements = uidoc.Selection.PickElementsByRectangle(
-                            filter,
-                            "Arrastra un recuadro sobre las tuberías a colocar Spot Slope:"
-                        );
-                        if (rectElements != null && rectElements.Count > 0)
-                        {
-                            foreach (var el in rectElements)
-                            {
-                                refsList.Add(new Reference(el));
-                            }
-                        }
-                    }
-                    catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                    catch { }
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
 
@@ -405,8 +390,7 @@ namespace MiNamespace
 
                         Reference pipeRef = new Reference(tuberiaPrincipal);
 
-                        bool esVertical = Math.Abs(dirFlujo.Y) > Math.Abs(dirFlujo.X);
-                        TagOrientation orientacion = esVertical ? TagOrientation.Vertical : TagOrientation.Horizontal;
+                        TagOrientation orientacion = TagOrientation.Horizontal;
 
                         IndependentTag newTag = IndependentTag.Create(
                             doc,
@@ -682,8 +666,8 @@ namespace MiNamespace
         }
 
         /// <summary>
-        /// Valida si el elemento es una tubería apta para taguear (horizontal o vertical),
-        /// ignorando niples y tramos extremadamente cortos (< 36 cm / 1.2 ft).
+        /// Valida si el elemento es una tubería apta para taguear,
+        /// ignorando tramos nulos o menores a 6 cm (0.2 ft).
         /// </summary>
         private static bool EsTuberiaValidaParaTag(Element e)
         {
@@ -697,8 +681,7 @@ namespace MiNamespace
 
             if (e.Location is LocationCurve lc && lc.Curve != null)
             {
-                // Mínimo 1.2 ft (~36 cm) para ignorar niples/tramitos cortos alrededor de codos/Ts
-                return lc.Curve.Length >= 1.2;
+                return lc.Curve.Length >= 0.2;
             }
 
             return false;
@@ -1253,7 +1236,7 @@ namespace MiNamespace
         // =========================================================================
 
         /// <summary>
-        /// Flujo por selección múltiple para etiquetar el material y diámetro de tuberías
+        /// Flujo por selección (recuadro, preselección o clics sucesivos) para etiquetar el material y diámetro de tuberías
         /// mediante la familia 'DC - Tag tubería 2 mm' (Type Name + Size).
         /// </summary>
         public static int TaguearMaterialPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
@@ -1264,13 +1247,13 @@ namespace MiNamespace
             if (materialTagTypeId == ElementId.InvalidElementId)
             {
                 Autodesk.Revit.UI.TaskDialog.Show("Tag Material",
-                    "No se encontró la familia de etiqueta de tubería ('DC - Tag tubería 2 mm' / 'Type Name + Size') cargada en el proyecto.");
+                    "No se encontró ninguna familia de etiqueta de tubería ('DC - Tag tubería 2 mm' / 'Type Name + Size' / 'Pipe Tag') cargada en el proyecto.");
                 return 0;
             }
 
-            List<Reference> refsList = new List<Reference>();
-
+            List<Element> pipes = new List<Element>();
             var filter = new PipeSelectionFilter();
+
             // 1. Revisar si el usuario ya tenía tuberías seleccionadas en Revit
             var preSelected = uidoc.Selection.GetElementIds();
             if (preSelected != null && preSelected.Count > 0)
@@ -1280,13 +1263,13 @@ namespace MiNamespace
                     Element el = doc.GetElement(id);
                     if (el != null && filter.AllowElement(el))
                     {
-                        refsList.Add(new Reference(el));
+                        pipes.Add(el);
                     }
                 }
             }
 
             // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
-            if (refsList.Count == 0)
+            if (pipes.Count == 0)
             {
                 try
                 {
@@ -1297,7 +1280,14 @@ namespace MiNamespace
                     );
                     if (pickedRefs != null && pickedRefs.Count > 0)
                     {
-                        refsList.AddRange(pickedRefs);
+                        foreach (var r in pickedRefs)
+                        {
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !pipes.Any(x => x.Id == el.Id))
+                            {
+                                pipes.Add(el);
+                            }
+                        }
                     }
                 }
                 catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -1310,7 +1300,48 @@ namespace MiNamespace
                 }
             }
 
-            if (refsList.Count == 0) return 0;
+            if (pipes.Count == 0) return 0;
+
+            // Agrupar tuberías seleccionadas que pertenezcan a la misma red y tengan el mismo diámetro y material
+            List<List<Element>> clusters = new List<List<Element>>();
+            foreach (var p in pipes)
+            {
+                if (p == null || !EsTuberiaValidaParaTag(p)) continue;
+                string diam = p.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsValueString() ?? "";
+                string mat = p.LookupParameter("Material")?.AsString() ?? p.LookupParameter("Comments")?.AsString() ?? "";
+
+                bool agregado = false;
+                foreach (var cluster in clusters)
+                {
+                    var first = cluster[0];
+                    string fDiam = first.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsValueString() ?? "";
+                    string fMat = first.LookupParameter("Material")?.AsString() ?? first.LookupParameter("Comments")?.AsString() ?? "";
+
+                    if (string.Equals(diam, fDiam, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(mat, fMat, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Verificar si están conectados o cercanos (< 7 ft)
+                        XYZ pMidCurrent = (p.Location is LocationCurve lcp && lcp.Curve != null) ? (lcp.Curve.GetEndPoint(0) + lcp.Curve.GetEndPoint(1)) * 0.5 : XYZ.Zero;
+                        bool conectado = cluster.Any(cp =>
+                        {
+                            XYZ pMidC = (cp.Location is LocationCurve lcc && lcc.Curve != null) ? (lcc.Curve.GetEndPoint(0) + lcc.Curve.GetEndPoint(1)) * 0.5 : XYZ.Zero;
+                            return pMidCurrent.DistanceTo(pMidC) < 7.0 || EstanConectadas(cp, p);
+                        });
+
+                        if (conectado)
+                        {
+                            cluster.Add(p);
+                            agregado = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!agregado)
+                {
+                    clusters.Add(new List<Element> { p });
+                }
+            }
 
             var tagSymbol = doc.GetElement(materialTagTypeId) as FamilySymbol;
             MaterialTagCollisionContext ctx = MaterialTagCollisionContext.BuildFromView(doc, view);
@@ -1326,42 +1357,73 @@ namespace MiNamespace
                     doc.Regenerate();
                 }
 
-                foreach (var pickRef in refsList)
+                foreach (var cluster in clusters)
                 {
                     try
                     {
-                        Element pipe = doc.GetElement(pickRef.ElementId);
+                        // Elegir la tubería más larga del grupo
+                        Element pipe = cluster.OrderByDescending(cp =>
+                        {
+                            if (cp.Location is LocationCurve lc && lc.Curve != null)
+                            {
+                                XYZ p0 = lc.Curve.GetEndPoint(0);
+                                XYZ p1 = lc.Curve.GetEndPoint(1);
+                                XYZ dir = p1 - p0;
+                                double len2D = Math.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
+                                return len2D;
+                            }
+                            return 0.0;
+                        }).FirstOrDefault() ?? cluster[0];
+
                         if (pipe == null || !EsTuberiaValidaParaTag(pipe)) continue;
 
                         if (!ObtenerPuntoMedioYDireccion(pipe, out XYZ puntoMitad, out XYZ dirCurva)) continue;
 
-                        if (!EsTuberiaOrtogonalEnPlanta(dirCurva)) continue;
-
                         if (!CalcularPosicionTagMaterialOptima(pipe, view, ctx, out XYZ tagPos, out TagOrientation orientacion, out bool usarLeader, out _))
                         {
-                            bool esVert = Math.Abs(dirCurva.Z) > 0.8 || (Math.Abs(dirCurva.Y) > Math.Abs(dirCurva.X));
-                            orientacion = esVert ? TagOrientation.Vertical : TagOrientation.Horizontal;
+                            orientacion = TagOrientation.Horizontal;
+                            bool esVert = Math.Abs(dirCurva.Z) > 0.8 || (Math.Abs(dirCurva.Y) > Math.Abs(dirCurva.X) * 1.5);
                             tagPos = esVert ? puntoMitad + new XYZ(0.85, 0, 0) : puntoMitad + new XYZ(0, -0.85, 0);
                             usarLeader = false;
                         }
 
-                        IndependentTag tag = IndependentTag.Create(
-                            doc,
-                            view.Id,
-                            new Reference(pipe),
-                            usarLeader,
-                            TagMode.TM_ADDBY_CATEGORY,
-                            orientacion,
-                            tagPos
-                        );
+                        IndependentTag tag = null;
+                        try
+                        {
+                            tag = IndependentTag.Create(
+                                doc,
+                                materialTagTypeId,
+                                view.Id,
+                                new Reference(pipe),
+                                usarLeader,
+                                TagOrientation.Horizontal,
+                                tagPos
+                            );
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                tag = IndependentTag.Create(
+                                    doc,
+                                    view.Id,
+                                    new Reference(pipe),
+                                    usarLeader,
+                                    TagMode.TM_ADDBY_CATEGORY,
+                                    TagOrientation.Horizontal,
+                                    tagPos
+                                );
+                                if (tag != null && materialTagTypeId != ElementId.InvalidElementId)
+                                {
+                                    try { tag.ChangeTypeId(materialTagTypeId); } catch { }
+                                }
+                            }
+                            catch { }
+                        }
 
                         if (tag != null)
                         {
-                            if (materialTagTypeId != ElementId.InvalidElementId)
-                            {
-                                try { tag.ChangeTypeId(materialTagTypeId); } catch { }
-                            }
-
+                            tag.TagOrientation = TagOrientation.Horizontal;
                             tag.HasLeader = usarLeader;
                             if (usarLeader)
                             {
@@ -1369,8 +1431,26 @@ namespace MiNamespace
                             }
                             tag.TagHeadPosition = tagPos;
 
+                            // Verificación geométrica para evitar que el tag quede vertical
+                            try
+                            {
+                                doc.Regenerate();
+                                BoundingBoxXYZ bb = tag.get_BoundingBox(view);
+                                if (bb != null)
+                                {
+                                    double w = Math.Abs(bb.Max.X - bb.Min.X);
+                                    double h = Math.Abs(bb.Max.Y - bb.Min.Y);
+                                    if (h > w * 1.25)
+                                    {
+                                        Line axis = Line.CreateBound(tagPos, tagPos + XYZ.BasisZ);
+                                        ElementTransformUtils.RotateElement(doc, tag.Id, axis, -Math.PI / 2.0);
+                                    }
+                                }
+                            }
+                            catch { }
+
                             colocados++;
-                            ctx.AddPlacedTag(tagPos, orientacion);
+                            ctx.AddPlacedTag(tagPos, TagOrientation.Horizontal);
                         }
                     }
                     catch { }
@@ -1381,7 +1461,7 @@ namespace MiNamespace
 
             if (colocados > 0)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Tag Material", $"Se colocaron {colocados} etiquetas de material.");
+                Autodesk.Revit.UI.TaskDialog.Show("Tag Material", $"Se colocaron exitosamente {colocados} etiquetas de material.");
             }
 
             return colocados;
@@ -1395,7 +1475,7 @@ namespace MiNamespace
             if (materialTagTypeId == ElementId.InvalidElementId)
             {
                 Autodesk.Revit.UI.TaskDialog.Show("Tag Material",
-                    "No se encontró la familia de etiqueta de tubería ('DC - Tag tubería 2 mm' / 'Type Name + Size') cargada en el proyecto.");
+                    "No se encontró ninguna familia de etiqueta de tubería ('DC - Tag tubería 2 mm' / 'Type Name + Size' / 'Pipe Tag') cargada en el proyecto.");
                 return 0;
             }
 
@@ -1425,20 +1505,13 @@ namespace MiNamespace
 
                 if (!ObtenerPuntoMedioYDireccion(pipe, out XYZ puntoMitad, out XYZ dirCurva)) continue;
 
-                // Descartar tuberías en diagonal (solo permitir horizontales o verticales)
-                if (!EsTuberiaOrtogonalEnPlanta(dirCurva))
-                {
-                    Autodesk.Revit.UI.TaskDialog.Show("Tag Material", "Solo se pueden taguear tuberías horizontales o verticales (no diagonales).");
-                    continue;
-                }
-
                 // Construir contexto de colisiones de la vista para encontrar zona en blanco
                 MaterialTagCollisionContext ctx = MaterialTagCollisionContext.BuildFromView(doc, view, new[] { pipe.Id });
 
                 if (!CalcularPosicionTagMaterialOptima(pipe, view, ctx, out XYZ tagPos, out TagOrientation orientacion, out bool usarLeader, out _))
                 {
-                    bool esVert = Math.Abs(dirCurva.Z) > 0.8 || (Math.Abs(dirCurva.Y) > Math.Abs(dirCurva.X));
-                    orientacion = esVert ? TagOrientation.Vertical : TagOrientation.Horizontal;
+                    orientacion = TagOrientation.Horizontal;
+                    bool esVert = Math.Abs(dirCurva.Z) > 0.8 || (Math.Abs(dirCurva.Y) > Math.Abs(dirCurva.X) * 1.5);
                     tagPos = esVert ? puntoMitad + new XYZ(0.85, 0, 0) : puntoMitad + new XYZ(0, -0.85, 0);
                     usarLeader = false;
                 }
@@ -1453,23 +1526,42 @@ namespace MiNamespace
                         doc.Regenerate();
                     }
 
-                    IndependentTag tag = IndependentTag.Create(
-                        doc,
-                        view.Id,
-                        new Reference(pipe),
-                        usarLeader,
-                        TagMode.TM_ADDBY_CATEGORY,
-                        orientacion,
-                        tagPos
-                    );
+                    IndependentTag tag = null;
+                    try
+                    {
+                        tag = IndependentTag.Create(
+                            doc,
+                            materialTagTypeId,
+                            view.Id,
+                            new Reference(pipe),
+                            usarLeader,
+                            orientacion,
+                            tagPos
+                        );
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            tag = IndependentTag.Create(
+                                doc,
+                                view.Id,
+                                new Reference(pipe),
+                                usarLeader,
+                                TagMode.TM_ADDBY_CATEGORY,
+                                orientacion,
+                                tagPos
+                            );
+                            if (tag != null && materialTagTypeId != ElementId.InvalidElementId)
+                            {
+                                try { tag.ChangeTypeId(materialTagTypeId); } catch { }
+                            }
+                        }
+                        catch { }
+                    }
 
                     if (tag != null)
                     {
-                        if (materialTagTypeId != ElementId.InvalidElementId)
-                        {
-                            try { tag.ChangeTypeId(materialTagTypeId); } catch { }
-                        }
-
                         tag.HasLeader = usarLeader;
                         if (usarLeader)
                         {
@@ -1486,7 +1578,7 @@ namespace MiNamespace
 
             if (colocados > 0)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Tag Material", $"Se colocaron {colocados} etiquetas de material.");
+                Autodesk.Revit.UI.TaskDialog.Show("Tag Material", $"Se colocaron exitosamente {colocados} etiquetas de material.");
             }
 
             return colocados;
@@ -1685,7 +1777,7 @@ namespace MiNamespace
             XYZ dir2D = new XYZ(dir.X / len2D, dir.Y / len2D, 0);
 
             bool esVerticalEnPlanta = Math.Abs(dir2D.Y) > Math.Abs(dir2D.X);
-            mejorOrientacion = esVerticalEnPlanta ? TagOrientation.Vertical : TagOrientation.Horizontal;
+            mejorOrientacion = TagOrientation.Horizontal;
 
             // Escala de la vista para calcular el tamaño real del tag de material en el modelo (pies)
             double scale = (view != null && view.Scale > 0) ? (double)view.Scale : 50.0;
@@ -1921,7 +2013,7 @@ namespace MiNamespace
 
                 if (redYaTieneTag) continue;
 
-                // Filtrar solo tuberías ortogonales en planta (excluyendo diagonales a 45° y subidas/bajadas en Z)
+                // Filtrar tuberías planares (excluyendo subidas/bajadas verticales puras en Z)
                 var tuberiasPlanares = redCompleta.Where(t =>
                 {
                     if (t.Location is LocationCurve lc && lc.Curve != null)
@@ -1930,7 +2022,7 @@ namespace MiNamespace
                         XYZ p1 = lc.Curve.GetEndPoint(1);
                         XYZ dir = p1 - p0;
                         double len2D = Math.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
-                        return len2D >= 1.0 && Math.Abs(dir.Normalize().Z) < 0.85 && EsTuberiaOrtogonalEnPlanta(dir);
+                        return len2D >= 0.4 && Math.Abs(dir.Normalize().Z) < 0.85;
                     }
                     return false;
                 }).ToList();
@@ -1990,23 +2082,42 @@ namespace MiNamespace
 
                     try
                     {
-                        IndependentTag newTag = IndependentTag.Create(
-                            doc,
-                            view.Id,
-                            new Reference(tuberia),
-                            usarLeader,
-                            TagMode.TM_ADDBY_CATEGORY,
-                            orientacion,
-                            tagPos
-                        );
+                        IndependentTag newTag = null;
+                        try
+                        {
+                            newTag = IndependentTag.Create(
+                                doc,
+                                materialTagTypeId,
+                                view.Id,
+                                new Reference(tuberia),
+                                usarLeader,
+                                orientacion,
+                                tagPos
+                            );
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                newTag = IndependentTag.Create(
+                                    doc,
+                                    view.Id,
+                                    new Reference(tuberia),
+                                    usarLeader,
+                                    TagMode.TM_ADDBY_CATEGORY,
+                                    orientacion,
+                                    tagPos
+                                );
+                                if (newTag != null && materialTagTypeId != ElementId.InvalidElementId)
+                                {
+                                    try { newTag.ChangeTypeId(materialTagTypeId); } catch { }
+                                }
+                            }
+                            catch { }
+                        }
 
                         if (newTag != null)
                         {
-                            if (materialTagTypeId != ElementId.InvalidElementId)
-                            {
-                                try { newTag.ChangeTypeId(materialTagTypeId); } catch { }
-                            }
-
                             newTag.HasLeader = usarLeader;
                             if (usarLeader)
                             {
@@ -2124,6 +2235,27 @@ namespace MiNamespace
             return null;
         }
 
+        private static bool EstanConectadas(Element e1, Element e2)
+        {
+            if (e1 == null || e2 == null || e1.Id == e2.Id) return true;
+            try
+            {
+                ConnectorSet cSet1 = GetConnectors(e1);
+                if (cSet1 == null) return false;
+                foreach (Connector c in cSet1)
+                {
+                    if (c == null || !c.IsConnected) continue;
+                    foreach (Connector other in c.AllRefs)
+                    {
+                        if (other != null && other.Owner != null && other.Owner.Id == e2.Id)
+                            return true;
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
         private static string ObtenerClaveMaterialYDiametro(Element pipe)
         {
             if (pipe == null) return string.Empty;
@@ -2175,16 +2307,37 @@ namespace MiNamespace
                     .WhereElementIsElementType()
                     .ToList();
 
+                if (pipeTagTypes.Count == 0)
+                {
+                    pipeTagTypes = new FilteredElementCollector(doc)
+                        .OfClass(typeof(FamilySymbol))
+                        .Cast<FamilySymbol>()
+                        .Where(fs => fs.Category != null && (
+#if REVIT2024_OR_LATER
+                            fs.Category.Id.Value == (long)BuiltInCategory.OST_PipeTags ||
+#else
+                            fs.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeTags ||
+#endif
+                            fs.Category.Name.IndexOf("Pipe", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            fs.Category.Name.IndexOf("Tuber", StringComparison.OrdinalIgnoreCase) >= 0))
+                        .Cast<Element>()
+                        .ToList();
+                }
+
                 if (pipeTagTypes.Count > 0)
                 {
                     // 1. PRIORIDAD ABSOLUTA: Tipo que contenga "Type Name + Size" o combinaciones de Nombre + Tamaño/Diámetro
                     var sizeAndTypeMatch = pipeTagTypes.FirstOrDefault(t =>
                     {
-                        string name = t.Name;
+                        string name = t.Name ?? string.Empty;
                         return name.IndexOf("Type Name + Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                name.IndexOf("TypeName + Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Nombre de tipo + Tamaño", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Material + Diámetro", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Material + Diametro", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                (name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 && name.IndexOf("Type", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                               (name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 && name.IndexOf("Name", StringComparison.OrdinalIgnoreCase) >= 0);
+                               (name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 && name.IndexOf("Name", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                               (name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 && name.IndexOf("Material", StringComparison.OrdinalIgnoreCase) >= 0);
                     });
                     if (sizeAndTypeMatch != null) return sizeAndTypeMatch.Id;
 
@@ -2193,31 +2346,57 @@ namespace MiNamespace
                     {
                         string famName = ObtenerNombreFamilia(t);
                         return (famName.IndexOf("DC - Tag tubería", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                famName.IndexOf("DC. tag", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                                famName.IndexOf("DC. tag", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                famName.IndexOf("TAG - Tuberia", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                famName.IndexOf("Tag Tubería", StringComparison.OrdinalIgnoreCase) >= 0) &&
                                (t.Name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 t.Name.IndexOf("+", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.Name.IndexOf("Diámetro", StringComparison.OrdinalIgnoreCase) >= 0);
+                                t.Name.IndexOf("Diámetro", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.Name.IndexOf("Diametro", StringComparison.OrdinalIgnoreCase) >= 0);
                     });
                     if (famSizeMatch != null) return famSizeMatch.Id;
 
-                    // 3. Coincidencia por "Size", "Tamaño" o "Diámetro"
+                    // 3. Coincidencia por "Size", "Tamaño", "Diámetro" o "Diametro"
                     var sizeOnlyMatch = pipeTagTypes.FirstOrDefault(t =>
-                        t.Name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        t.Name.IndexOf("Tamaño", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        t.Name.IndexOf("Diámetro", StringComparison.OrdinalIgnoreCase) >= 0);
+                    {
+                        string name = t.Name ?? string.Empty;
+                        return name.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Tamaño", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Diámetro", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Diametro", StringComparison.OrdinalIgnoreCase) >= 0;
+                    });
                     if (sizeOnlyMatch != null) return sizeOnlyMatch.Id;
 
-                    // 4. Fallback: coincidencia por familia DC - Tag tubería
+                    // 4. Fallback: coincidencia por familia DC - Tag tubería o Pipe Tag
                     var famMatch = pipeTagTypes.FirstOrDefault(t =>
                     {
                         string famName = ObtenerNombreFamilia(t);
                         return famName.IndexOf("DC - Tag tubería", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                               famName.IndexOf("DC. tag", StringComparison.OrdinalIgnoreCase) >= 0;
+                               famName.IndexOf("DC. tag", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               famName.IndexOf("Pipe", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               famName.IndexOf("Tuber", StringComparison.OrdinalIgnoreCase) >= 0;
                     });
                     if (famMatch != null) return famMatch.Id;
 
                     // 5. Fallback: primer tipo disponible
                     return pipeTagTypes.First().Id;
+                }
+
+                // 6. Si no hay OST_PipeTags, buscar en MultiCategoryTags
+                var multiTags = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_MultiCategoryTags)
+                    .WhereElementIsElementType()
+                    .ToList();
+                if (multiTags.Count > 0)
+                {
+                    var multiMatch = multiTags.FirstOrDefault(t =>
+                    {
+                        string name = (t.Name ?? string.Empty) + " " + ObtenerNombreFamilia(t);
+                        return name.IndexOf("Tuber", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Pipe", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               name.IndexOf("Material", StringComparison.OrdinalIgnoreCase) >= 0;
+                    });
+                    return (multiMatch ?? multiTags.First()).Id;
                 }
             }
             catch { }
@@ -2235,1482 +2414,6 @@ namespace MiNamespace
             var param = t.get_Parameter(BuiltInParameter.ALL_MODEL_FAMILY_NAME);
             if (param != null) return param.AsString() ?? string.Empty;
             return string.Empty;
-        }
-
-        /// <summary>
-        /// Flujo por selección múltiple para colocar Tags "C.N" en cambios de nivel en desagües / tuberías.
-        /// </summary>
-        public static int TaguearCambioDeNivelHumedasPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
-        {
-            if (uidoc == null || doc == null || view == null) return 0;
-
-            FamilySymbol tagSymbol = ObtenerTagPipeAccesorio(doc);
-            if (tagSymbol == null)
-            {
-                ElementId spotTypeId = ObtenerTipoSpotElevation(doc);
-                return TaguearCambioDeNivelSpotElevationFallback(uidoc, doc, view, spotTypeId);
-            }
-
-            List<Reference> refsList = new List<Reference>();
-
-            var filter = new CodoCambioDeNivelSelectionFilter();
-            // 1. Preselección
-            var preSelected = uidoc.Selection.GetElementIds();
-            if (preSelected != null && preSelected.Count > 0)
-            {
-                foreach (var id in preSelected)
-                {
-                    Element el = doc.GetElement(id);
-                    if (el != null && filter.AllowElement(el))
-                    {
-                        refsList.Add(new Reference(el));
-                    }
-                }
-            }
-
-            // 2. Si no había preselección, permitir selección por recuadro o clics continuos con ESC para finalizar
-            if (refsList.Count == 0)
-            {
-                try
-                {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
-                        filter,
-                        "Arrastra un recuadro sobre los codos de cambio de nivel:"
-                    );
-                    if (rectElements != null && rectElements.Count > 0)
-                    {
-                        foreach (var el in rectElements)
-                        {
-                            refsList.Add(new Reference(el));
-                        }
-                    }
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (refsList.Count == 0)
-                {
-                    while (true)
-                    {
-                        try
-                        {
-                            Reference pick = uidoc.Selection.PickObject(
-                                ObjectType.Element,
-                                filter,
-                                "Clic en codos de cambio de nivel (presiona ESC cuando termines para colocar tags):"
-                            );
-                            if (pick != null)
-                            {
-                                Element el = doc.GetElement(pick.ElementId);
-                                if (!EsCodoCambioDeNivelValido(el, out string motivoRechazo))
-                                {
-                                    Autodesk.Revit.UI.TaskDialog.Show("Tag C.N - No Aplica",
-                                        $"El elemento seleccionado no aplica como cambio de nivel:\n\n{motivoRechazo}");
-                                    continue;
-                                }
-
-                                if (!refsList.Any(r => r.ElementId == pick.ElementId))
-                                {
-                                    refsList.Add(pick);
-                                }
-                            }
-                        }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break; // Al presionar ESC termina la selección y procede
-                        }
-                        catch
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (refsList.Count == 0) return 0;
-
-            int colocados = 0;
-            int omitidos = 0;
-            List<string> motivosOmitidos = new List<string>();
-
-            using (Transaction tx = new Transaction(doc, "Tags C.N por Selección (Redes Húmedas)"))
-            {
-                tx.Start();
-
-                if (!tagSymbol.IsActive)
-                {
-                    tagSymbol.Activate();
-                    doc.Regenerate();
-                }
-
-                foreach (var pickRef in refsList)
-                {
-                    try
-                    {
-                        Element el = doc.GetElement(pickRef.ElementId);
-                        if (el == null) continue;
-
-                        if (!EsCodoCambioDeNivelValido(el, out string motivo))
-                        {
-                            omitidos++;
-                            if (!string.IsNullOrEmpty(motivo) && !motivosOmitidos.Contains(motivo))
-                            {
-                                motivosOmitidos.Add(motivo);
-                            }
-                            continue;
-                        }
-
-                        XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
-                        if (puntoEje == null) continue;
-
-                        XYZ tagHeadPos = puntoEje + new XYZ(0.8, 0.8, 0);
-
-                        IndependentTag tag = IndependentTag.Create(
-                            doc,
-                            tagSymbol.Id,
-                            view.Id,
-                            pickRef,
-                            true,
-                            TagOrientation.Horizontal,
-                            tagHeadPos
-                        );
-
-                        if (tag != null)
-                        {
-                            tag.HasLeader = true;
-                            tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                            tag.TagHeadPosition = tagHeadPos;
-                            colocados++;
-                        }
-                    }
-                    catch { }
-                }
-
-                tx.Commit();
-            }
-
-            if (omitidos > 0)
-            {
-                string detalle = string.Join("\n• ", motivosOmitidos);
-                Autodesk.Revit.UI.TaskDialog.Show("Tags C.N - Resumen",
-                    $"Se colocaron {colocados} tags 'C.N'.\n\nSe omitieron {omitidos} elementos no aplicables:\n• {detalle}");
-            }
-
-            return colocados;
-        }
-
-        public static int TaguearCambioDeNivelHumedasPorClic(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
-        {
-            if (uidoc == null || doc == null || view == null) return 0;
-
-            int colocados = 0;
-            FamilySymbol tagSymbol = ObtenerTagPipeAccesorio(doc);
-
-            if (tagSymbol == null)
-            {
-                // Fallback a SpotElevation si no existe la familia de tag de accesorio en el proyecto
-                ElementId spotTypeId = ObtenerTipoSpotElevation(doc);
-                return TaguearCambioDeNivelSpotElevationFallback(uidoc, doc, view, spotTypeId);
-            }
-
-            while (true)
-            {
-                Reference pickRef = null;
-                try
-                {
-                    pickRef = uidoc.Selection.PickObject(
-                        ObjectType.Element,
-                        new CodoCambioDeNivelSelectionFilter(),
-                        "Clic en cualquiera de los dos codos del cambio de nivel (ESC para terminar)"
-                    );
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (pickRef == null) break;
-
-                Element el = doc.GetElement(pickRef.ElementId);
-                if (el == null) continue;
-
-                if (!EsCodoCambioDeNivelValido(el, out string motivoRechazo))
-                {
-                    Autodesk.Revit.UI.TaskDialog.Show("Tag C.N - Elemento no válido",
-                        $"No se puede colocar el Tag C.N en el elemento seleccionado:\n{motivoRechazo}");
-                    continue;
-                }
-
-                // Posicionamiento del Tag en zona limpia
-                XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
-                XYZ tagHeadPos = puntoEje + new XYZ(0.8, 0.8, 0);
-
-                using (Transaction tx = new Transaction(doc, "Colocar Tag C.N"))
-                {
-                    tx.Start();
-
-                    if (!tagSymbol.IsActive)
-                    {
-                        tagSymbol.Activate();
-                        doc.Regenerate();
-                    }
-
-                    IndependentTag tag = IndependentTag.Create(
-                        doc,
-                        tagSymbol.Id,
-                        view.Id,
-                        pickRef,
-                        true,
-                        TagOrientation.Horizontal,
-                        tagHeadPos
-                    );
-
-                    if (tag != null)
-                    {
-                        tag.HasLeader = true;
-                        tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                        tag.TagHeadPosition = tagHeadPos;
-
-                        // Asignar parámetros si existen en el elemento
-                        Parameter pCambio = el.LookupParameter("DC. TAG conduit accesorio")
-                                         ?? el.LookupParameter("DC. TAG accesorio")
-                                         ?? el.LookupParameter("cambio de nivel")
-                                         ?? el.LookupParameter("Cambio de Nivel")
-                                         ?? el.LookupParameter("C.N");
-
-                        if (pCambio != null && !pCambio.IsReadOnly && pCambio.StorageType == StorageType.String)
-                        {
-                            pCambio.Set("Cambio de nivel");
-                        }
-
-                        colocados++;
-                    }
-
-                    tx.Commit();
-                }
-            }
-
-            return colocados;
-        }
-
-        /// <summary>
-        /// Flujo automático para taguear TODOS los cambios de nivel válidos en la vista activa para Redes Húmedas.
-        /// Recolecta los codos de tuberías y fittings, filtra los codos a 90° y giros horizontales,
-        /// agrupa pares de codos pertenecientes a la misma bajada/subida (para no duplicar tag)
-        /// y coloca el Tag C.N automáticamente.
-        /// </summary>
-        public static int TaguearCambioDeNivelHumedasTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
-        {
-            if (uidoc == null || doc == null || view == null) return 0;
-
-            var categorias = new[]
-            {
-                BuiltInCategory.OST_PipeFitting,
-                BuiltInCategory.OST_ConduitFitting,
-                BuiltInCategory.OST_CableTrayFitting,
-                BuiltInCategory.OST_DuctFitting
-            };
-
-            List<Element> codosCandidatos = new List<Element>();
-            foreach (var cat in categorias)
-            {
-                var elems = new FilteredElementCollector(doc, view.Id)
-                    .OfCategory(cat)
-                    .WhereElementIsNotElementType()
-                    .ToElements();
-                codosCandidatos.AddRange(elems);
-            }
-
-            if (codosCandidatos.Count == 0) return 0;
-
-            // 1. Filtrar solo codos válidos de cambio de nivel (descartando giros puramente horizontales)
-            List<Element> codosValidos = codosCandidatos
-                .Where(el => EsCodoCambioDeNivelValido(el, out _))
-                .ToList();
-
-            if (codosValidos.Count == 0) return 0;
-
-            FamilySymbol tagSymbol = ObtenerTagPipeAccesorio(doc);
-            if (tagSymbol == null) return 0;
-
-            // 2. Identificar qué codos ya tienen específicamente un Tag C.N asignado en la vista (no cualquier tag genérico)
-            var tagsExistentes = new FilteredElementCollector(doc, view.Id)
-                .OfClass(typeof(IndependentTag))
-                .Cast<IndependentTag>()
-                .ToList();
-
-            HashSet<ElementId> elementosYaTagueados = new HashSet<ElementId>();
-            foreach (var t in tagsExistentes)
-            {
-                try
-                {
-                    ElementId tagTypeId = t.GetTypeId();
-                    string tagFamName = (doc.GetElement(tagTypeId) as ElementType)?.FamilyName?.ToLower() ?? "";
-                    string tagSymName = (doc.GetElement(tagTypeId) as ElementType)?.Name?.ToLower() ?? "";
-                    string tagText = "";
-                    try { tagText = t.TagText?.ToLower() ?? ""; } catch { }
-
-                    bool esTagCN = (tagTypeId == tagSymbol.Id) ||
-                                   tagFamName.Contains("accesorio") ||
-                                   tagFamName.Contains("cambio de nivel") ||
-                                   tagSymName.Contains("cambio de nivel") ||
-                                   tagSymName.Contains("c.n") ||
-                                   tagText.Contains("c.n") ||
-                                   tagText.Contains("cambio");
-
-                    if (!esTagCN) continue;
-
-                    ElementId hostId = GetTaggedHostElementId(t);
-                    if (hostId != null && hostId != ElementId.InvalidElementId)
-                    {
-                        elementosYaTagueados.Add(hostId);
-                    }
-                }
-                catch { }
-            }
-
-            // 3. Agrupar codos por cada cambio de nivel individual (pares de codos a <= 5.5 ft)
-            List<List<Element>> gruposCambios = AgruparCodosEnCambiosDeNivel(codosValidos);
-            List<Element> codosATaguear = new List<Element>();
-
-            foreach (var grupo in gruposCambios)
-            {
-                // Si algún codo de este cambio de nivel ya fue tagueado previamente con C.N en la vista, omitir
-                if (grupo.Any(c => elementosYaTagueados.Contains(c.Id)))
-                {
-                    continue;
-                }
-
-                // Seleccionar un codo representativo por cada cambio de nivel individual
-                Element codoSeleccionado = grupo
-                    .OrderBy(c =>
-                    {
-                        XYZ pt = (c.Location as LocationPoint)?.Point ?? XYZ.Zero;
-                        return pt.X * 1000.0 + pt.Y * 10.0 + pt.Z;
-                    })
-                    .FirstOrDefault();
-
-                if (codoSeleccionado != null)
-                {
-                    codosATaguear.Add(codoSeleccionado);
-                }
-            }
-
-            if (codosATaguear.Count == 0) return 0;
-
-            int creados = 0;
-            using (Transaction tx = new Transaction(doc, "Tags C.N Automático Desagües"))
-            {
-                tx.Start();
-
-                if (!tagSymbol.IsActive)
-                {
-                    tagSymbol.Activate();
-                    doc.Regenerate();
-                }
-
-                foreach (var codo in codosATaguear)
-                {
-                    try
-                    {
-                        XYZ puntoEje = ObtenerPuntoCentro(codo, out _) ?? (codo.Location as LocationPoint)?.Point;
-                        if (puntoEje == null) continue;
-
-                        XYZ tagHeadPos = puntoEje + new XYZ(0.8, 0.8, 0);
-
-                        IndependentTag tag = IndependentTag.Create(
-                            doc,
-                            tagSymbol.Id,
-                            view.Id,
-                            new Reference(codo),
-                            true,
-                            TagOrientation.Horizontal,
-                            tagHeadPos
-                        );
-
-                        if (tag != null)
-                        {
-                            tag.HasLeader = true;
-                            tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                            tag.TagHeadPosition = tagHeadPos;
-
-                            Parameter pCambio = codo.LookupParameter("DC. TAG conduit accesorio")
-                                             ?? codo.LookupParameter("DC. TAG accesorio")
-                                             ?? codo.LookupParameter("cambio de nivel")
-                                             ?? codo.LookupParameter("Cambio de Nivel")
-                                             ?? codo.LookupParameter("C.N");
-
-                            if (pCambio != null && !pCambio.IsReadOnly && pCambio.StorageType == StorageType.String)
-                            {
-                                pCambio.Set("Cambio de nivel");
-                            }
-
-                            creados++;
-                        }
-                    }
-                    catch { }
-                }
-
-                tx.Commit();
-            }
-
-            return creados;
-        }
-
-        /// <summary>
-        /// Agrupa los codos que pertenecen al MISMO cambio de nivel (unidos directamente o por un tramo corto de transición <= 5.5 pies).
-        /// Cada grupo representa un único cambio de nivel (bayoneta / salto).
-        /// </summary>
-        private static List<List<Element>> AgruparCodosEnCambiosDeNivel(List<Element> codosValidos)
-        {
-            List<List<Element>> grupos = new List<List<Element>>();
-            HashSet<ElementId> visitados = new HashSet<ElementId>();
-            HashSet<ElementId> idsValidos = new HashSet<ElementId>(codosValidos.Select(c => c.Id));
-
-            foreach (var codo in codosValidos)
-            {
-                if (visitados.Contains(codo.Id)) continue;
-
-                List<Element> grupoActual = new List<Element>();
-                Queue<Element> cola = new Queue<Element>();
-
-                cola.Enqueue(codo);
-                visitados.Add(codo.Id);
-
-                while (cola.Count > 0)
-                {
-                    Element actual = cola.Dequeue();
-                    grupoActual.Add(actual);
-
-                    XYZ pActual = ObtenerPuntoCentro(actual, out _) ?? (actual.Location as LocationPoint)?.Point;
-
-                    ConnectorSet conectores = null;
-                    if (actual is FamilyInstance fi && fi.MEPModel?.ConnectorManager != null)
-                    {
-                        conectores = fi.MEPModel.ConnectorManager.Connectors;
-                    }
-
-                    if (conectores != null)
-                    {
-                        foreach (Connector conn in conectores)
-                        {
-                            foreach (Connector refConn in conn.AllRefs)
-                            {
-                                Element owner = refConn.Owner;
-                                if (owner == null || owner.Id == actual.Id) continue;
-
-                                // Caso 1: Conexión directa a otro codo válido del mismo cambio de nivel
-                                if (idsValidos.Contains(owner.Id) && !visitados.Contains(owner.Id))
-                                {
-                                    XYZ pOwner = ObtenerPuntoCentro(owner, out _) ?? (owner.Location as LocationPoint)?.Point;
-                                    if (pActual == null || pOwner == null || pActual.DistanceTo(pOwner) <= 5.5)
-                                    {
-                                        visitados.Add(owner.Id);
-                                        cola.Enqueue(owner);
-                                    }
-                                }
-                                // Caso 2: Conexión a través de un tramo corto de tubería/conduit inclinado (longitud <= 5.5 pies)
-                                else if (owner.Location is LocationCurve lc && lc.Curve != null && lc.Curve.Length <= 5.5)
-                                {
-                                    if (owner is MEPCurve mepCurve && mepCurve.ConnectorManager != null)
-                                    {
-                                        foreach (Connector pipeConn in mepCurve.ConnectorManager.Connectors)
-                                        {
-                                            foreach (Connector refPipeConn in pipeConn.AllRefs)
-                                            {
-                                                Element vecino = refPipeConn.Owner;
-                                                if (vecino != null && vecino.Id != actual.Id && idsValidos.Contains(vecino.Id) && !visitados.Contains(vecino.Id))
-                                                {
-                                                    XYZ pVecino = ObtenerPuntoCentro(vecino, out _) ?? (vecino.Location as LocationPoint)?.Point;
-                                                    if (pActual == null || pVecino == null || pActual.DistanceTo(pVecino) <= 5.5)
-                                                    {
-                                                        visitados.Add(vecino.Id);
-                                                        cola.Enqueue(vecino);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                grupos.Add(grupoActual);
-            }
-
-            return grupos;
-        }
-
-        private static int TaguearCambioDeNivelSpotElevationFallback(
-            UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, ElementId spotTypeId)
-        {
-            int colocados = 0;
-            while (true)
-            {
-                Reference pickRef = null;
-                try
-                {
-                    pickRef = uidoc.Selection.PickObject(
-                        ObjectType.Element,
-                        new CodoCambioDeNivelSelectionFilter(),
-                        "Clic en codo de cambio de nivel (ESC para terminar)"
-                    );
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    break;
-                }
-
-                if (pickRef == null) break;
-
-                Element el = doc.GetElement(pickRef.ElementId);
-                if (el == null) continue;
-
-                if (!EsCodoCambioDeNivelValido(el, out string motivoRechazo))
-                {
-                    Autodesk.Revit.UI.TaskDialog.Show("Tag C.N - Elemento no válido",
-                        $"No se puede colocar el Tag C.N:\n{motivoRechazo}");
-                    continue;
-                }
-
-                XYZ puntoEje = ObtenerPuntoEjeDesdeClic(el, pickRef.GlobalPoint);
-                Level nivelTecho = ObtenerNivelTecho(doc, view, el, puntoEje);
-
-                XYZ puntoUbicacion = null;
-                try
-                {
-                    puntoUbicacion = uidoc.Selection.PickPoint(
-                        ObjectSnapTypes.None,
-                        "Clic para ubicar la directriz de Tag C.N (o ESC para ubicación automática)"
-                    );
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    puntoUbicacion = null;
-                }
-
-                using (Transaction tx = new Transaction(doc, "Colocar Tags C.N"))
-                {
-                    tx.Start();
-
-                    SpotDimension spot = ColocarSpotElevation(
-                        doc, view, el, pickRef, puntoEje, puntoUbicacion, spotTypeId, nivelTecho
-                    );
-
-                    if (spot != null)
-                    {
-                        colocados++;
-                    }
-
-                    tx.Commit();
-                }
-            }
-
-            return colocados;
-        }
-
-        /// <summary>
-        /// Determina si un elemento es una caja eléctrica/derivación, toma, interruptor, tablero o dispositivo terminal.
-        /// </summary>
-        public static bool EsCajaODispositivoElemento(Element e)
-        {
-            if (e == null || e.Category == null) return false;
-
-            int catId = e.Category.Id.IntegerValue;
-            if (catId == (int)BuiltInCategory.OST_ElectricalFixtures ||
-                catId == (int)BuiltInCategory.OST_LightingDevices ||
-                catId == (int)BuiltInCategory.OST_LightingFixtures ||
-                catId == (int)BuiltInCategory.OST_ElectricalEquipment ||
-                catId == (int)BuiltInCategory.OST_CommunicationDevices ||
-                catId == (int)BuiltInCategory.OST_DataDevices ||
-                catId == (int)BuiltInCategory.OST_FireAlarmDevices ||
-                catId == (int)BuiltInCategory.OST_SecurityDevices ||
-                catId == (int)BuiltInCategory.OST_PlumbingFixtures ||
-                catId == (int)BuiltInCategory.OST_MechanicalEquipment)
-            {
-                return true;
-            }
-
-            // Si es un fitting, verificar si su PartType es JunctionBox
-            if (e is FamilyInstance fi && fi.MEPModel != null)
-            {
-                try
-                {
-                    System.Reflection.PropertyInfo piPartType = fi.MEPModel.GetType().GetProperty("PartType");
-                    if (piPartType != null)
-                    {
-                        object partTypeVal = piPartType.GetValue(fi.MEPModel);
-                        if (partTypeVal != null && partTypeVal.ToString().Equals("JunctionBox", StringComparison.OrdinalIgnoreCase))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            string famName = (e as FamilyInstance)?.Symbol?.Family?.Name?.ToLower() ?? "";
-            if (famName.Contains("caja") || famName.Contains("junction box") || famName.Contains("condulet") || famName.Contains("pull box"))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Verifica si el accesorio/codo es o está conectado directamente (o por un tramo corto de bajada/subida) a una caja o dispositivo terminal.
-        /// </summary>
-        public static bool EstaConectadoACajaODispositivo(Element fitting)
-        {
-            if (fitting == null) return false;
-
-            if (EsCajaODispositivoElemento(fitting)) return true;
-
-            // Revisar conexiones vía conectores MEP
-            if (fitting is FamilyInstance fi && fi.MEPModel?.ConnectorManager != null)
-            {
-                foreach (Connector conn in fi.MEPModel.ConnectorManager.Connectors)
-                {
-                    foreach (Connector refConn in conn.AllRefs)
-                    {
-                        Element owner = refConn.Owner;
-                        if (owner == null || owner.Id == fitting.Id) continue;
-
-                        if (EsCajaODispositivoElemento(owner)) return true;
-
-                        // Si el conector va a un tramo de tubería/conduit (MEPCurve)
-                        if (owner is MEPCurve mepCurve && mepCurve.ConnectorManager != null)
-                        {
-                            foreach (Connector pipeConn in mepCurve.ConnectorManager.Connectors)
-                            {
-                                foreach (Connector pipeRef in pipeConn.AllRefs)
-                                {
-                                    Element nextOwner = pipeRef.Owner;
-                                    if (nextOwner == null || nextOwner.Id == fitting.Id || nextOwner.Id == owner.Id) continue;
-
-                                    if (EsCajaODispositivoElemento(nextOwner)) return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static bool EsCodoCambioDeNivelValido(Element el, out string motivoRechazo)
-        {
-            motivoRechazo = string.Empty;
-            if (el == null)
-            {
-                motivoRechazo = "Elemento nulo";
-                return false;
-            }
-
-            // 1. Debe ser un accesorio MEP (Fitting / FamilyInstance), NO una tubería/conduit recta (MEPCurve)
-            if (el is MEPCurve || (el.Category != null && (
-                el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Conduit ||
-                el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeCurves ||
-                el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_CableTray ||
-                el.Category.Id.IntegerValue == (int)BuiltInCategory.OST_DuctCurves)))
-            {
-                motivoRechazo = "Debes seleccionar un codo / accesorio (Fitting), no un tramo de tubería o conduit.";
-                return false;
-            }
-
-            if (el.Category == null)
-            {
-                motivoRechazo = "El elemento no tiene categoría válida.";
-                return false;
-            }
-
-            int catId = el.Category.Id.IntegerValue;
-            bool esFitting = catId == (int)BuiltInCategory.OST_ConduitFitting ||
-                             catId == (int)BuiltInCategory.OST_PipeFitting ||
-                             catId == (int)BuiltInCategory.OST_CableTrayFitting ||
-                             catId == (int)BuiltInCategory.OST_DuctFitting;
-
-            if (!esFitting || !(el is FamilyInstance fiElem))
-            {
-                motivoRechazo = "Debes seleccionar un codo / accesorio de cambio de nivel (Fitting).";
-                return false;
-            }
-
-            // 2. Descartar Cajas de Paso / Derivación / Aparatos y conexiones directas a cajas
-            if (EstaConectadoACajaODispositivo(el))
-            {
-                motivoRechazo = "Las conexiones/bajadas a cajas, tomas o dispositivos no se taguean como cambio de nivel.";
-                return false;
-            }
-
-            // 3. Descartar Codos de 90° (giros a escuadra, bajadas a pared/tableros)
-            if (EsCodoDe90Grados(fiElem))
-            {
-                motivoRechazo = "No aplica: Es un codo a 90° (los cambios de nivel se realizan con codos de 15°, 30°, 45° o 60°).";
-                return false;
-            }
-
-            // 4. Descartar "Caballitos" / saltos de cruce (bypass temporal que esquiva un obstáculo y regresa al mismo nivel original)
-            if (EsCaballitoOSaltoDeCruce(fiElem))
-            {
-                motivoRechazo = "No aplica: Es un 'caballito' o salto de cruce (la tubería regresa a su nivel original).";
-                return false;
-            }
-
-            // 5. Verificar si hay un cambio de altura / elevación Z real (mínimo 0.15 ft ≈ 4.5 cm / 50 mm)
-            double umbralMinimoZ = 0.15; // en pies (~4.5 cm)
-            bool presentaCambioZ = false;
-
-            if (fiElem.MEPModel?.ConnectorManager != null)
-            {
-                var connectors = fiElem.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
-                List<double> elevaciones = new List<double>();
-
-                foreach (Connector conn in connectors)
-                {
-                    elevaciones.Add(conn.Origin.Z);
-
-                    if (conn.CoordinateSystem != null && Math.Abs(conn.CoordinateSystem.BasisZ.Z) >= 0.15)
-                    {
-                        presentaCambioZ = true;
-                    }
-
-                    foreach (Connector refConn in conn.AllRefs)
-                    {
-                        if (refConn.Owner != null && refConn.Owner.Id != el.Id)
-                        {
-                            Element owner = refConn.Owner;
-                            if (owner.Location is LocationCurve lc && lc.Curve != null)
-                            {
-                                XYZ p0 = lc.Curve.GetEndPoint(0);
-                                XYZ p1 = lc.Curve.GetEndPoint(1);
-                                if (Math.Abs(p1.Z - p0.Z) >= umbralMinimoZ)
-                                {
-                                    presentaCambioZ = true;
-                                }
-                                elevaciones.Add(p0.Z);
-                                elevaciones.Add(p1.Z);
-                            }
-                            else if (owner is FamilyInstance fiVecino && fiVecino.MEPModel?.ConnectorManager != null)
-                            {
-                                foreach (Connector cVecino in fiVecino.MEPModel.ConnectorManager.Connectors)
-                                {
-                                    elevaciones.Add(cVecino.Origin.Z);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (elevaciones.Count > 1)
-                {
-                    double minZ = elevaciones.Min();
-                    double maxZ = elevaciones.Max();
-                    if (maxZ - minZ >= umbralMinimoZ)
-                    {
-                        presentaCambioZ = true;
-                    }
-                }
-            }
-
-            if (!presentaCambioZ)
-            {
-                motivoRechazo = "No presenta cambio de nivel ni desnivel vertical en Z (giro horizontal en planta o pendiente mínima).";
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool EsCodoDe90Grados(FamilyInstance fi)
-        {
-            if (fi == null) return false;
-
-            Parameter pAng = fi.LookupParameter("Angle")
-                           ?? fi.LookupParameter("Ángulo")
-                           ?? fi.LookupParameter("Angulo")
-                           ?? fi.LookupParameter("Angle 1")
-                           ?? fi.LookupParameter("Angle 2");
-
-            if (pAng != null && pAng.StorageType == StorageType.Double)
-            {
-                double rad = pAng.AsDouble();
-                double deg = rad * (180.0 / Math.PI);
-                if (deg >= 80.0 && deg <= 100.0) return true;
-            }
-
-            if (fi.MEPModel?.ConnectorManager != null)
-            {
-                var conns = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
-                if (conns.Count >= 2)
-                {
-                    XYZ v1 = conns[0].CoordinateSystem?.BasisZ;
-                    XYZ v2 = conns[1].CoordinateSystem?.BasisZ;
-                    if (v1 != null && v2 != null && !v1.IsZeroLength() && !v2.IsZeroLength())
-                    {
-                        double dot = Math.Max(-1.0, Math.Min(1.0, v1.Normalize().DotProduct(v2.Normalize())));
-                        double angDeg = Math.Acos(dot) * (180.0 / Math.PI);
-                        if (angDeg >= 80.0 && angDeg <= 100.0) return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static bool EsCaballitoOSaltoDeCruce(FamilyInstance fi)
-        {
-            if (fi?.MEPModel?.ConnectorManager == null) return false;
-
-            var connectors = fi.MEPModel.ConnectorManager.Connectors.Cast<Connector>().ToList();
-            if (connectors.Count < 2) return false;
-
-            List<double> zExtremos = new List<double>();
-            double zCodo = fi.Location is LocationPoint lp ? lp.Point.Z : connectors[0].Origin.Z;
-
-            foreach (Connector conn in connectors)
-            {
-                double zExtremo = ObtenerElevacionTramoPrincipalHumedas(conn, fi.Id, 4, 10.0, out _);
-                if (!double.IsNaN(zExtremo))
-                {
-                    zExtremos.Add(zExtremo);
-                }
-            }
-
-            if (zExtremos.Count == 2)
-            {
-                double diffExtremos = Math.Abs(zExtremos[0] - zExtremos[1]);
-                double alturaSalto = Math.Abs(zCodo - zExtremos[0]);
-
-                if (diffExtremos < 0.08 && (alturaSalto >= 0.10 || TieneInclinacionVerticalHumedas(fi)))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool TieneInclinacionVerticalHumedas(FamilyInstance fi)
-        {
-            if (fi?.MEPModel?.ConnectorManager == null) return false;
-            foreach (Connector c in fi.MEPModel.ConnectorManager.Connectors)
-            {
-                if (c.CoordinateSystem != null && Math.Abs(c.CoordinateSystem.BasisZ.Z) >= 0.15)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private static double ObtenerElevacionTramoPrincipalHumedas(Connector startConn, ElementId originId, int maxProfundidad, double maxDistanciaFt, out ElementId levelId)
-        {
-            levelId = ElementId.InvalidElementId;
-            double distAcumulada = 0;
-            Connector currConn = startConn;
-            ElementId lastId = originId;
-
-            for (int step = 0; step < maxProfundidad; step++)
-            {
-                Connector nextStepConn = null;
-                foreach (Connector refConn in currConn.AllRefs)
-                {
-                    Element owner = refConn.Owner;
-                    if (owner == null || owner.Id == lastId) continue;
-
-                    if (owner is MEPCurve mepCurve)
-                    {
-                        if (mepCurve.ReferenceLevel != null)
-                        {
-                            levelId = mepCurve.ReferenceLevel.Id;
-                        }
-                        else if (mepCurve.LevelId != null && mepCurve.LevelId != ElementId.InvalidElementId)
-                        {
-                            levelId = mepCurve.LevelId;
-                        }
-
-                        if (mepCurve.Location is LocationCurve lc && lc.Curve != null)
-                        {
-                            double len = lc.Curve.Length;
-                            distAcumulada += len;
-                            XYZ p0 = lc.Curve.GetEndPoint(0);
-                            XYZ p1 = lc.Curve.GetEndPoint(1);
-
-                            if (Math.Abs(p1.Z - p0.Z) < 0.05 && (len > 2.0 || distAcumulada > maxDistanciaFt))
-                            {
-                                return (p0.Z + p1.Z) / 2.0;
-                            }
-
-                            if (mepCurve.ConnectorManager != null)
-                            {
-                                foreach (Connector nextConn in mepCurve.ConnectorManager.Connectors)
-                                {
-                                    if (nextConn.Id != refConn.Id)
-                                    {
-                                        nextStepConn = nextConn;
-                                        lastId = mepCurve.Id;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (owner is FamilyInstance nextFi && nextFi.MEPModel?.ConnectorManager != null)
-                    {
-                        if (nextFi.LevelId != null && nextFi.LevelId != ElementId.InvalidElementId)
-                        {
-                            levelId = nextFi.LevelId;
-                        }
-
-                        lastId = nextFi.Id;
-                        foreach (Connector nextConn in nextFi.MEPModel.ConnectorManager.Connectors)
-                        {
-                            if (nextConn.Id != refConn.Id)
-                            {
-                                nextStepConn = nextConn;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (nextStepConn != null) break;
-                }
-
-                if (nextStepConn == null) break;
-                currConn = nextStepConn;
-            }
-
-            return double.NaN;
-        }
-
-        public static FamilySymbol ObtenerTagPipeAccesorio(Document doc)
-        {
-            try
-            {
-                var tagSymbols = new FilteredElementCollector(doc)
-                    .WhereElementIsElementType()
-                    .OfClass(typeof(FamilySymbol))
-                    .Cast<FamilySymbol>()
-                    .ToList();
-
-                var coincidenciaFamilia = tagSymbols.FirstOrDefault(s =>
-                    (s.Family?.Name?.IndexOf("DC- Tag accesorio", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     s.Family?.Name?.IndexOf("DC. TAG", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     s.Family?.Name?.IndexOf("Tag accesorio", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     s.Family?.Name?.IndexOf("TAG accesorio", StringComparison.OrdinalIgnoreCase) >= 0) &&
-                    (s.Name.IndexOf("Cambio de nivel", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     s.Name.IndexOf("C.N", StringComparison.OrdinalIgnoreCase) >= 0));
-
-                if (coincidenciaFamilia != null) return coincidenciaFamilia;
-
-                var coincidenciaNombre = tagSymbols.FirstOrDefault(s =>
-                    s.Category != null &&
-                    (s.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeFittingTags ||
-                     s.Category.Id.IntegerValue == (int)BuiltInCategory.OST_ConduitFittingTags ||
-                     s.Category.Name.ToLower().Contains("tag")) &&
-                    (s.Name.IndexOf("Cambio de nivel", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     s.Name.IndexOf("C.N", StringComparison.OrdinalIgnoreCase) >= 0));
-
-                if (coincidenciaNombre != null) return coincidenciaNombre;
-
-                var fallbackPipeTag = tagSymbols.FirstOrDefault(s =>
-                    s.Category != null &&
-                    (s.Category.Id.IntegerValue == (int)BuiltInCategory.OST_PipeFittingTags ||
-                     s.Category.Id.IntegerValue == (int)BuiltInCategory.OST_ConduitFittingTags));
-
-                return fallbackPipeTag ?? tagSymbols.FirstOrDefault(s => s.Category != null && s.Category.Name.ToLower().Contains("tag"));
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private class CodoCambioDeNivelSelectionFilter : ISelectionFilter
-        {
-            public bool AllowElement(Element e)
-            {
-                if (e?.Category == null) return false;
-                int catId = e.Category.Id.IntegerValue;
-                bool esFitting = catId == (int)BuiltInCategory.OST_ConduitFitting ||
-                                 catId == (int)BuiltInCategory.OST_PipeFitting;
-                return esFitting;
-            }
-
-            public bool AllowReference(Reference r, XYZ p) => true;
-        }
-
-        private static XYZ ObtenerPuntoEjeDesdeClic(Element el, XYZ puntoClic)
-        {
-            try
-            {
-                if (el.Location is LocationCurve lc && lc.Curve != null)
-                {
-                    IntersectionResult ir = lc.Curve.Project(puntoClic);
-                    if (ir != null)
-                    {
-                        return ir.XYZPoint;
-                    }
-                }
-                else if (el.Location is LocationPoint lp)
-                {
-                    return lp.Point;
-                }
-                else if (el is FamilyInstance fi)
-                {
-                    BoundingBoxXYZ bb = fi.get_BoundingBox(null);
-                    if (bb != null)
-                    {
-                        return (bb.Min + bb.Max) / 2.0;
-                    }
-                }
-            }
-            catch { }
-
-            return puntoClic;
-        }
-
-        private static XYZ ObtenerPuntoCentro(Element el, out XYZ dirCurva)
-        {
-            dirCurva = null;
-            try
-            {
-                if (el.Location is LocationCurve lc && lc.Curve != null)
-                {
-                    Curve curve = lc.Curve;
-                    XYZ start = curve.GetEndPoint(0);
-                    XYZ end = curve.GetEndPoint(1);
-
-                    XYZ vector = end - start;
-                    if (!vector.IsZeroLength())
-                    {
-                        dirCurva = vector.Normalize();
-                    }
-
-                    return new XYZ(
-                        (start.X + end.X) / 2.0,
-                        (start.Y + end.Y) / 2.0,
-                        (start.Z + end.Z) / 2.0
-                    );
-                }
-                else if (el.Location is LocationPoint lp)
-                {
-                    return lp.Point;
-                }
-                else if (el is FamilyInstance fi)
-                {
-                    BoundingBoxXYZ bb = fi.get_BoundingBox(null);
-                    if (bb != null)
-                    {
-                        return (bb.Min + bb.Max) / 2.0;
-                    }
-                }
-            }
-            catch { }
-
-            return null;
-        }
-
-        private static ElementId ObtenerTipoSpotElevation(Document doc)
-        {
-            try
-            {
-                var spotTypes = new FilteredElementCollector(doc)
-                    .OfClass(typeof(SpotDimensionType))
-                    .Cast<SpotDimensionType>()
-                    .ToList();
-
-                var objetivo = spotTypes.FirstOrDefault(t =>
-                    t.Name.IndexOf("DC - Elevacion relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("DC - Elevación relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("DC Elevacion relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("DC Elevación relativa", StringComparison.OrdinalIgnoreCase) >= 0)
-                    ?? spotTypes.FirstOrDefault(t =>
-                    t.Name.IndexOf("Elevacion relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("Elevación relativa", StringComparison.OrdinalIgnoreCase) >= 0)
-                    ?? spotTypes.FirstOrDefault(t =>
-                    t.Name.IndexOf("DC", StringComparison.OrdinalIgnoreCase) >= 0);
-
-                if (objetivo != null) return objetivo.Id;
-
-                SpotDimensionType baseType = spotTypes.FirstOrDefault();
-                if (baseType != null)
-                {
-                    SpotDimensionType nuevoTipo = null;
-                    if (doc.IsModifiable)
-                    {
-                        try { nuevoTipo = baseType.Duplicate("DC - Elevacion relativa") as SpotDimensionType; } catch { }
-                    }
-                    else
-                    {
-                        using (Transaction tx = new Transaction(doc, "Crear tipo Spot Elevation DC"))
-                        {
-                            tx.Start();
-                            try { nuevoTipo = baseType.Duplicate("DC - Elevacion relativa") as SpotDimensionType; } catch { }
-                            tx.Commit();
-                        }
-                    }
-
-                    if (nuevoTipo != null) return nuevoTipo.Id;
-                }
-
-                var dimTypes = new FilteredElementCollector(doc)
-                    .OfClass(typeof(DimensionType))
-                    .Cast<DimensionType>()
-                    .Where(t => t.Category != null && t.Category.Id.IntegerValue == (int)BuiltInCategory.OST_SpotElevations)
-                    .ToList();
-
-                var objetivoDim = dimTypes.FirstOrDefault(t =>
-                    t.Name.IndexOf("DC - Elevacion relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("DC - Elevación relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("Elevacion relativa", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.Name.IndexOf("Elevación relativa", StringComparison.OrdinalIgnoreCase) >= 0)
-                    ?? dimTypes.FirstOrDefault();
-
-                return objetivoDim?.Id;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static Level ObtenerNivelTecho(Document doc, Autodesk.Revit.DB.View view, Element el, XYZ puntoEje)
-        {
-            try
-            {
-                var todosNiveles = new FilteredElementCollector(doc)
-                    .OfClass(typeof(Level))
-                    .Cast<Level>()
-                    .OrderBy(l => l.Elevation)
-                    .ToList();
-
-                if (todosNiveles.Count == 0) return null;
-
-                // 1. Determinar la coordenada Z real de la tubería / conducto
-                double? zElemento = null;
-                if (puntoEje != null)
-                {
-                    zElemento = puntoEje.Z;
-                }
-                else if (el != null)
-                {
-                    if (el.Location is LocationCurve lc && lc.Curve != null)
-                    {
-                        zElemento = 0.5 * (lc.Curve.GetEndPoint(0).Z + lc.Curve.GetEndPoint(1).Z);
-                    }
-                    else if (el.Location is LocationPoint lp)
-                    {
-                        zElemento = lp.Point.Z;
-                    }
-                    else
-                    {
-                        BoundingBoxXYZ bbox = el.get_BoundingBox(view) ?? el.get_BoundingBox(null);
-                        if (bbox != null)
-                        {
-                            zElemento = 0.5 * (bbox.Min.Z + bbox.Max.Z);
-                        }
-                    }
-                }
-
-                // 2. Si tenemos la Z real de la tubería, buscar SIEMPRE el nivel inmediatamente superior en Z
-                if (zElemento.HasValue)
-                {
-                    var nivelInmediatamenteSuperior = todosNiveles
-                        .FirstOrDefault(l => l.Elevation > zElemento.Value + 0.05);
-
-                    if (nivelInmediatamenteSuperior != null)
-                    {
-                        return nivelInmediatamenteSuperior;
-                    }
-
-                    // Si la tubería está en la parte más alta sin niveles superiores, tomar el nivel más alto
-                    return todosNiveles.LastOrDefault();
-                }
-
-                // 3. Fallback: Nivel base de la vista
-                Level nivelVista = view?.GenLevel;
-                if (nivelVista != null)
-                {
-                    var supVista = todosNiveles.FirstOrDefault(l => l.Elevation > nivelVista.Elevation + 0.05);
-                    if (supVista != null) return supVista;
-                    return nivelVista;
-                }
-
-                return todosNiveles.LastOrDefault();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static SpotDimension ColocarSpotElevation(
-            Document doc,
-            Autodesk.Revit.DB.View view,
-            Element el,
-            Reference pickRef,
-            XYZ puntoEje,
-            XYZ puntoUbicacion,
-            ElementId spotTypeId,
-            Level nivelTecho)
-        {
-            XYZ refPt = puntoEje;
-            XYZ bendPt;
-            XYZ endPt;
-
-            if (puntoUbicacion != null)
-            {
-                double shoulderLen = 1.2;
-                bendPt = new XYZ(puntoEje.X, puntoUbicacion.Y, puntoEje.Z);
-                double dirX = (puntoUbicacion.X < puntoEje.X) ? -1.0 : 1.0;
-                endPt = new XYZ(bendPt.X + dirX * shoulderLen, bendPt.Y, bendPt.Z);
-            }
-            else
-            {
-                double offsetSubida = 1.5;
-                double longitudHombro = 1.2;
-                bendPt = new XYZ(puntoEje.X, puntoEje.Y + offsetSubida, puntoEje.Z);
-                endPt = new XYZ(bendPt.X + longitudHombro, bendPt.Y, bendPt.Z);
-            }
-
-            SpotDimension spot = null;
-
-            if (pickRef != null)
-            {
-                try
-                {
-                    spot = doc.Create.NewSpotElevation(view, pickRef, refPt, bendPt, endPt, refPt, true);
-                }
-                catch { }
-            }
-
-            if (spot == null && el != null)
-            {
-                if (ObtenerReferenciaCaraSuperiorYPoint(el, view, puntoEje, out Reference faceRef, out XYZ puntoCara))
-                {
-                    try
-                    {
-                        spot = doc.Create.NewSpotElevation(view, faceRef, puntoCara, bendPt, endPt, puntoCara, true);
-                    }
-                    catch { }
-                }
-            }
-
-            if (spot != null)
-            {
-                if (spotTypeId != null && spotTypeId != ElementId.InvalidElementId)
-                {
-                    try { spot.ChangeTypeId(spotTypeId); } catch { }
-                }
-                ConfigurarSpotElevation(spot, nivelTecho, doc);
-
-                try
-                {
-                    double dirX = (endPt.X >= bendPt.X) ? 1.0 : -1.0;
-                    spot.TextPosition = new XYZ(bendPt.X + dirX * 0.45, bendPt.Y, bendPt.Z);
-                }
-                catch { }
-            }
-
-            return spot;
-        }
-
-
-        private static bool BuscarCaraSuperiorEnGeometria(
-            Element el,
-            Autodesk.Revit.DB.View view,
-            XYZ puntoMedioEje,
-            bool usarVista,
-            out Reference refCara,
-            out XYZ puntoEnCara)
-        {
-            refCara = null;
-            puntoEnCara = null;
-
-            Options opt = new Options
-            {
-                ComputeReferences = true,
-                IncludeNonVisibleObjects = true
-            };
-
-            if (usarVista && view != null)
-            {
-                opt.View = view;
-            }
-            else
-            {
-                opt.DetailLevel = ViewDetailLevel.Fine;
-            }
-
-            GeometryElement geom = el.get_Geometry(opt);
-            if (geom == null) return false;
-
-            XYZ testPoint = new XYZ(puntoMedioEje.X, puntoMedioEje.Y, puntoMedioEje.Z + 2.0);
-
-            Reference mejorRef = null;
-            XYZ mejorPt = null;
-            double mayorZ = double.MinValue;
-
-            List<Solid> solidos = new List<Solid>();
-
-            void ExtraerSolidos(GeometryElement gElem)
-            {
-                foreach (GeometryObject gObj in gElem)
-                {
-                    if (gObj is Solid solid && solid.Faces.Size > 0 && solid.Volume > 1e-6)
-                    {
-                        solidos.Add(solid);
-                    }
-                    else if (gObj is GeometryInstance gInst)
-                    {
-                        GeometryElement instGeom = gInst.GetInstanceGeometry();
-                        if (instGeom != null) ExtraerSolidos(instGeom);
-
-                        GeometryElement symGeom = gInst.GetSymbolGeometry();
-                        if (symGeom != null) ExtraerSolidos(symGeom);
-                    }
-                }
-            }
-
-            ExtraerSolidos(geom);
-
-            foreach (Solid solid in solidos)
-            {
-                foreach (Face face in solid.Faces)
-                {
-                    if (face.Reference == null) continue;
-
-                    IntersectionResult ir = null;
-                    try
-                    {
-                        ir = face.Project(testPoint);
-                    }
-                    catch { }
-
-                    if (ir != null && ir.XYZPoint != null)
-                    {
-                        XYZ pt = ir.XYZPoint;
-
-                        double distXY = Math.Sqrt(Math.Pow(pt.X - puntoMedioEje.X, 2) + Math.Pow(pt.Y - puntoMedioEje.Y, 2));
-                        if (distXY > 1.0) continue;
-
-                        if (pt.Z < puntoMedioEje.Z - 0.01) continue;
-
-                        try
-                        {
-                            XYZ normal = face.ComputeNormal(ir.UVPoint);
-                            if (normal.Z < -0.1) continue;
-                        }
-                        catch { }
-
-                        if (pt.Z > mayorZ)
-                        {
-                            mayorZ = pt.Z;
-                            mejorRef = face.Reference;
-                            mejorPt = pt;
-                        }
-                    }
-                }
-            }
-
-            if (mejorRef != null && mejorPt != null)
-            {
-                refCara = mejorRef;
-                puntoEnCara = mejorPt;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static void ConfigurarSpotElevation(SpotDimension spot, Level nivelTecho, Document doc)
-        {
-            if (spot == null) return;
-
-            if (nivelTecho != null)
-            {
-                try
-                {
-                    Parameter pBase = spot.LookupParameter("Relative Base")
-                                   ?? spot.LookupParameter("Base relativa")
-                                   ?? spot.LookupParameter("Nivel relativo")
-                                   ?? spot.LookupParameter("Base Relativa")
-                                   ?? spot.LookupParameter("Nivel Relativo")
-                                   ?? spot.LookupParameter("Reference Level");
-
-                    if (pBase != null && !pBase.IsReadOnly && pBase.StorageType == StorageType.ElementId)
-                    {
-                        pBase.Set(nivelTecho.Id);
-                    }
-                    else
-                    {
-                        foreach (Parameter p in spot.Parameters)
-                        {
-                            if (!p.IsReadOnly && p.StorageType == StorageType.ElementId)
-                            {
-                                string def = p.Definition.Name.ToLower();
-                                if (def.Contains("relative") || def.Contains("base"))
-                                {
-                                    p.Set(nivelTecho.Id);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            try
-            {
-                Parameter pDisplay = spot.get_Parameter(BuiltInParameter.SPOT_ELEV_DISPLAY_ELEVATIONS)
-                                  ?? spot.LookupParameter("Display Elevations")
-                                  ?? spot.LookupParameter("Mostrar elevaciones");
-
-                if (pDisplay != null && !pDisplay.IsReadOnly)
-                {
-                    pDisplay.Set(2);
-
-                    try
-                    {
-                        string val = pDisplay.AsValueString();
-                        if (val == null || (!val.ToLower().Contains("bottom") && !val.ToLower().Contains("inferior")))
-                        {
-                            pDisplay.SetValueString("Bottom Elevation");
-                        }
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-
-            try
-            {
-                Parameter pLeader = spot.LookupParameter("Leader") ?? spot.LookupParameter("Directriz");
-                if (pLeader != null && !pLeader.IsReadOnly && pLeader.StorageType == StorageType.Integer)
-                {
-                    pLeader.Set(1);
-                }
-
-                Parameter pShoulder = spot.LookupParameter("Leader Shoulder") ?? spot.LookupParameter("Hombro de directriz");
-                if (pShoulder != null && !pShoulder.IsReadOnly && pShoulder.StorageType == StorageType.Integer)
-                {
-                    pShoulder.Set(1);
-                }
-            }
-            catch { }
-
-            try
-            {
-                doc.Regenerate();
-            }
-            catch { }
         }
 
         #region 4. TUBERÍAS EMBEBIDAS EN PISO / AFINADO Y EMBEBIDAS EN PLACA
@@ -3737,52 +2440,35 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (pipes.Count == 0)
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var pickedRefs = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         filter,
-                        "Arrastra un recuadro sobre las tuberías en piso/afinado a acotar:"
+                        "Selecciona las tuberías en piso/afinado a acotar y haz clic en 'Finish':"
                     );
-                    if (rectElements != null && rectElements.Count > 0)
+                    if (pickedRefs != null && pickedRefs.Count > 0)
                     {
-                        pipes.AddRange(rectElements);
-                    }
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (pipes.Count == 0)
-                {
-                    while (true)
-                    {
-                        try
+                        foreach (var r in pickedRefs)
                         {
-                            Reference pick = uidoc.Selection.PickObject(
-                                ObjectType.Element,
-                                filter,
-                                "Clic en tuberías en piso/afinado a acotar (presiona ESC cuando termines para acotar):"
-                            );
-                            if (pick != null)
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !pipes.Any(x => x.Id == el.Id))
                             {
-                                Element el = doc.GetElement(pick.ElementId);
-                                if (el != null && !pipes.Any(x => x.Id == el.Id))
-                                {
-                                    pipes.Add(el);
-                                }
+                                pipes.Add(el);
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break; // Al presionar ESC termina la selección y procede
-                        }
-                        catch
-                        {
-                            break;
-                        }
                     }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
 
@@ -3831,52 +2517,35 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (pipes.Count == 0)
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var pickedRefs = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         filter,
-                        "Arrastra un recuadro sobre las tuberías en placa a acotar:"
+                        "Selecciona las tuberías en placa a acotar y haz clic en 'Finish':"
                     );
-                    if (rectElements != null && rectElements.Count > 0)
+                    if (pickedRefs != null && pickedRefs.Count > 0)
                     {
-                        pipes.AddRange(rectElements);
-                    }
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (pipes.Count == 0)
-                {
-                    while (true)
-                    {
-                        try
+                        foreach (var r in pickedRefs)
                         {
-                            Reference pick = uidoc.Selection.PickObject(
-                                ObjectType.Element,
-                                filter,
-                                "Clic en tuberías en placa a acotar (presiona ESC cuando termines para acotar):"
-                            );
-                            if (pick != null)
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !pipes.Any(x => x.Id == el.Id))
                             {
-                                Element el = doc.GetElement(pick.ElementId);
-                                if (el != null && !pipes.Any(x => x.Id == el.Id))
-                                {
-                                    pipes.Add(el);
-                                }
+                                pipes.Add(el);
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break; // Al presionar ESC termina la selección y procede
-                        }
-                        catch
-                        {
-                            break;
-                        }
                     }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
 
@@ -4177,52 +2846,35 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (pipes.Count == 0)
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var pickedRefs = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         filter,
-                        "Arrastra un recuadro sobre las tuberías elevadas / cielo raso a acotar:"
+                        "Selecciona las tuberías elevadas / cielo raso a acotar y haz clic en 'Finish':"
                     );
-                    if (rectElements != null && rectElements.Count > 0)
+                    if (pickedRefs != null && pickedRefs.Count > 0)
                     {
-                        pipes.AddRange(rectElements);
-                    }
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (pipes.Count == 0)
-                {
-                    while (true)
-                    {
-                        try
+                        foreach (var r in pickedRefs)
                         {
-                            Reference pick = uidoc.Selection.PickObject(
-                                ObjectType.Element,
-                                filter,
-                                "Clic en tuberías elevadas / cielo raso (presiona ESC cuando termines para acotar):"
-                            );
-                            if (pick != null)
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !pipes.Any(x => x.Id == el.Id))
                             {
-                                Element el = doc.GetElement(pick.ElementId);
-                                if (el != null && !pipes.Any(x => x.Id == el.Id))
-                                {
-                                    pipes.Add(el);
-                                }
+                                pipes.Add(el);
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break; // Al presionar ESC termina la selección y procede
-                        }
-                        catch
-                        {
-                            break;
-                        }
                     }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
 
@@ -4696,52 +3348,35 @@ namespace MiNamespace
                 }
             }
 
-            // 2. Si no había preselección, solicitar selección por recuadro o clics continuos con ESC para finalizar
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
             if (pipes.Count == 0)
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var pickedRefs = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         filter,
-                        "Arrastra un recuadro sobre las tuberías en pases de viga a taguear:"
+                        "Selecciona las tuberías en pases de viga a taguear y haz clic en 'Finish':"
                     );
-                    if (rectElements != null && rectElements.Count > 0)
+                    if (pickedRefs != null && pickedRefs.Count > 0)
                     {
-                        pipes.AddRange(rectElements);
-                    }
-                }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-
-                if (pipes.Count == 0)
-                {
-                    while (true)
-                    {
-                        try
+                        foreach (var r in pickedRefs)
                         {
-                            Reference pick = uidoc.Selection.PickObject(
-                                ObjectType.Element,
-                                filter,
-                                "Clic en tuberías en pases de viga (presiona ESC cuando termines para taguear):"
-                            );
-                            if (pick != null)
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !pipes.Any(x => x.Id == el.Id))
                             {
-                                Element el = doc.GetElement(pick.ElementId);
-                                if (el != null && !pipes.Any(x => x.Id == el.Id))
-                                {
-                                    pipes.Add(el);
-                                }
+                                pipes.Add(el);
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break; // Al presionar ESC termina la selección y procede
-                        }
-                        catch
-                        {
-                            break;
-                        }
                     }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
 
@@ -4801,7 +3436,7 @@ namespace MiNamespace
 
             XYZ dir2D = new XYZ(dir.X / len2D, dir.Y / len2D, 0);
             bool esVertical = Math.Abs(dir2D.Y) > Math.Abs(dir2D.X);
-            mejorOrientacion = esVertical ? TagOrientation.Vertical : TagOrientation.Horizontal;
+            mejorOrientacion = TagOrientation.Horizontal;
 
             // Escala de la vista para dimensionar la caja del tag (ej. "Ø4""):
             double scale = (view != null && view.Scale > 0) ? (double)view.Scale : 50.0;
@@ -4971,8 +3606,8 @@ namespace MiNamespace
                             TagOrientation orientacion;
                             if (!CalcularPosicionTagSizeOptima(pipe, pPase, view, ctx, out tagPos, out orientacion))
                             {
+                                orientacion = TagOrientation.Horizontal;
                                 bool esVert = Math.Abs(dir.Y) > Math.Abs(dir.X);
-                                orientacion = esVert ? TagOrientation.Vertical : TagOrientation.Horizontal;
                                 tagPos = esVert ? pPase + new XYZ(0.35, 0, 0) : pPase + new XYZ(0, -0.35, 0);
                             }
 
@@ -5011,6 +3646,441 @@ namespace MiNamespace
             }
 
             return tagsCreados;
+        }
+
+        #endregion
+
+        #region 7. TAGS DE DUCTOS (HVAC / REDES HÚMEDAS Y MECÁNICAS)
+
+        public class DuctSelectionFilter : ISelectionFilter
+        {
+            public bool AllowElement(Element elem)
+            {
+                if (elem == null || elem.Category == null) return false;
+#if REVIT2024_OR_LATER
+                long catId = elem.Category.Id.Value;
+                return catId == (long)BuiltInCategory.OST_DuctCurves || catId == (long)BuiltInCategory.OST_DuctFitting;
+#else
+                int catId = elem.Category.Id.IntegerValue;
+                return catId == (int)BuiltInCategory.OST_DuctCurves || catId == (int)BuiltInCategory.OST_DuctFitting;
+#endif
+            }
+
+            public bool AllowReference(Reference reference, XYZ position) => true;
+        }
+
+        public static int TaguearDuctosSoloDimensionesPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            return EjecutarFlujoSeleccionDuctos(uidoc, doc, view, false);
+        }
+
+        public static int TaguearDuctosSoloDimensionesTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            return EjecutarFlujoAutoDuctos(uidoc, doc, view, false);
+        }
+
+        public static int TaguearDuctosDimensionesMaterialPorSeleccion(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            return EjecutarFlujoSeleccionDuctos(uidoc, doc, view, true);
+        }
+
+        public static int TaguearDuctosDimensionesMaterialTodoEnVista(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view)
+        {
+            return EjecutarFlujoAutoDuctos(uidoc, doc, view, true);
+        }
+
+        private static int EjecutarFlujoSeleccionDuctos(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, bool incluirMaterial)
+        {
+            if (uidoc == null || doc == null || view == null) return 0;
+
+            List<Element> ductos = new List<Element>();
+            var filter = new DuctSelectionFilter();
+
+            // 1. Revisar si el usuario ya tenía ductos seleccionados en Revit
+            var preSelected = uidoc.Selection.GetElementIds();
+            if (preSelected != null && preSelected.Count > 0)
+            {
+                foreach (var id in preSelected)
+                {
+                    Element el = doc.GetElement(id);
+                    if (el != null && filter.AllowElement(el))
+                    {
+                        ductos.Add(el);
+                    }
+                }
+            }
+
+            // 2. Si no había preselección, permitir selección interactiva con cursor (+) y (-) y botón Finish
+            if (ductos.Count == 0)
+            {
+                try
+                {
+                    var pickedRefs = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
+                        filter,
+                        "Selecciona los ductos y accesorios a taguear y haz clic en 'Finish':"
+                    );
+                    if (pickedRefs != null && pickedRefs.Count > 0)
+                    {
+                        foreach (var r in pickedRefs)
+                        {
+                            Element el = doc.GetElement(r.ElementId);
+                            if (el != null && !ductos.Any(x => x.Id == el.Id))
+                            {
+                                ductos.Add(el);
+                            }
+                        }
+                    }
+                }
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                {
+                    return 0;
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+
+            if (ductos.Count == 0) return 0;
+
+            return ProcesarTagueoDuctos(doc, view, ductos, incluirMaterial);
+        }
+
+        private static int EjecutarFlujoAutoDuctos(UIDocument uidoc, Document doc, Autodesk.Revit.DB.View view, bool incluirMaterial)
+        {
+            if (uidoc == null || doc == null || view == null) return 0;
+
+            List<Element> curves = new FilteredElementCollector(doc, view.Id)
+                .OfCategory(BuiltInCategory.OST_DuctCurves)
+                .WhereElementIsNotElementType()
+                .ToList();
+
+            List<Element> fittings = new FilteredElementCollector(doc, view.Id)
+                .OfCategory(BuiltInCategory.OST_DuctFitting)
+                .WhereElementIsNotElementType()
+                .ToList();
+
+            List<Element> todos = new List<Element>();
+            todos.AddRange(curves);
+            todos.AddRange(fittings);
+
+            if (todos.Count == 0)
+            {
+                Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos", "No se encontraron ductos en la vista activa.");
+                return 0;
+            }
+
+            return ProcesarTagueoDuctos(doc, view, todos, incluirMaterial);
+        }
+
+        private static int ProcesarTagueoDuctos(Document doc, Autodesk.Revit.DB.View view, List<Element> ductos, bool incluirMaterial)
+        {
+            if (ductos == null || ductos.Count == 0) return 0;
+
+            ElementId tagTypeId = ObtenerTipoDuctTag(doc, incluirMaterial);
+            if (tagTypeId == ElementId.InvalidElementId)
+            {
+                Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos",
+                    "No se encontró ninguna familia de etiqueta de ducto cargada en el proyecto (OST_DuctTags).");
+                return 0;
+            }
+
+            var tagSymbol = doc.GetElement(tagTypeId) as FamilySymbol;
+            int tagsCreados = 0;
+
+            using (Transaction tx = new Transaction(doc, incluirMaterial ? "Taguear Ductos (Dimensiones + Material)" : "Taguear Ductos (Solo Dimensiones)"))
+            {
+                tx.Start();
+
+                if (tagSymbol != null && !tagSymbol.IsActive)
+                {
+                    tagSymbol.Activate();
+                    doc.Regenerate();
+                }
+
+                double scale = (view.Scale > 0) ? (double)view.Scale : 50.0;
+                double offsetBaseFt = (4.0 / 1000.0 * scale) * 3.28084; // ~4mm en escala
+
+                foreach (var ducto in ductos)
+                {
+                    if (ducto == null) continue;
+
+                    XYZ pHost = null;
+                    XYZ perp = XYZ.BasisY;
+                    bool esVertical = false;
+
+                    if (ducto.Location is LocationCurve lc && lc.Curve != null)
+                    {
+                        XYZ p0 = lc.Curve.GetEndPoint(0);
+                        XYZ p1 = lc.Curve.GetEndPoint(1);
+                        XYZ v2D = new XYZ(p1.X - p0.X, p1.Y - p0.Y, 0);
+                        if (v2D.GetLength() < 0.25)
+                        {
+                            // Ducto vertical (montante o bajante)
+                            esVertical = true;
+                            pHost = new XYZ(p0.X, p0.Y, (p0.Z + p1.Z) * 0.5);
+                            perp = -XYZ.BasisX;
+                        }
+                        else
+                        {
+                            XYZ dir = v2D.Normalize();
+                            perp = new XYZ(-dir.Y, dir.X, 0);
+                            pHost = (p0 + p1) * 0.5;
+                        }
+                    }
+                    else if (ducto.Location is LocationPoint lp)
+                    {
+                        pHost = lp.Point;
+                    }
+
+                    if (pHost == null) continue;
+
+                    // Extraer dimensión y materialidad
+                    string sizeStr = ObtenerDimensionDucto(ducto);
+                    string matStr = ObtenerMaterialidadDucto(doc, ducto);
+
+                    string valorComentario = incluirMaterial ? $"{sizeStr} - {matStr}" : sizeStr;
+
+                    // Inyectar en parámetro Comments/Comentarios para dinamismo
+                    try
+                    {
+                        Parameter pCom = ducto.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)
+                                      ?? ducto.LookupParameter("Comentarios")
+                                      ?? ducto.LookupParameter("Comments");
+                        if (pCom != null && !pCom.IsReadOnly)
+                        {
+                            pCom.Set(valorComentario);
+                        }
+                    }
+                    catch { }
+
+                    // Calcular semiancho o semialto del ducto
+                    double halfDuctFt = 0.6;
+                    Parameter pWidth = ducto.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)
+                                    ?? ducto.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM)
+                                    ?? ducto.LookupParameter("Width")
+                                    ?? ducto.LookupParameter("Ancho");
+                    if (pWidth != null && pWidth.HasValue && pWidth.AsDouble() > 0)
+                    {
+                        halfDuctFt = pWidth.AsDouble() * 0.5;
+                    }
+
+                    // Posicionar la cabeza de la etiqueta fuera del contorno del ducto con directriz
+                    XYZ tagHeadPos;
+                    if (esVertical)
+                    {
+                        tagHeadPos = pHost - new XYZ(halfDuctFt + offsetBaseFt + 0.5, 0, 0);
+                    }
+                    else
+                    {
+                        if (perp.Y < -0.1) perp = -perp; // Preferir arriba (+Y)
+                        tagHeadPos = pHost + (perp * (halfDuctFt + offsetBaseFt)) + new XYZ(0.3, 0, 0);
+                    }
+
+                    try
+                    {
+                        IndependentTag tag = IndependentTag.Create(
+                            doc,
+                            tagTypeId,
+                            view.Id,
+                            new Reference(ducto),
+                            true, // con directriz
+                            TagOrientation.Horizontal,
+                            tagHeadPos
+                        );
+
+                        if (tag != null)
+                        {
+                            if (tagTypeId != ElementId.InvalidElementId)
+                            {
+                                try { tag.ChangeTypeId(tagTypeId); } catch { }
+                            }
+
+                            tag.HasLeader = true;
+                            tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                            tag.TagHeadPosition = tagHeadPos;
+
+                            tagsCreados++;
+                        }
+                    }
+                    catch { }
+                }
+
+                tx.Commit();
+            }
+
+            return tagsCreados;
+        }
+
+        private static string ObtenerDimensionDucto(Element ducto)
+        {
+            try
+            {
+                Parameter pCalcSize = ducto.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)
+                                   ?? ducto.LookupParameter("Size")
+                                   ?? ducto.LookupParameter("Tamaño");
+                if (pCalcSize != null && pCalcSize.HasValue && !string.IsNullOrWhiteSpace(pCalcSize.AsString()))
+                {
+                    return pCalcSize.AsString();
+                }
+
+                Parameter pW = ducto.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)
+                            ?? ducto.LookupParameter("Width")
+                            ?? ducto.LookupParameter("Ancho");
+                Parameter pH = ducto.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)
+                            ?? ducto.LookupParameter("Height")
+                            ?? ducto.LookupParameter("Alto");
+                Parameter pDiam = ducto.get_Parameter(BuiltInParameter.RBS_CURVE_DIAMETER_PARAM)
+                               ?? ducto.LookupParameter("Diameter")
+                               ?? ducto.LookupParameter("Diámetro");
+
+                if (pW != null && pH != null && pW.HasValue && pH.HasValue)
+                {
+                    double wInches = Math.Round(pW.AsDouble() * 12.0);
+                    double hInches = Math.Round(pH.AsDouble() * 12.0);
+                    return $"{wInches}\"x{hInches}\"";
+                }
+                else if (pDiam != null && pDiam.HasValue)
+                {
+                    double dInches = Math.Round(pDiam.AsDouble() * 12.0);
+                    return $"Ø{dInches}\"";
+                }
+            }
+            catch { }
+
+            return "6\"x5\"";
+        }
+
+        private static string ObtenerMaterialidadDucto(Document doc, Element ducto)
+        {
+            try
+            {
+                // 1. Parámetro de material
+                Parameter pMat = ducto.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)
+                              ?? ducto.LookupParameter("Material")
+                              ?? ducto.LookupParameter("Materialidad")
+                              ?? ducto.LookupParameter("Duct Material");
+                if (pMat != null && pMat.HasValue)
+                {
+                    if (pMat.StorageType == StorageType.String && !string.IsNullOrWhiteSpace(pMat.AsString()))
+                    {
+                        return pMat.AsString();
+                    }
+                    else if (pMat.StorageType == StorageType.ElementId && pMat.AsElementId() != ElementId.InvalidElementId)
+                    {
+                        Element matEl = doc.GetElement(pMat.AsElementId());
+                        if (matEl != null && !string.IsNullOrWhiteSpace(matEl.Name))
+                        {
+                            return matEl.Name;
+                        }
+                    }
+                }
+
+                // 2. Nombre de tipo de ducto (ej. Lamina galvanizada / Rectangular Duct)
+                Element typeEl = doc.GetElement(ducto.GetTypeId());
+                if (typeEl != null && !string.IsNullOrWhiteSpace(typeEl.Name))
+                {
+                    string tName = typeEl.Name;
+                    if (tName.IndexOf("Galvaniz", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        tName.IndexOf("Lamina", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        tName.IndexOf("Chapa", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        tName.IndexOf("Fibra", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        tName.IndexOf("Flexible", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return tName;
+                    }
+                }
+            }
+            catch { }
+
+            return "Lamina galvanizada";
+        }
+
+        private static string ObtenerNombreFamiliaTag(ElementType t)
+        {
+            if (t == null) return string.Empty;
+            try
+            {
+                if (t is FamilySymbol fs && fs.Family != null && !string.IsNullOrEmpty(fs.Family.Name))
+                    return fs.Family.Name;
+
+                Parameter p = t.get_Parameter(BuiltInParameter.ALL_MODEL_FAMILY_NAME) ?? t.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM);
+                if (p != null && p.HasValue) return p.AsString() ?? string.Empty;
+            }
+            catch { }
+            return string.Empty;
+        }
+
+        private static ElementId ObtenerTipoDuctTag(Document doc, bool incluirMaterial)
+        {
+            try
+            {
+                var tagTypes = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_DuctTags)
+                    .WhereElementIsElementType()
+                    .Cast<ElementType>()
+                    .ToList();
+
+                var multiTypes = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_MultiCategoryTags)
+                    .WhereElementIsElementType()
+                    .Cast<ElementType>()
+                    .ToList();
+
+                tagTypes.AddRange(multiTypes);
+
+                if (tagTypes.Count > 0)
+                {
+                    if (incluirMaterial)
+                    {
+                        // 1. Prioridad: Etiquetas que incluyan Size + Material / Tipo / Name
+                        var matType = tagTypes.FirstOrDefault(t =>
+                        {
+                            string n = (t.Name ?? "") + " " + ObtenerNombreFamiliaTag(t);
+                            return (n.IndexOf("Material", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Mat", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Type", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Tipo", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Lamina", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                                   (n.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Dim", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Duct", StringComparison.OrdinalIgnoreCase) >= 0);
+                        });
+                        if (matType != null) return matType.Id;
+
+                        // 2. Fallback de material
+                        var matFallback = tagTypes.FirstOrDefault(t =>
+                        {
+                            string n = (t.Name ?? "") + " " + ObtenerNombreFamiliaTag(t);
+                            return n.IndexOf("Material", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                   n.IndexOf("Tipo", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                   n.IndexOf("Type", StringComparison.OrdinalIgnoreCase) >= 0;
+                        });
+                        if (matFallback != null) return matFallback.Id;
+                    }
+                    else
+                    {
+                        // Solo Dimensiones: Prioridad etiquetas de solo Size / Dimensión
+                        var sizeType = tagTypes.FirstOrDefault(t =>
+                        {
+                            string n = (t.Name ?? "") + " " + ObtenerNombreFamiliaTag(t);
+                            return (n.IndexOf("Size", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Dimension", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Tamaño", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    n.IndexOf("Solo", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                                   n.IndexOf("Material", StringComparison.OrdinalIgnoreCase) < 0;
+                        });
+                        if (sizeType != null) return sizeType.Id;
+                    }
+
+                    // Fallback genérico: Primer tag disponible
+                    return tagTypes.First().Id;
+                }
+            }
+            catch { }
+
+            return ElementId.InvalidElementId;
         }
 
         #endregion

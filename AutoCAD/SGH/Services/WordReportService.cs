@@ -237,7 +237,13 @@ namespace AutoCAD.SGH.Services
                             }
                         }
                     }
+
+                    // 6. Asegurar que las tablas de contenido y campos sean actualizables en Word (w:updateFields)
+                    EnsureWordFieldsUpdateSetting(zip);
                 }
+
+                // 7. Si Microsoft Word está instalado en el equipo, actualizar silenciosamente la Tabla de Contenido
+                TryUpdateWordFieldsWithWordApp(outputPath);
 
                 ed?.WriteMessage($"\n[SGH] Informe Word generado exitosamente: {outputPath}\n");
                 return true;
@@ -246,6 +252,127 @@ namespace AutoCAD.SGH.Services
             {
                 ed?.WriteMessage($"\n[SGH Error en generación Word]: {ex.Message}\n");
                 return false;
+            }
+        }
+
+        private static void UpdateTocInstruction(XDocument doc)
+        {
+            try
+            {
+                if (doc?.Root == null) return;
+                foreach (var instr in doc.Descendants(W + "instrText"))
+                {
+                    if (instr.Value != null && instr.Value.Contains("TOC"))
+                    {
+                        if (instr.Value.Contains(@"\o ""1-2"""))
+                        {
+                            instr.Value = instr.Value.Replace(@"\o ""1-2""", @"\o ""1-3""");
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void EnsureWordFieldsUpdateSetting(ZipArchive zip)
+        {
+            try
+            {
+                var settingsEntry = zip.GetEntry("word/settings.xml");
+                XDocument xSettings;
+                if (settingsEntry != null)
+                {
+                    using (var stream = settingsEntry.Open())
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        xSettings = XDocument.Load(reader);
+                    }
+
+                    if (xSettings.Root != null)
+                    {
+                        var updateFields = xSettings.Root.Element(W + "updateFields");
+                        if (updateFields == null)
+                        {
+                            xSettings.Root.AddFirst(new XElement(W + "updateFields", new XAttribute(W + "val", "true")));
+                        }
+                        else
+                        {
+                            updateFields.SetAttributeValue(W + "val", "true");
+                        }
+                    }
+
+                    settingsEntry.Delete();
+                    var newEntry = zip.CreateEntry("word/settings.xml", CompressionLevel.Optimal);
+                    using (var stream = newEntry.Open())
+                    using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
+                    {
+                        xSettings.Save(writer);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void TryUpdateWordFieldsWithWordApp(string docxPath)
+        {
+            if (string.IsNullOrWhiteSpace(docxPath) || !File.Exists(docxPath)) return;
+
+            dynamic wordApp = null;
+            dynamic doc = null;
+            try
+            {
+                Type wordType = Type.GetTypeFromProgID("Word.Application");
+                if (wordType == null) return;
+
+                wordApp = Activator.CreateInstance(wordType);
+                if (wordApp == null) return;
+
+                wordApp.Visible = false;
+                wordApp.DisplayAlerts = 0; // wdAlertsNone
+
+                doc = wordApp.Documents.Open(docxPath);
+                if (doc != null)
+                {
+                    if (doc.TablesOfContents != null)
+                    {
+                        for (int i = 1; i <= doc.TablesOfContents.Count; i++)
+                        {
+                            try
+                            {
+                                doc.TablesOfContents.Item(i).Update();
+                            }
+                            catch { }
+                        }
+                    }
+
+                    if (doc.Fields != null)
+                    {
+                        try
+                        {
+                            doc.Fields.Update();
+                        }
+                        catch { }
+                    }
+
+                    doc.Save();
+                    doc.Close(false);
+                    doc = null;
+                }
+            }
+            catch
+            {
+                // Silencioso: si Word no responde o no está disponible, el documento se abrirá normalmente y Word actualizará los campos al abrir gracias a w:updateFields
+            }
+            finally
+            {
+                if (doc != null)
+                {
+                    try { doc.Close(false); } catch { }
+                }
+                if (wordApp != null)
+                {
+                    try { wordApp.Quit(); } catch { }
+                }
             }
         }
 
@@ -308,6 +435,9 @@ namespace AutoCAD.SGH.Services
 
             // 0. Eliminar párrafos vacíos residuales antes del salto de página de la portada para evitar páginas en blanco intermedias
             EliminateExtraCoverBlankPages(doc);
+
+            // Asegurar que la instrucción TOC soporte niveles 1 a 3 (1-3)
+            UpdateTocInstruction(doc);
 
             var paragraphs = doc.Descendants(W + "p").ToList();
 
@@ -414,16 +544,17 @@ namespace AutoCAD.SGH.Services
                     continue;
                 }
 
-                if (text.Contains("TABLA: CLASIFICACIÓN") || text.Contains("TABLA: CLASIFICACION") || text.Contains("TABLA:CLASIFICACIÓN"))
-                {
-                    var tblClassification = BuildWordClassificationTable(spaces, model);
-                    p.ReplaceWith(tblClassification);
-                    continue;
-                }
-
+                // IMPORTANTE: Eliminar la tabla secundaria primero para que no coincida con "TABLA: CLASIFICACIÓN"
                 if (text.Contains("TABLA: CLASIFICACIÓN SECUNDARIA") || text.Contains("TABLA: CLASIFICACION SECUNDARIA") || text.Contains("TABLA: Almacenamiento") || text.Contains("TABLA: ALMACENAMIENTO"))
                 {
                     p.Remove();
+                    continue;
+                }
+
+                if ((text.Contains("TABLA: CLASIFICACIÓN") || text.Contains("TABLA: CLASIFICACION") || text.Contains("TABLA:CLASIFICACIÓN")) && !text.Contains("SECUNDARIA"))
+                {
+                    var tblClassification = BuildWordClassificationTable(spaces, model);
+                    p.ReplaceWith(tblClassification);
                     continue;
                 }
 

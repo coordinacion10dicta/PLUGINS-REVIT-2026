@@ -1,7 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Control = System.Windows.Forms.Control;
 
 namespace MiNamespace
 {
@@ -13,19 +18,30 @@ namespace MiNamespace
         NivelesTodaLaVista,
         CambioDeNivelPorSeleccion,
         CambioDeNivelAuto,
+        CambioDeNivelManual,
         CotasAlineadasPorSeleccion,
         CotasAlineadasAuto,
         NivelDeUbicacion,
         CamasConduitsPorSeleccion,
         CamasConduitsAuto,
+        CamasTubosPorSeleccion,
+        CamasTubosAuto,
+        CotasBandejasPorSeleccion,
+        CotasBandejasAuto,
+        ExostosPorSeleccion,
+        ExostosAuto,
+        TagRoomPorSeleccion,
+        TagRoomAuto,
+        BuitronesCuartosPorSeleccion = TagRoomPorSeleccion,
+        BuitronesCuartosAuto = TagRoomAuto,
+        ConduitTagsPorSeleccion,
+        ConduitTagsAuto,
         // Redes Húmedas (Desagües)
         PendientesPorClic,
         PendientesPorSeleccion,
         PendientesTodoEnVista,
         MaterialPorSeleccion,
         MaterialTodoEnVista,
-        CambioDeNivelHumedasPorSeleccion,
-        CambioDeNivelHumedasAuto,
         EmbebidasPlacaPorSeleccion,
         EmbebidasPlacaAuto,
         EmbebidasPisoPorSeleccion,
@@ -33,28 +49,48 @@ namespace MiNamespace
         ElevadasPorSeleccion,
         ElevadasAuto,
         PasesVigaPorSeleccion,
-        PasesVigaAuto
+        PasesVigaAuto,
+        // Tags de Ductos (HVAC)
+        TagDuctosSoloDimensionesSel,
+        TagDuctosSoloDimensionesAuto,
+        TagDuctosDimensionesMaterialSel,
+        TagDuctosDimensionesMaterialAuto,
+        // Generales (Redes Secas y Húmedas)
+        TagSubePorSeleccion,
+        TagSubeAuto,
+        TagBajaPorSeleccion,
+        TagBajaAuto
     }
 
-    public class TagsCoorWindow : Form
+    public class TagsCoorWindow : System.Windows.Forms.Form
     {
         public TagsCoorAction SelectedAction { get; private set; } = TagsCoorAction.Cancelar;
+        public string SelectedLevelName { get; private set; }
 
-        public TagsCoorWindow()
+        private readonly Autodesk.Revit.DB.Document _doc;
+
+        public TagsCoorWindow() : this(null)
         {
+        }
+
+        public TagsCoorWindow(Autodesk.Revit.DB.Document doc)
+        {
+            _doc = doc;
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
             this.Text = "DICTA - Tags Coordinación";
-            this.Size = new Size(610, 375);
+            this.Size = new Size(820, 700);
+            this.MinimumSize = new Size(680, 540);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
             this.MinimizeBox = false;
             this.BackColor = Color.FromArgb(248, 249, 250);
             this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            this.DoubleBuffered = true;
 
             ToolTip toolTip = new ToolTip
             {
@@ -68,39 +104,57 @@ namespace MiNamespace
             Panel pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 52,
+                Height = 56,
                 BackColor = Color.FromArgb(24, 43, 73)
             };
 
             Label lblTitle = new Label
             {
                 Text = "TAGS DE COORDINACIÓN",
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11.5F, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(16, 8),
+                Location = new Point(16, 9),
                 AutoSize = true
             };
 
             Label lblSub = new Label
             {
-                Text = "Herramientas de etiquetado para redes secas y redes húmedas (desagües)",
-                Font = new Font("Segoe UI", 8F, FontStyle.Regular),
+                Text = "Herramientas de etiquetado para redes secas, redes húmedas (desagües) y HVAC",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
                 ForeColor = Color.FromArgb(200, 215, 235),
-                Location = new Point(17, 29),
+                Location = new Point(17, 31),
                 AutoSize = true
             };
 
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblSub);
-            this.Controls.Add(pnlHeader);
+
+            // 1.1 Panel Inferior (Footer) con botón Cerrar
+            Panel pnlFooter = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 50,
+                BackColor = Color.FromArgb(248, 249, 250)
+            };
+
+            // 1.2 Panel Central con Scroll Responsivo
+            Panel pnlMain = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 249, 250),
+                Padding = new Padding(12, 10, 12, 10)
+            };
+
+
 
             // =========================================================================
             // 2. SECCIÓN REDES SECAS
             // =========================================================================
             Panel pnlSecas = new Panel
             {
-                Location = new Point(14, 60),
-                Size = new Size(566, 80),
+                Location = new Point(12, 10),
+                Size = new Size(780, 130),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle
             };
@@ -108,24 +162,24 @@ namespace MiNamespace
             Label lblSecas = new Label
             {
                 Text = "REDES SECAS",
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 102, 204),
-                Location = new Point(10, 6),
+                Location = new Point(10, 8),
                 AutoSize = true
             };
             pnlSecas.Controls.Add(lblSecas);
 
             FlowLayoutPanel flowSecas = new FlowLayoutPanel
             {
-                Location = new Point(6, 24),
-                Size = new Size(552, 48),
+                Location = new Point(6, 28),
+                Size = new Size(765, 98),
                 AutoScroll = false,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
+                WrapContents = true,
                 BackColor = Color.White
             };
 
-            Size btnSize = new Size(130, 40);
+            Size btnSize = new Size(150, 42);
             Color secasFore = Color.FromArgb(0, 102, 204);
             Color secasBack = Color.FromArgb(242, 247, 255);
             Color secasBorder = Color.FromArgb(145, 190, 240);
@@ -207,44 +261,121 @@ namespace MiNamespace
             toolTip.SetToolTip(btnCotasAlineadas, "Coloca cotas alineadas en cadenas entre referencias paralelas (ejes en instalaciones, caras en arquitectura).");
 
             // --- BOTÓN 4: Camas Conduits (Desplegable) ---
-            ContextMenuStrip menuCamas = new ContextMenuStrip();
-            ToolStripMenuItem itemCamasSel = new ToolStripMenuItem("Por Selección Múltiple");
-            itemCamasSel.Click += (s, e) =>
+            ContextMenuStrip menuCamasConduits = new ContextMenuStrip();
+            ToolStripMenuItem itemCamasConduitsSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemCamasConduitsSel.Click += (s, e) =>
             {
                 SelectedAction = TagsCoorAction.CamasConduitsPorSeleccion;
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             };
 
-            ToolStripMenuItem itemCamasAuto = new ToolStripMenuItem("Camas Automático");
-            itemCamasAuto.Click += (s, e) =>
+            ToolStripMenuItem itemCamasConduitsAuto = new ToolStripMenuItem("Camas Automático");
+            itemCamasConduitsAuto.Click += (s, e) =>
             {
                 SelectedAction = TagsCoorAction.CamasConduitsAuto;
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             };
 
-            menuCamas.Items.Add(itemCamasSel);
-            menuCamas.Items.Add(itemCamasAuto);
-            ConfigureModernMenu(menuCamas, secasFore, secasHover);
+            menuCamasConduits.Items.Add(itemCamasConduitsSel);
+            menuCamasConduits.Items.Add(itemCamasConduitsAuto);
+            ConfigureModernMenu(menuCamasConduits, secasFore, secasHover);
 
-            Button btnCamas = CreateDropdownButton("Camas Conduits", btnSize, secasBack, secasFore, menuCamas, secasBorder);
-            toolTip.SetToolTip(btnCamas, "Etiqueta camas de conduits indicando cantidad por nivel: (N)- Size - Material/Tipo.");
+            Button btnCamasConduits = CreateDropdownButton("Camas Conduits", btnSize, secasBack, secasFore, menuCamasConduits, secasBorder);
+            toolTip.SetToolTip(btnCamasConduits, "Etiqueta camas de conduits en planta indicando cantidad por nivel: (N)- Size - Material/Tipo.");
+
+            // --- BOTÓN 5: Camas de Tubos (Desplegable) ---
+            ContextMenuStrip menuCamasTubos = new ContextMenuStrip();
+            ToolStripMenuItem itemCamasTubosSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemCamasTubosSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.CamasTubosPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemCamasTubosAuto = new ToolStripMenuItem("Camas Automático");
+            itemCamasTubosAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.CamasTubosAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuCamasTubos.Items.Add(itemCamasTubosSel);
+            menuCamasTubos.Items.Add(itemCamasTubosAuto);
+            ConfigureModernMenu(menuCamasTubos, secasFore, secasHover);
+
+            Button btnCamasTubos = CreateDropdownButton("Camas de Tuberías", btnSize, secasBack, secasFore, menuCamasTubos, secasBorder);
+            toolTip.SetToolTip(btnCamasTubos, "Etiqueta y acota camas de tuberías/salidas de tablero en detalles y cortes (N.E. / N TUBERÍAS / Diámetro - Material).");
+
+            // --- BOTÓN 6: Cotas Bandejas (Desplegable) ---
+            ContextMenuStrip menuCotasBandejas = new ContextMenuStrip();
+            ToolStripMenuItem itemBandejasSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemBandejasSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.CotasBandejasPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemBandejasAuto = new ToolStripMenuItem("Bandejas Automático");
+            itemBandejasAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.CotasBandejasAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuCotasBandejas.Items.Add(itemBandejasSel);
+            menuCotasBandejas.Items.Add(itemBandejasAuto);
+            ConfigureModernMenu(menuCotasBandejas, secasFore, secasHover);
+
+            Button btnCotasBandejas = CreateDropdownButton("Cotas Bandejas", btnSize, secasBack, secasFore, menuCotasBandejas, secasBorder);
+            toolTip.SetToolTip(btnCotasBandejas, "Acota bandejas portacables a la estructura más cercana (muros, vigas, columnas) sin repetir ancho.");
+
+            // --- BOTÓN 7: Conduit Tags (Desplegable) ---
+            ContextMenuStrip menuConduitTags = new ContextMenuStrip();
+            ToolStripMenuItem itemConduitTagsSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemConduitTagsSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.ConduitTagsPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemConduitTagsAuto = new ToolStripMenuItem("Tag Automático");
+            itemConduitTagsAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.ConduitTagsAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuConduitTags.Items.Add(itemConduitTagsSel);
+            menuConduitTags.Items.Add(itemConduitTagsAuto);
+            ConfigureModernMenu(menuConduitTags, secasFore, secasHover);
+
+            Button btnConduitTags = CreateDropdownButton("Conduit Tags", btnSize, secasBack, secasFore, menuConduitTags, secasBorder);
+            toolTip.SetToolTip(btnConduitTags, "Etiqueta conduits de Eléctrico, Electrónico y HVAC (Control) con el formato Type Name + Size.");
 
             flowSecas.Controls.Add(btnNivelesDropdown);
             flowSecas.Controls.Add(btnCambioNivel);
             flowSecas.Controls.Add(btnCotasAlineadas);
-            flowSecas.Controls.Add(btnCamas);
+            flowSecas.Controls.Add(btnCamasConduits);
+            flowSecas.Controls.Add(btnCamasTubos);
+            flowSecas.Controls.Add(btnCotasBandejas);
+            flowSecas.Controls.Add(btnConduitTags);
             pnlSecas.Controls.Add(flowSecas);
-            this.Controls.Add(pnlSecas);
 
             // =========================================================================
             // 3. SECCIÓN REDES HÚMEDAS (DESAGÜES)
             // =========================================================================
             Panel pnlHumedas = new Panel
             {
-                Location = new Point(14, 146),
-                Size = new Size(566, 130),
+                Location = new Point(12, 160),
+                Size = new Size(780, 130),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle
             };
@@ -252,17 +383,17 @@ namespace MiNamespace
             Label lblHumedas = new Label
             {
                 Text = "REDES HÚMEDAS (DESAGÜES)",
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(0, 130, 110),
-                Location = new Point(10, 6),
+                Location = new Point(10, 8),
                 AutoSize = true
             };
             pnlHumedas.Controls.Add(lblHumedas);
 
             FlowLayoutPanel flowHumedas = new FlowLayoutPanel
             {
-                Location = new Point(6, 24),
-                Size = new Size(552, 98),
+                Location = new Point(6, 28),
+                Size = new Size(765, 98),
                 AutoScroll = false,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true,
@@ -276,7 +407,7 @@ namespace MiNamespace
 
             // --- BOTÓN 1: Tag Pendientes (Desplegable) ---
             ContextMenuStrip menuPendientes = new ContextMenuStrip();
-            ToolStripMenuItem itemPendClic = new ToolStripMenuItem("Por Clic Individual");
+            ToolStripMenuItem itemPendClic = new ToolStripMenuItem("Por Clic");
             itemPendClic.Click += (s, e) =>
             {
                 SelectedAction = TagsCoorAction.PendientesPorClic;
@@ -284,20 +415,11 @@ namespace MiNamespace
                 this.Close();
             };
 
-            ToolStripMenuItem itemPendSeleccion = new ToolStripMenuItem("Por Selección Múltiple");
-            itemPendSeleccion.Click += (s, e) =>
-            {
-                SelectedAction = TagsCoorAction.PendientesPorSeleccion;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            };
-
             menuPendientes.Items.Add(itemPendClic);
-            menuPendientes.Items.Add(itemPendSeleccion);
             ConfigureModernMenu(menuPendientes, humedasFore, humedasHover);
 
             Button btnPendientes = CreateDropdownButton("Tag Pendientes", btnSize, humedasBack, humedasFore, menuPendientes, humedasBorder);
-            toolTip.SetToolTip(btnPendientes, "Etiqueta pendientes (%) con flecha de flujo en tuberías de desagüe.");
+            toolTip.SetToolTip(btnPendientes, "Etiqueta pendientes (%) por clic con flecha de flujo en tuberías de desagüe.");
 
             // --- BOTÓN 2: Tag Material (Desplegable) ---
             ContextMenuStrip menuMaterial = new ContextMenuStrip();
@@ -324,32 +446,7 @@ namespace MiNamespace
             Button btnMaterial = CreateDropdownButton("Tag Material", btnSize, humedasBack, humedasFore, menuMaterial, humedasBorder);
             toolTip.SetToolTip(btnMaterial, "Etiqueta el material en tuberías y accesorios.");
 
-            // --- BOTÓN 3: Tag Cambio Nivel Desagües (Desplegable) ---
-            ContextMenuStrip menuCambioNivelH = new ContextMenuStrip();
-            ToolStripMenuItem itemCnHhumSel = new ToolStripMenuItem("Por Selección Múltiple");
-            itemCnHhumSel.Click += (s, e) =>
-            {
-                SelectedAction = TagsCoorAction.CambioDeNivelHumedasPorSeleccion;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            };
-
-            ToolStripMenuItem itemCnHhumAuto = new ToolStripMenuItem("Tag Automático");
-            itemCnHhumAuto.Click += (s, e) =>
-            {
-                SelectedAction = TagsCoorAction.CambioDeNivelHumedasAuto;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            };
-
-            menuCambioNivelH.Items.Add(itemCnHhumSel);
-            menuCambioNivelH.Items.Add(itemCnHhumAuto);
-            ConfigureModernMenu(menuCambioNivelH, humedasFore, humedasHover);
-
-            Button btnCambioNivelH = CreateDropdownButton("Tags \"C.N\"", btnSize, humedasBack, humedasFore, menuCambioNivelH, humedasBorder);
-            toolTip.SetToolTip(btnCambioNivelH, "Etiqueta cambios de nivel en codos y bajantes de desagües.");
-
-            // --- BOTÓN 4: Tuberías Embebidas en Placa (Desplegable) ---
+            // --- BOTÓN 3: Tuberías Embebidas en Placa (Desplegable) ---
             ContextMenuStrip menuEmbebidasPlaca = new ContextMenuStrip();
             ToolStripMenuItem itemPlacaSel = new ToolStripMenuItem("Por Selección Múltiple");
             itemPlacaSel.Click += (s, e) =>
@@ -374,7 +471,7 @@ namespace MiNamespace
             Button btnEmbebidasPlaca = CreateDropdownButton("Embebidas Placa", btnSize, humedasBack, humedasFore, menuEmbebidasPlaca, humedasBorder);
             toolTip.SetToolTip(btnEmbebidasPlaca, "Acota tuberías embebidas en placa a elementos estructurales y ajusta el rango de vista (-15 cm).");
 
-            // --- BOTÓN 5: Tuberías Embebidas en Piso / Afinado (Desplegable) ---
+            // --- BOTÓN 4: Tuberías Embebidas en Piso / Afinado (Desplegable) ---
             ContextMenuStrip menuEmbebidasPiso = new ContextMenuStrip();
             ToolStripMenuItem itemPisoSel = new ToolStripMenuItem("Por Selección Múltiple");
             itemPisoSel.Click += (s, e) =>
@@ -399,7 +496,7 @@ namespace MiNamespace
             Button btnEmbebidasPiso = CreateDropdownButton("Embebidas Piso", btnSize, humedasBack, humedasFore, menuEmbebidasPiso, humedasBorder);
             toolTip.SetToolTip(btnEmbebidasPiso, "Acota tuberías en afinado de piso a muros arquitectónicos o estructura.");
 
-            // --- BOTÓN 6: Tuberías Elevadas / Cielo Raso (Desplegable) ---
+            // --- BOTÓN 5: Tuberías Elevadas / Cielo Raso (Desplegable) ---
             ContextMenuStrip menuElevadas = new ContextMenuStrip();
             ToolStripMenuItem itemElevSel = new ToolStripMenuItem("Por Selección Múltiple");
             itemElevSel.Click += (s, e) =>
@@ -424,7 +521,7 @@ namespace MiNamespace
             Button btnElevadas = CreateDropdownButton("Tub. Elevadas", btnSize, humedasBack, humedasFore, menuElevadas, humedasBorder);
             toolTip.SetToolTip(btnElevadas, "Acota tuberías elevadas o sobre cielo raso a la estructura inmediatamente superior.");
 
-            // --- BOTÓN 7: Tags de Pases en Viga (Desplegable) ---
+            // --- BOTÓN 6: Tags de Pases en Viga (Desplegable) ---
             ContextMenuStrip menuPasesViga = new ContextMenuStrip();
             ToolStripMenuItem itemPasesSel = new ToolStripMenuItem("Por Selección Múltiple");
             itemPasesSel.Click += (s, e) =>
@@ -449,72 +546,364 @@ namespace MiNamespace
             Button btnPasesViga = CreateDropdownButton("Pases en Viga", btnSize, humedasBack, humedasFore, menuPasesViga, humedasBorder);
             toolTip.SetToolTip(btnPasesViga, "Etiqueta pases de tuberías en vigas mostrando únicamente la dimensión (Size / Diámetro).");
 
+            // --- BOTÓN 7: Tags de Ductos (Desplegable) ---
+            ContextMenuStrip menuDuctos = new ContextMenuStrip();
+            ToolStripMenuItem itemDuctosSoloDimSel = new ToolStripMenuItem("Solo Dimensiones (Selección Múltiple)");
+            itemDuctosSoloDimSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagDuctosSoloDimensionesSel;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemDuctosSoloDimAuto = new ToolStripMenuItem("Solo Dimensiones (Automático en Vista)");
+            itemDuctosSoloDimAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagDuctosSoloDimensionesAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemDuctosMatSel = new ToolStripMenuItem("Dimensiones + Material (Selección Múltiple)");
+            itemDuctosMatSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagDuctosDimensionesMaterialSel;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemDuctosMatAuto = new ToolStripMenuItem("Dimensiones + Material (Automático en Vista)");
+            itemDuctosMatAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagDuctosDimensionesMaterialAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuDuctos.Items.Add(itemDuctosSoloDimSel);
+            menuDuctos.Items.Add(itemDuctosSoloDimAuto);
+            menuDuctos.Items.Add(new ToolStripSeparator());
+            menuDuctos.Items.Add(itemDuctosMatSel);
+            menuDuctos.Items.Add(itemDuctosMatAuto);
+            ConfigureModernMenu(menuDuctos, humedasFore, humedasHover);
+
+            Button btnDuctos = CreateDropdownButton("Tags Ductos", btnSize, humedasBack, humedasFore, menuDuctos, humedasBorder);
+            toolTip.SetToolTip(btnDuctos, "Etiqueta ductos de climatización/ventilación con dimensiones (ancho x alto) y materialidad.");
+
             flowHumedas.Controls.Add(btnPendientes);
             flowHumedas.Controls.Add(btnMaterial);
-            flowHumedas.Controls.Add(btnCambioNivelH);
             flowHumedas.Controls.Add(btnEmbebidasPlaca);
             flowHumedas.Controls.Add(btnEmbebidasPiso);
             flowHumedas.Controls.Add(btnElevadas);
             flowHumedas.Controls.Add(btnPasesViga);
+            flowHumedas.Controls.Add(btnDuctos);
             pnlHumedas.Controls.Add(flowHumedas);
-            this.Controls.Add(pnlHumedas);
 
-            // 4. Botón Inferior Cerrar
+            // =========================================================================
+            // 4. SECCIÓN HVAC
+            // =========================================================================
+            Panel pnlHvac = new Panel
+            {
+                Location = new Point(12, 310),
+                Size = new Size(780, 75),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            Label lblHvac = new Label
+            {
+                Text = "HVAC",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(196, 70, 70),
+                Location = new Point(10, 8),
+                AutoSize = true
+            };
+            pnlHvac.Controls.Add(lblHvac);
+
+            FlowLayoutPanel flowHvac = new FlowLayoutPanel
+            {
+                Location = new Point(6, 28),
+                Size = new Size(765, 45),
+                AutoScroll = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                BackColor = Color.White
+            };
+
+            Color hvacFore = Color.FromArgb(196, 70, 70);
+            Color hvacBack = Color.FromArgb(253, 240, 240);
+            Color hvacBorder = Color.FromArgb(240, 175, 175);
+            Color hvacHover = Color.FromArgb(250, 228, 228);
+
+            // --- BOTÓN 1: Tags Exostos (Desplegable) ---
+            ContextMenuStrip menuExostos = new ContextMenuStrip();
+            ToolStripMenuItem itemExostosSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemExostosSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.ExostosPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemExostosAuto = new ToolStripMenuItem("Tag Automático");
+            itemExostosAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.ExostosAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuExostos.Items.Add(itemExostosSel);
+            menuExostos.Items.Add(itemExostosAuto);
+            ConfigureModernMenu(menuExostos, hvacFore, hvacHover);
+
+            Button btnExostos = CreateDropdownButton("Tags Exostos", btnSize, hvacBack, hvacFore, menuExostos, hvacBorder);
+            toolTip.SetToolTip(btnExostos, "Etiqueta ductos y tuberías de exostos indicando diámetro y materialidad (ej: 10\"ø - Acero galvanizado).");
+
+            flowHvac.Controls.Add(btnExostos);
+            pnlHvac.Controls.Add(flowHvac);
+
+            // =========================================================================
+            // 5. SECCIÓN GENERALES (REDES SECAS Y HÚMEDAS)
+            // =========================================================================
+            Panel pnlGenerales = new Panel
+            {
+                Location = new Point(12, 400),
+                Size = new Size(780, 75),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            Label lblGenerales = new Label
+            {
+                Text = "GENERALES (REDES SECAS Y HÚMEDAS)",
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(102, 51, 153),
+                Location = new Point(10, 8),
+                AutoSize = true
+            };
+            pnlGenerales.Controls.Add(lblGenerales);
+
+            FlowLayoutPanel flowGenerales = new FlowLayoutPanel
+            {
+                Location = new Point(6, 28),
+                Size = new Size(765, 45),
+                AutoScroll = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                BackColor = Color.White
+            };
+
+            Color generalesFore = Color.FromArgb(102, 51, 153);
+            Color generalesBack = Color.FromArgb(246, 243, 252);
+            Color generalesBorder = Color.FromArgb(190, 170, 225);
+            Color generalesHover = Color.FromArgb(238, 230, 250);
+
+            // --- BOTÓN 1: Sube / Baja (Desplegable unificado) ---
+            ContextMenuStrip menuSubeBaja = new ContextMenuStrip();
+
+            ToolStripMenuItem itemSubeSel = new ToolStripMenuItem("Tag SUBE (Selección Múltiple)");
+            itemSubeSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagSubePorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemBajaSel = new ToolStripMenuItem("Tag BAJA (Selección Múltiple)");
+            itemBajaSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagBajaPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemSubeAuto = new ToolStripMenuItem("Tag SUBE (Automático en Vista)");
+            itemSubeAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagSubeAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemBajaAuto = new ToolStripMenuItem("Tag BAJA (Automático en Vista)");
+            itemBajaAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagBajaAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuSubeBaja.Items.Add(itemSubeSel);
+            menuSubeBaja.Items.Add(itemBajaSel);
+            menuSubeBaja.Items.Add(new ToolStripSeparator());
+            menuSubeBaja.Items.Add(itemSubeAuto);
+            menuSubeBaja.Items.Add(itemBajaAuto);
+            ConfigureModernMenu(menuSubeBaja, generalesFore, generalesHover);
+
+            Button btnSubeBaja = CreateDropdownButton("Sube / Baja", btnSize, generalesBack, generalesFore, menuSubeBaja, generalesBorder);
+            toolTip.SetToolTip(btnSubeBaja, "Coloca etiquetas 'SUBE' o 'BAJA' en accesorios y tuberías.");
+
+            // --- BOTÓN 2: Tag Room (Desplegable) ---
+            ContextMenuStrip menuTagRoom = new ContextMenuStrip();
+            ToolStripMenuItem itemTagRoomSel = new ToolStripMenuItem("Por Selección Múltiple");
+            itemTagRoomSel.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagRoomPorSeleccion;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            ToolStripMenuItem itemTagRoomAuto = new ToolStripMenuItem("Tag Automático");
+            itemTagRoomAuto.Click += (s, e) =>
+            {
+                SelectedAction = TagsCoorAction.TagRoomAuto;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
+
+            menuTagRoom.Items.Add(itemTagRoomSel);
+            menuTagRoom.Items.Add(itemTagRoomAuto);
+            ConfigureModernMenu(menuTagRoom, generalesFore, generalesHover);
+
+            Button btnTagRoom = CreateDropdownButton("Tag Room", btnSize, generalesBack, generalesFore, menuTagRoom, generalesBorder);
+            toolTip.SetToolTip(btnTagRoom, "Etiqueta habitaciones y espacios (buitrones técnicos HID, ELE, ETO, HVAC, RCI y cuartos técnicos) usando Room Tags.");
+
+            flowGenerales.Controls.Add(btnSubeBaja);
+            flowGenerales.Controls.Add(btnTagRoom);
+            pnlGenerales.Controls.Add(flowGenerales);
+
+            // Agregar secciones de contenido a pnlMain
+            pnlMain.Controls.Add(pnlSecas);
+            pnlMain.Controls.Add(pnlHumedas);
+            pnlMain.Controls.Add(pnlHvac);
+            pnlMain.Controls.Add(pnlGenerales);
+
+            // 5. Botón Inferior Cerrar en pnlFooter
             Button btnCerrar = new Button
             {
                 Text = "Cerrar",
                 DialogResult = DialogResult.Cancel,
-                Location = new Point(490, 288),
-                Size = new Size(90, 28),
+                Size = new Size(110, 32),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.White,
                 ForeColor = Color.FromArgb(70, 70, 70),
-                Font = new Font("Segoe UI", 8.5F),
+                Font = new Font("Segoe UI", 9F),
                 Cursor = Cursors.Hand
             };
             btnCerrar.FlatAppearance.BorderSize = 0;
             ApplyRoundedStyle(btnCerrar, 6, Color.LightGray);
+            btnCerrar.Location = new Point(pnlFooter.ClientSize.Width - btnCerrar.Width - 18, 9);
+            btnCerrar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnCerrar.Click += (s, e) =>
             {
                 SelectedAction = TagsCoorAction.Cancelar;
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
             };
+            pnlFooter.Controls.Add(btnCerrar);
 
-            this.Controls.Add(btnCerrar);
+            this.Controls.Add(pnlMain);
+            this.Controls.Add(pnlFooter);
+            this.Controls.Add(pnlHeader);
             this.CancelButton = btnCerrar;
+
+            // Recalcular posiciones y envolver botones dinámicamente al cambiar el tamaño de la ventana
+            Action relayoutSections = () =>
+            {
+                int scrollW = pnlMain.VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0;
+                int targetW = Math.Max(320, pnlMain.ClientSize.Width - scrollW - 28);
+
+                pnlSecas.Location = new Point(12, 10);
+                pnlSecas.Width = targetW;
+                flowSecas.Width = Math.Max(200, pnlSecas.ClientSize.Width - 20);
+                flowSecas.Height = flowSecas.GetPreferredSize(new Size(flowSecas.Width, 0)).Height;
+                pnlSecas.Height = flowSecas.Bottom + 12;
+
+                pnlHumedas.Location = new Point(12, pnlSecas.Bottom + 14);
+                pnlHumedas.Width = targetW;
+                flowHumedas.Width = Math.Max(200, pnlHumedas.ClientSize.Width - 20);
+                flowHumedas.Height = flowHumedas.GetPreferredSize(new Size(flowHumedas.Width, 0)).Height;
+                pnlHumedas.Height = flowHumedas.Bottom + 12;
+
+                pnlHvac.Location = new Point(12, pnlHumedas.Bottom + 14);
+                pnlHvac.Width = targetW;
+                flowHvac.Width = Math.Max(200, pnlHvac.ClientSize.Width - 20);
+                flowHvac.Height = flowHvac.GetPreferredSize(new Size(flowHvac.Width, 0)).Height;
+                pnlHvac.Height = flowHvac.Bottom + 12;
+
+                pnlGenerales.Location = new Point(12, pnlHvac.Bottom + 14);
+                pnlGenerales.Width = targetW;
+                flowGenerales.Width = Math.Max(200, pnlGenerales.ClientSize.Width - 20);
+                flowGenerales.Height = flowGenerales.GetPreferredSize(new Size(flowGenerales.Width, 0)).Height;
+                pnlGenerales.Height = flowGenerales.Bottom + 12;
+            };
+
+            pnlMain.Resize += (s, e) => relayoutSections();
+            this.Shown += (s, e) => relayoutSections();
         }
 
         private static void ConfigureModernMenu(ContextMenuStrip menu, Color activeTextColor, Color hoverBg)
         {
-            menu.ShowImageMargin = false;
-            menu.ShowCheckMargin = false;
-            menu.BackColor = Color.White;
-            menu.Renderer = new ModernMenuRenderer(hoverBg, activeTextColor);
-            menu.Font = new Font("Segoe UI", 8.75F, FontStyle.Regular);
-            menu.Padding = new Padding(4, 4, 4, 4);
-            menu.AutoSize = true;
-            menu.DropShadowEnabled = true;
+            ApplyModernMenuStyle(menu, activeTextColor, hoverBg);
+        }
 
-            menu.Opened += (s, e) =>
+        private static void ApplyModernMenuStyle(ToolStripDropDown dropDown, Color activeTextColor, Color hoverBg)
+        {
+            if (dropDown is ToolStripDropDownMenu dropMenu)
             {
-                if (menu.Width > 0 && menu.Height > 0)
+                dropMenu.ShowImageMargin = false;
+                dropMenu.ShowCheckMargin = false;
+            }
+            dropDown.BackColor = Color.White;
+            dropDown.Renderer = new ModernMenuRenderer(hoverBg, activeTextColor);
+            dropDown.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+            dropDown.Padding = new Padding(4, 4, 4, 4);
+            dropDown.AutoSize = true;
+            dropDown.DropShadowEnabled = true;
+
+            dropDown.Opened += (s, e) =>
+            {
+                if (dropDown.Width > 0 && dropDown.Height > 0)
                 {
-                    Rectangle rect = new Rectangle(0, 0, menu.Width, menu.Height);
+                    Rectangle rect = new Rectangle(0, 0, dropDown.Width, dropDown.Height);
                     using (var path = GetRoundedRectanglePath(rect, 8))
                     {
-                        menu.Region = new Region(path);
+                        dropDown.Region = new Region(path);
                     }
                 }
             };
 
-            foreach (ToolStripItem item in menu.Items)
+            foreach (ToolStripItem item in dropDown.Items)
             {
                 item.Padding = new Padding(12, 7, 12, 7);
                 item.Margin = new Padding(2, 2, 2, 2);
-                item.Font = new Font("Segoe UI", 8.75F, FontStyle.Regular);
+                item.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
                 item.ForeColor = Color.FromArgb(51, 65, 85);
+
+                if (item is ToolStripMenuItem menuItem && menuItem.HasDropDownItems)
+                {
+                    ApplyModernMenuStyle(menuItem.DropDown, activeTextColor, hoverBg);
+                }
             }
+        }
+
+        private static Button CreateModernButton(string text, Size size, Color backColor, Color foreColor, Color? borderColor = null)
+        {
+            Button btn = new Button
+            {
+                Text = text,
+                Size = size,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = backColor,
+                ForeColor = foreColor,
+                Font = new Font("Segoe UI", 8.75F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(4, 3, 4, 3)
+            };
+            btn.FlatAppearance.BorderSize = 0;
+            ApplyRoundedStyle(btn, 8, borderColor);
+            return btn;
         }
 
         private static Button CreateDropdownButton(string text, Size size, Color backColor, Color foreColor, ContextMenuStrip menu, Color? borderColor = null)
@@ -526,9 +915,9 @@ namespace MiNamespace
                 FlatStyle = FlatStyle.Flat,
                 BackColor = backColor,
                 ForeColor = foreColor,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8.75F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(3, 2, 3, 2)
+                Margin = new Padding(4, 3, 4, 3)
             };
             btn.FlatAppearance.BorderSize = 0;
             ApplyRoundedStyle(btn, 8, borderColor);
@@ -555,11 +944,20 @@ namespace MiNamespace
 
         public static void ApplyRoundedStyle(Control control, int radius, Color? borderColor)
         {
-            Rectangle rect = new Rectangle(0, 0, control.Width, control.Height);
-            using (GraphicsPath path = GetRoundedRectanglePath(rect, radius))
+            Action updateRegion = () =>
             {
-                control.Region = new Region(path);
-            }
+                if (control.Width > 0 && control.Height > 0)
+                {
+                    Rectangle rect = new Rectangle(0, 0, control.Width, control.Height);
+                    using (GraphicsPath path = GetRoundedRectanglePath(rect, radius))
+                    {
+                        control.Region = new Region(path);
+                    }
+                }
+            };
+
+            updateRegion();
+            control.SizeChanged += (s, e) => updateRegion();
 
             if (borderColor.HasValue)
             {

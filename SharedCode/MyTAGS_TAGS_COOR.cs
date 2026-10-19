@@ -26,13 +26,15 @@ namespace MiNamespace
 
             // 1. Abrir la ventana modal de TAGS de Coordinación
             TagsCoorAction accionSeleccionada = TagsCoorAction.Cancelar;
-            using (var modal = new TagsCoorWindow())
+            string nivelManualSeleccionado = null;
+            using (var modal = new TagsCoorWindow(doc))
             {
                 if (modal.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 {
                     return Result.Cancelled;
                 }
                 accionSeleccionada = modal.SelectedAction;
+                nivelManualSeleccionado = modal.SelectedLevelName;
             }
 
             // 2. Ejecutar la acción seleccionada delegando a la clase correspondiente
@@ -92,7 +94,7 @@ namespace MiNamespace
                     int camasSel = MyTAGS_Cotas_RedesSecas.TaguearCamasConduitsPorSeleccion(uidoc, doc, view);
                     if (camasSel > 0)
                     {
-                        Autodesk.Revit.UI.TaskDialog.Show("Camas de Conduits", $"Se crearon {camasSel} etiquetas en las camas de conduits seleccionadas.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Camas Conduits", $"Se crearon {camasSel} etiquetas en las camas de conduits seleccionadas.");
                     }
                     return Result.Succeeded;
 
@@ -100,7 +102,91 @@ namespace MiNamespace
                     int camasAuto = MyTAGS_Cotas_RedesSecas.TaguearCamasConduitsTodoEnVista(uidoc, doc, view);
                     if (camasAuto > 0)
                     {
-                        Autodesk.Revit.UI.TaskDialog.Show("Camas de Conduits", $"Se crearon {camasAuto} etiquetas de camas de conduits en la vista.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Camas Conduits", $"Se crearon {camasAuto} etiquetas de camas de conduits en la vista.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.CamasTubosPorSeleccion:
+                    int tubosSel = MyTAGS_Cotas_RedesSecas.TaguearCamasDeTubosPorSeleccion(uidoc, doc, view);
+                    if (tubosSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Camas de Tuberías", $"Se generaron {tubosSel} tags/cotas de camas de tuberías.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.CamasTubosAuto:
+                    int tubosAuto = MyTAGS_Cotas_RedesSecas.TaguearCamasDeTubosTodoEnVista(uidoc, doc, view);
+                    if (tubosAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Camas de Tuberías", $"Se generaron {tubosAuto} tags/cotas de camas de tuberías en la vista.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.CotasBandejasPorSeleccion:
+                    int bandejasSel = MyTAGS_Cotas_RedesSecas.TaguearCotasBandejasPorSeleccion(uidoc, doc, view);
+                    if (bandejasSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas de Bandejas", $"Se acotaron exitosamente {bandejasSel} elementos de bandejas portacables.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.CotasBandejasAuto:
+                    int bandejasAuto = MyTAGS_Cotas_RedesSecas.TaguearCotasBandejasTodoEnVista(uidoc, doc, view);
+                    if (bandejasAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas de Bandejas", $"Se crearon {bandejasAuto} cotas de bandejas portacables en la vista activa.");
+                    }
+                    else
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Cotas de Bandejas", "No se crearon cotas. Verifica que haya muros o vigas paralelos a las bandejas (máx. ~6 m), visibles en la vista y en el modelo host (no vinculados).");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.ExostosPorSeleccion:
+                    int exostosSel = MyTAGS_Cotas_RedesSecas.TaguearExostosPorSeleccion(uidoc, doc, view);
+                    if (exostosSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Exostos", $"Se etiquetaron {exostosSel} exostos (diámetro + materialidad).");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.ExostosAuto:
+                    int exostosAuto = MyTAGS_Cotas_RedesSecas.TaguearExostosTodoEnVista(uidoc, doc, view);
+                    if (exostosAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Exostos", $"Se etiquetaron {exostosAuto} exostos en la vista activa.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagRoomPorSeleccion:
+                    int buitronesSel = MyTAGS_Cotas_RedesSecas.TaguearBuitronesYCuartosPorSeleccion(uidoc, doc, view);
+                    if (buitronesSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag Room", $"Se etiquetaron {buitronesSel} habitaciones/espacios (buitrones / cuartos técnicos) con Room Tags.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagRoomAuto:
+                    int buitronesAuto = MyTAGS_Cotas_RedesSecas.TaguearBuitronesYCuartosTodoEnVista(uidoc, doc, view);
+                    if (buitronesAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag Room", $"Se etiquetaron {buitronesAuto} habitaciones/espacios (buitrones / cuartos técnicos) en la vista activa con Room Tags.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.ConduitTagsPorSeleccion:
+                    int conduitsSel = MyTAGS_Cotas_RedesSecas.TaguearConduitTagsPorSeleccion(uidoc, doc, view);
+                    if (conduitsSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Conduit Tags", $"Se etiquetaron {conduitsSel} conduits (Type Name + Size).");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.ConduitTagsAuto:
+                    int conduitsAuto = MyTAGS_Cotas_RedesSecas.TaguearConduitTagsTodoEnVista(uidoc, doc, view);
+                    if (conduitsAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Conduit Tags", $"Se etiquetaron {conduitsAuto} conduits en la vista activa (Type Name + Size).");
                     }
                     return Result.Succeeded;
 
@@ -123,14 +209,6 @@ namespace MiNamespace
 
                 case TagsCoorAction.MaterialTodoEnVista:
                     MyTAGS_Tags_RedesHumedas.TaguearMaterialTodoEnVista(uidoc, doc, view);
-                    return Result.Succeeded;
-
-                case TagsCoorAction.CambioDeNivelHumedasPorSeleccion:
-                    MyTAGS_Tags_RedesHumedas.TaguearCambioDeNivelHumedasPorSeleccion(uidoc, doc, view);
-                    return Result.Succeeded;
-
-                case TagsCoorAction.CambioDeNivelHumedasAuto:
-                    MyTAGS_Tags_RedesHumedas.TaguearCambioDeNivelHumedasTodoEnVista(uidoc, doc, view);
                     return Result.Succeeded;
 
                 case TagsCoorAction.EmbebidasPlacaPorSeleccion:
@@ -194,6 +272,71 @@ namespace MiNamespace
                     if (pasesAuto > 0)
                     {
                         Autodesk.Revit.UI.TaskDialog.Show("Pases en Viga", $"Se etiquetaron {pasesAuto} pases en vigas en la vista activa con el tag de tamaño (Size).");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagDuctosSoloDimensionesSel:
+                    int dDimSel = MyTAGS_Tags_RedesHumedas.TaguearDuctosSoloDimensionesPorSeleccion(uidoc, doc, view);
+                    if (dDimSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos", $"Se etiquetaron {dDimSel} ductos con solo dimensiones.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagDuctosSoloDimensionesAuto:
+                    int dDimAuto = MyTAGS_Tags_RedesHumedas.TaguearDuctosSoloDimensionesTodoEnVista(uidoc, doc, view);
+                    if (dDimAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos", $"Se etiquetaron {dDimAuto} ductos con solo dimensiones en la vista activa.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagDuctosDimensionesMaterialSel:
+                    int dMatSel = MyTAGS_Tags_RedesHumedas.TaguearDuctosDimensionesMaterialPorSeleccion(uidoc, doc, view);
+                    if (dMatSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos", $"Se etiquetaron {dMatSel} ductos con dimensiones y material.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagDuctosDimensionesMaterialAuto:
+                    int dMatAuto = MyTAGS_Tags_RedesHumedas.TaguearDuctosDimensionesMaterialTodoEnVista(uidoc, doc, view);
+                    if (dMatAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tags de Ductos", $"Se etiquetaron {dMatAuto} ductos con dimensiones y material en la vista activa.");
+                    }
+                    return Result.Succeeded;
+
+                // ==================== GENERALES (REDES SECAS Y HÚMEDAS) ====================
+                case TagsCoorAction.TagSubePorSeleccion:
+                    int subeSel = MyTAGS_Sube_Baja.TaguearSubePorSeleccion(uidoc, doc, view);
+                    if (subeSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag SUBE", $"Se colocaron {subeSel} tags 'SUBE' en los elementos seleccionados.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagSubeAuto:
+                    int subeAuto = MyTAGS_Sube_Baja.TaguearSubeTodoEnVista(uidoc, doc, view);
+                    if (subeAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag SUBE Automático", $"Se colocaron {subeAuto} tags 'SUBE' en la vista activa.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagBajaPorSeleccion:
+                    int bajaSel = MyTAGS_Sube_Baja.TaguearBajaPorSeleccion(uidoc, doc, view);
+                    if (bajaSel > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag BAJA", $"Se colocaron {bajaSel} tags 'BAJA' en los elementos seleccionados.");
+                    }
+                    return Result.Succeeded;
+
+                case TagsCoorAction.TagBajaAuto:
+                    int bajaAuto = MyTAGS_Sube_Baja.TaguearBajaTodoEnVista(uidoc, doc, view);
+                    if (bajaAuto > 0)
+                    {
+                        Autodesk.Revit.UI.TaskDialog.Show("Tag BAJA Automático", $"Se colocaron {bajaAuto} tags 'BAJA' en la vista activa.");
                     }
                     return Result.Succeeded;
 

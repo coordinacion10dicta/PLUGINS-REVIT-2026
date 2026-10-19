@@ -392,44 +392,23 @@ namespace MiNamespace
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var picked = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         conduitFilter,
-                        "Arrastra un recuadro sobre los conduits (o haz clics individuales):");
-                    if (rectElements != null && rectElements.Count > 0)
+                        "Selecciona conduits a taguear y haz clic en 'Finish':"
+                    );
+                    if (picked != null && picked.Count > 0)
                     {
-                        foreach (var el in rectElements)
-                        {
-                            picks.Add(new Reference(el));
-                        }
+                        picks.AddRange(picked);
                     }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-            }
-
-            if (picks.Count == 0)
-            {
-                while (true)
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
-                    try
-                    {
-                        Reference pick = uidoc.Selection.PickObject(
-                            ObjectType.PointOnElement,
-                            conduitFilter,
-                            "Selecciona conduits (clics sucesivos). Pulsa ESC para terminar y colocar tags.");
-                        if (pick != null)
-                        {
-                            picks.Add(pick);
-                        }
-                    }
-                    catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                    {
-                        break; // Al presionar ESC termina la selección y procede a taguear
-                    }
-                    catch
-                    {
-                        break;
-                    }
+                    return Result.Cancelled;
+                }
+                catch
+                {
+                    return Result.Cancelled;
                 }
             }
 
@@ -452,6 +431,18 @@ namespace MiNamespace
                     if (cmt != null && !cmt.IsReadOnly) cmt.Set(userText);
 
                     XYZ head = pickRef.GlobalPoint;
+                    if (head == null)
+                    {
+                        if (elem.Location is LocationCurve lc && lc.Curve != null)
+                            head = lc.Curve.Evaluate(0.5, true);
+                        else if (elem.Location is LocationPoint lp)
+                            head = lp.Point;
+                        else
+                        {
+                            var bbox = elem.get_BoundingBox(view);
+                            head = (bbox != null) ? (bbox.Min + bbox.Max) * 0.5 : XYZ.Zero;
+                        }
+                    }
                     Reference elemRef = new Reference(elem);
 
                     IndependentTag tag = IndependentTag.Create(
@@ -540,44 +531,29 @@ namespace MiNamespace
             {
                 try
                 {
-                    var rectElements = uidoc.Selection.PickElementsByRectangle(
+                    var picked = uidoc.Selection.PickObjects(
+                        ObjectType.Element,
                         codoFilter,
-                        "Arrastra un recuadro sobre los codos (o haz clics individuales):");
-                    if (rectElements != null && rectElements.Count > 0)
+                        "Selecciona codos a taguear y haz clic en 'Finish':"
+                    );
+                    if (picked != null && picked.Count > 0)
                     {
-                        foreach (var el in rectElements)
+                        foreach (var r in picked)
                         {
-                            refs.Add(new Reference(el));
+                            if (!refs.Any(x => x.ElementId == r.ElementId))
+                            {
+                                refs.Add(r);
+                            }
                         }
                     }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException) { }
-                catch { }
-            }
-
-            if (refs.Count == 0)
-            {
-                while (true)
+                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                 {
-                    try
-                    {
-                        Reference pick = uidoc.Selection.PickObject(
-                            ObjectType.Element,
-                            codoFilter,
-                            "Selecciona codos a taguear (clics sucesivos). Pulsa ESC para terminar y colocar tags.");
-                        if (pick != null && !refs.Any(r => r.ElementId == pick.ElementId))
-                        {
-                            refs.Add(pick);
-                        }
-                    }
-                    catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                    {
-                        break; // Al presionar ESC termina la selección y procede
-                    }
-                    catch
-                    {
-                        break;
-                    }
+                    return Result.Cancelled;
+                }
+                catch
+                {
+                    return Result.Cancelled;
                 }
             }
 
