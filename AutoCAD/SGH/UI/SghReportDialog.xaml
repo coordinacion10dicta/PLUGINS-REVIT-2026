@@ -303,6 +303,155 @@
             <!-- Tab Control Principal (Columna 0) -->
             <TabControl Grid.Column="0" x:Name="MainTabControl" Background="Transparent" BorderBrush="#45475A" BorderThickness="0,1,0,0" SelectionChanged="MainTabControl_SelectionChanged">
 
+            <!-- TAB 0: Plantilla y Secciones -->
+            <TabItem Header="📑 Plantilla y Secciones">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel Margin="0,0,10,0">
+
+                        <!-- Tarjeta 1: Selección de Plantilla Word -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="FORMATO Y PLANTILLA DE WORD (.DOCX)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,8"/>
+                                <TextBlock Text="Seleccione si desea utilizar la plantilla oficial de DICTA o subir un formato corporativo específico para este proyecto:" FontSize="11.5" Foreground="#BAC2DE" Margin="0,0,0,12"/>
+
+                                <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                                    <RadioButton x:Name="RbTemplateStandard" Content="Plantilla Oficial SGH Predeterminada (SGH-INF-001.docx)" Foreground="#CDD6F4" FontWeight="SemiBold" FontSize="12.5" IsChecked="True" Checked="RbTemplate_Checked" Margin="0,0,0,8"/>
+                                    <RadioButton x:Name="RbTemplateCustom" Content="Subir Formato / Plantilla Personalizada del Proyecto (.docx)" Foreground="#CDD6F4" FontWeight="SemiBold" FontSize="12.5" Checked="RbTemplate_Checked"/>
+                                </StackPanel>
+
+                                <!-- Selector de archivo personalizado -->
+                                <Border x:Name="BrdCustomTemplatePicker" Background="#11111B" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,4,0,10" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock Text="Archivo de Plantilla (.docx):" FontSize="11" FontWeight="SemiBold" Foreground="#89B4FA" Margin="0,0,0,6"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="6"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" x:Name="TxtCustomTemplatePath" IsReadOnly="True" FontSize="11" VerticalContentAlignment="Center" Background="#1E1E2E"/>
+                                            <Button Grid.Column="2" Content="📁 Cargar Plantilla..." Padding="12,6" Background="#2563EB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11.5" BorderThickness="0" Click="BtnBrowseCustomTemplate_Click" Cursor="Hand"/>
+                                            <Button Grid.Column="4" Content="✖ Quitar" Padding="10,6" Background="#313244" Foreground="#F38BA8" BorderBrush="#45475A" BorderThickness="1" Click="BtnClearCustomTemplate_Click" Cursor="Hand"/>
+                                        </Grid>
+                                        <Border Background="#1E1E2E" BorderBrush="#89B4FA" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="ℹ" FontSize="13" Foreground="#89B4FA" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                                <TextBlock Text="Con esta plantilla se respetarán fielmente sus membretes, encabezados, pies de página, logotipos, márgenes, tipo de letra (Arial Narrow u otro estilo corporativo) y tamaños originales." FontSize="11" Foreground="#BAC2DE" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tarjeta 2: Modo de Preservación y Reemplazo -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="MODO DE INSERCIÓN Y PRESERVACIÓN" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="ChkReplaceFromSection5Only" Content="Preservar secciones iniciales (Puntos 1 al 4) y generar a partir del Punto 5" Foreground="#CDD6F4" FontWeight="Bold" FontSize="12.5" IsChecked="True" Checked="ChkReplaceFromSection5Only_Changed" Unchecked="ChkReplaceFromSection5Only_Changed" Margin="0,0,0,4"/>
+                                <TextBlock Text="Garantiza que la Introducción (1), Objetivos (2), Metodología (3) y Descripción previa no se alteren en absoluto, ya que provienen de otra fuente o disciplina." FontSize="11" Foreground="#BAC2DE" Margin="24,0,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tarjeta 3: Checklist Modular de Contenido -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="SELECCIÓN DE INFORMACIÓN A INYECTAR / REEMPLAZAR:" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Marque los elementos técnicos calculados en AutoCAD que se volcarán al informe de Word:" FontSize="11" Foreground="#BAC2DE"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="✓ Marcar Todo" Padding="10,5" Background="#313244" Foreground="#A6E3A1" BorderBrush="#45475A" BorderThickness="1" FontSize="11" Click="BtnCheckAllSections_Click" Cursor="Hand" Margin="0,0,8,0"/>
+                                        <Button Content="✕ Desmarcar Todo" Padding="10,5" Background="#313244" Foreground="#F38BA8" BorderBrush="#45475A" BorderThickness="1" FontSize="11" Click="BtnUncheckAllSections_Click" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Checklist Items -->
+                                <Border Background="#11111B" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="14,10">
+                                    <StackPanel>
+                                        <!-- Item 1: Portada y Metadatos -->
+                                        <CheckBox x:Name="ChkReplaceMetadata" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="Portada y Metadatos: " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Opcional: Si se desmarca, la portada de la plantilla subida queda 100% intacta sin alterar los nombres que ya traiga)." Foreground="#BAC2DE" FontStyle="Italic"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 2: 5.1 Clasificación y Riesgo -->
+                                        <CheckBox x:Name="ChkReplaceClasificacionRiesgo" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="5.1 Clasificación de Ocupación y Resistencia al Fuego " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(NSR-10 / NFPA)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 3: 5.2 Cargas de Ocupación -->
+                                        <CheckBox x:Name="ChkReplaceCargasOcupacion" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="5.2 Determinación y Tablas de Cargas de Ocupación " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Las tablas extraídas de los espacios de AutoCAD)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 4: 5.3 Medios de Evacuación y Salidas -->
+                                        <CheckBox x:Name="ChkReplaceMediosEvacuacion" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="5.3 Medios de Evacuación y Salidas " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Salidas requeridas vs. existentes, anchos y distancias)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 5: 5.4 Protección Activa y Pasiva -->
+                                        <CheckBox x:Name="ChkReplaceProteccionActivaPasiva" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="5.4 Protección Activa y Pasiva " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Rociadores, tomas bomberos, detección, escaleras)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 6: Conclusiones Normativas -->
+                                        <CheckBox x:Name="ChkReplaceConclusiones" IsChecked="True" Margin="0,4,0,8">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="Conclusiones Normativas " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Las conclusiones editadas en la pestaña de Conclusiones)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+
+                                        <Border BorderBrush="#313244" BorderThickness="0,1,0,0" Margin="0,2,0,8"/>
+
+                                        <!-- Item 7: Imágenes del Proyecto -->
+                                        <CheckBox x:Name="ChkReplaceImagenesProyecto" IsChecked="True" Margin="0,4,0,4">
+                                            <TextBlock TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="Imágenes del Proyecto " FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                <Run Text="(Implantación y Localización en la sección correspondiente)." Foreground="#BAC2DE"/>
+                                            </TextBlock>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- TAB 1: Portada -->
             <TabItem Header="📄 Portada">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
@@ -517,7 +666,7 @@
                                         <TextBox Grid.Column="0" x:Name="TxtBuildingHeight" Text="15.0" TextChanged="TxtBuildingHeight_TextChanged"/>
                                         <TextBlock Grid.Column="1" Text="m" Foreground="#6C7086" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                     </Grid>
-                                    <TextBlock x:Name="TxtHighRiseIndicator" Text="ℹ Edificio de Altura Convencional (≤ 23m)" FontSize="11" Foreground="#A6E3A1" Margin="0,4,0,0"/>
+                                    <TextBlock x:Name="TxtHighRiseIndicator" Text="ℹ Edificio de Altura Convencional" FontSize="11" Foreground="#A6E3A1" Margin="0,4,0,0"/>
                                 </StackPanel>
 
                             </Grid>
@@ -565,7 +714,15 @@
                                 <Border BorderBrush="#45475A" BorderThickness="0,1,0,0" Margin="0,0,0,12"/>
 
                                 <!-- Separación de Salidas -->
-                                <TextBlock Text="SEPARACIÓN DE SALIDAS (NSR-10 K.3.4.1.1)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="SEPARACIÓN DE SALIDAS (NSR-10 K.3.4.1.1)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" VerticalAlignment="Center"/>
+                                    <CheckBox Grid.Column="1" x:Name="ChkSprinklersSalidas" Content="Cuenta con Sistema de Rociadores (Reduce separación a 1/3 de D)" Foreground="#BAC2DE" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" Checked="ChkSprinklersSalidas_Changed" Unchecked="ChkSprinklersSalidas_Changed"/>
+                                </Grid>
+                                <TextBlock x:Name="TxtSeparacionFormulaIndicator" Text="ℹ Con Rociadores: Mín. requerido ≥ D/3 | Sin Rociadores: Mín. requerido ≥ D/2" FontSize="11" Foreground="#A6E3A1" Margin="0,0,0,10"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -602,48 +759,58 @@
 
                         <!-- Descarga, Distancias de Recorrido y Capacidad -->
                         <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="10" Padding="16">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="18"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="DESCARGA, DISTANCIAS DE RECORRIDO Y CAPACIDAD (NSR-10 K.3.3 / K.3.5 / K.3.6)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,12"/>
 
-                                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="DESCARGA, DISTANCIAS DE RECORRIDO Y CAPACIDAD (NSR-10 K.3.3 / K.3.5 / K.3.6)" FontSize="12" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,0,10"/>
+                                <!-- Fila 1: Distancia de Recorrido (Evaluación Automática) -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <!-- Distancia de Recorrido -->
-                                <StackPanel Grid.Row="1" Grid.Column="0">
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Distancia Máx. Perm. (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
-                                            <TextBox x:Name="TxtDistanciaMax" Text="45.0"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Distancia Existente (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
-                                            <TextBox x:Name="TxtDistanciaExistente" Text="32.0"/>
-                                        </StackPanel>
-                                    </Grid>
+                                    <!-- Columna 0: Inputs de Distancia e Indicador Dinámico -->
+                                    <StackPanel Grid.Column="0">
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Distancia Máx. Perm. (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="TxtDistanciaMax" Text="45.0" TextChanged="TxtDistancia_TextChanged"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Distancia Existente (m):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="TxtDistanciaExistente" Text="32.0" TextChanged="TxtDistancia_TextChanged"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock x:Name="TxtDistanciaFormulaIndicator" Text="ℹ Cumple si Distancia Existente ≤ Distancia Máxima Permitida" FontSize="11" Foreground="#A6E3A1" Margin="0,0,0,4"/>
+                                    </StackPanel>
 
-                                    <TextBlock Text="Evaluación Distancia de Recorrido:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
-                                    <ComboBox x:Name="CmbCumplimientoDistancia" SelectedIndex="0">
-                                        <ComboBoxItem Content="Cumple"/>
-                                        <ComboBoxItem Content="No Cumple"/>
-                                    </ComboBox>
-                                </StackPanel>
+                                    <!-- Columna 2: Evaluación Distancia de Recorrido (alineado directamente al lado de los inputs) -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Evaluación Distancia de Recorrido:" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="CmbCumplimientoDistancia" SelectedIndex="0">
+                                            <ComboBoxItem Content="Cumple"/>
+                                            <ComboBoxItem Content="No Cumple"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
 
-                                <!-- Descarga y Capacidad -->
-                                <StackPanel Grid.Row="1" Grid.Column="2">
-                                    <StackPanel Margin="0,0,0,10">
+                                <Border BorderBrush="#45475A" BorderThickness="0,1,0,0" Margin="0,6,0,12"/>
+
+                                <!-- Fila 2: Descarga y Capacidad (Evaluaciones Manuales) -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
                                         <TextBlock Text="Evaluación Descarga de Salidas (K.3.5):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
                                         <ComboBox x:Name="CmbCumplimientoDescarga" SelectedIndex="0">
                                             <ComboBoxItem Content="Cumple"/>
@@ -651,13 +818,15 @@
                                         </ComboBox>
                                     </StackPanel>
 
-                                    <TextBlock Text="Evaluación Capacidad de Medios (K.3.3):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
-                                    <ComboBox x:Name="CmbCumplimientoCapacidad" SelectedIndex="0">
-                                        <ComboBoxItem Content="Cumple"/>
-                                        <ComboBoxItem Content="No Cumple"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Evaluación Capacidad de Medios (K.3.3):" FontSize="12" Foreground="#BAC2DE" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="CmbCumplimientoCapacidad" SelectedIndex="0">
+                                            <ComboBoxItem Content="Cumple"/>
+                                            <ComboBoxItem Content="No Cumple"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
                         </Border>
 
                     </StackPanel>

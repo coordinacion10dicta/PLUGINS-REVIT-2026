@@ -169,22 +169,24 @@ namespace AutoCAD.SGH.UI
 
             // Altura y Gran Altura
             bool isHigh = model.IsHighRise;
-            string relation = isHigh ? "superior a 23m" : "inferior a 23m";
+            double threshold = model.HighRiseThreshold;
+            string relation = isHigh ? $"superior o igual a {threshold:0}m" : $"inferior a {threshold:0}m";
             string highText = isHigh ? "ES DE GRAN ALTURA" : "NO ES DE GRAN ALTURA";
-            TxtPrevHeightParagraph.Text = $"El edificio tiene una altura de {model.BuildingHeight.ToString("0.0", CultureInfo.InvariantCulture)} m, siendo {relation} desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que {highText} de acuerdo con NSR-10 K.3.1.3 y NFPA 101.";
+            string normCitation = string.Equals(model.SelectedNorm, "NFPA", StringComparison.OrdinalIgnoreCase) ? "NFPA 101" : "NSR-10 K.3.1.3";
+            TxtPrevHeightParagraph.Text = $"El edificio tiene una altura de {model.BuildingHeight.ToString("0.0", CultureInfo.InvariantCulture)} m, siendo {relation} desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que {highText} de acuerdo con {normCitation}.";
 
             if (isHigh)
             {
                 BadgePrevHighRise.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2));
                 BadgePrevHighRise.BorderBrush = new SolidColorBrush(Color.FromRgb(0xFC, 0xA5, 0xA5));
-                TxtPrevHighRiseBadge.Text = "⚠ Edificio de Gran Altura (> 23m)";
+                TxtPrevHighRiseBadge.Text = $"⚠ Edificio de Gran Altura (≥ {threshold:0}m)";
                 TxtPrevHighRiseBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
             }
             else
             {
                 BadgePrevHighRise.Background = new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7));
                 BadgePrevHighRise.BorderBrush = new SolidColorBrush(Color.FromRgb(0x86, 0xEF, 0xAC));
-                TxtPrevHighRiseBadge.Text = "✓ Edificio de Altura Convencional (≤ 23m)";
+                TxtPrevHighRiseBadge.Text = $"✓ Edificio de Altura Convencional (< {threshold:0}m)";
                 TxtPrevHighRiseBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34));
             }
 

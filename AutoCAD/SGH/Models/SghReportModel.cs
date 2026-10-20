@@ -37,7 +37,8 @@ namespace AutoCAD.SGH.Models
         // Parámetros del Edificio
         public string SelectedNorm { get; set; } = "NSR-10";
         public double BuildingHeight { get; set; } = 15.0;
-        public bool IsHighRise => BuildingHeight > 23.0;
+        public double HighRiseThreshold => string.Equals(SelectedNorm, "NFPA", StringComparison.OrdinalIgnoreCase) ? 23.0 : 28.0;
+        public bool IsHighRise => BuildingHeight >= HighRiseThreshold;
         public string RiskCategory { get; set; } = "Categoría II";
         public string GeneralFireResistance { get; set; } = "2 Horas";
         public string BuildingClassification { get; set; } = "Comercial (C)";
@@ -106,6 +107,20 @@ namespace AutoCAD.SGH.Models
         public bool GenerateWord { get; set; } = true;
         public string ExcelOutputPath { get; set; } = string.Empty;
         public string WordOutputPath { get; set; } = string.Empty;
+
+        // Plantilla Word y Modo de Reemplazo
+        public bool UseCustomTemplate { get; set; } = false;
+        public string CustomTemplatePath { get; set; } = string.Empty;
+        public bool ReplaceFromSection5Only { get; set; } = true;
+
+        // Checklist de Secciones a Inyectar / Reemplazar
+        public bool ReplaceMetadata { get; set; } = true;
+        public bool ReplaceClasificacionRiesgo { get; set; } = true;
+        public bool ReplaceCargasOcupacion { get; set; } = true;
+        public bool ReplaceMediosEvacuacion { get; set; } = true;
+        public bool ReplaceProteccionActivaPasiva { get; set; } = true;
+        public bool ReplaceConclusiones { get; set; } = true;
+        public bool ReplaceImagenesProyecto { get; set; } = true;
 
         // Rutas de configuración
         private static string GetConfigFilePath()
@@ -209,7 +224,18 @@ namespace AutoCAD.SGH.Models
                     ImplantacionImagePath = this.ImplantacionImagePath,
                     LocalizacionImagePath = this.LocalizacionImagePath,
                     GenerateExcel = this.GenerateExcel,
-                    GenerateWord = this.GenerateWord
+                    GenerateWord = this.GenerateWord,
+
+                    UseCustomTemplate = this.UseCustomTemplate,
+                    CustomTemplatePath = this.CustomTemplatePath,
+                    ReplaceFromSection5Only = this.ReplaceFromSection5Only,
+                    ReplaceMetadata = this.ReplaceMetadata,
+                    ReplaceClasificacionRiesgo = this.ReplaceClasificacionRiesgo,
+                    ReplaceCargasOcupacion = this.ReplaceCargasOcupacion,
+                    ReplaceMediosEvacuacion = this.ReplaceMediosEvacuacion,
+                    ReplaceProteccionActivaPasiva = this.ReplaceProteccionActivaPasiva,
+                    ReplaceConclusiones = this.ReplaceConclusiones,
+                    ReplaceImagenesProyecto = this.ReplaceImagenesProyecto
                 };
 
                 var serializer = new XmlSerializer(typeof(SghReportDefaults));
@@ -356,6 +382,18 @@ namespace AutoCAD.SGH.Models
 
                     model.GenerateExcel = defaults.GenerateExcel;
                     model.GenerateWord = defaults.GenerateWord;
+
+                    model.UseCustomTemplate = defaults.UseCustomTemplate;
+                    if (!string.IsNullOrEmpty(defaults.CustomTemplatePath)) model.CustomTemplatePath = defaults.CustomTemplatePath;
+                    model.ReplaceFromSection5Only = defaults.ReplaceFromSection5Only;
+
+                    model.ReplaceMetadata = defaults.ReplaceMetadata;
+                    model.ReplaceClasificacionRiesgo = defaults.ReplaceClasificacionRiesgo;
+                    model.ReplaceCargasOcupacion = defaults.ReplaceCargasOcupacion;
+                    model.ReplaceMediosEvacuacion = defaults.ReplaceMediosEvacuacion;
+                    model.ReplaceProteccionActivaPasiva = defaults.ReplaceProteccionActivaPasiva;
+                    model.ReplaceConclusiones = defaults.ReplaceConclusiones;
+                    model.ReplaceImagenesProyecto = defaults.ReplaceImagenesProyecto;
                 }
             }
             catch { }
@@ -420,6 +458,18 @@ namespace AutoCAD.SGH.Models
         public string LocalizacionImagePath { get; set; }
         public bool GenerateExcel { get; set; } = true;
         public bool GenerateWord { get; set; } = true;
+
+        public bool UseCustomTemplate { get; set; }
+        public string CustomTemplatePath { get; set; }
+        public bool ReplaceFromSection5Only { get; set; } = true;
+
+        public bool ReplaceMetadata { get; set; } = true;
+        public bool ReplaceClasificacionRiesgo { get; set; } = true;
+        public bool ReplaceCargasOcupacion { get; set; } = true;
+        public bool ReplaceMediosEvacuacion { get; set; } = true;
+        public bool ReplaceProteccionActivaPasiva { get; set; } = true;
+        public bool ReplaceConclusiones { get; set; } = true;
+        public bool ReplaceImagenesProyecto { get; set; } = true;
     }
 
     public class SghFloorExitItem

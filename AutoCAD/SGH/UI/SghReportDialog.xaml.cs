@@ -72,6 +72,7 @@ namespace AutoCAD.SGH.UI
         {
             if (Model.FloorExits != null && Model.FloorExits.Count > 0)
             {
+                Model.FloorExits.RemoveAll(f => f.IsTotal || f.Piso == "TOTAL EDIFICIO");
                 return;
             }
 
@@ -131,26 +132,13 @@ namespace AutoCAD.SGH.UI
                 }
             }
 
-            // Fila Total Edificio
-            int grandTotalOcc = Model.FloorExits.Where(f => !f.IsTotal).Sum(f => f.Ocupacion);
-            int totalReq = CalculateRequiredExits(grandTotalOcc);
-            int totalExist = Model.FloorExits.Where(f => !f.IsTotal).Max(f => f.SalidasExistentes);
-            if (totalExist < 2) totalExist = 2;
-
-            Model.FloorExits.Add(new SghFloorExitItem
+            if (Model.FloorExits.Count > 0)
             {
-                Piso = "TOTAL EDIFICIO",
-                Ocupacion = grandTotalOcc,
-                SalidasRequeridas = totalReq,
-                SalidasExistentes = totalExist,
-                Evaluacion = totalExist >= totalReq ? "Cumple" : "No Cumple",
-                IsTotal = true
-            });
-
-            Model.OcupacionTotalPiso = grandTotalOcc;
-            Model.SalidasRequeridas = totalReq;
-            Model.SalidasExistentes = totalExist;
-            Model.CumplimientoCantidadSalidas = totalExist >= totalReq ? "Cumple" : "No Cumple";
+                Model.OcupacionTotalPiso = Model.FloorExits.Sum(f => f.Ocupacion);
+                Model.SalidasRequeridas = Model.FloorExits.Max(f => f.SalidasRequeridas);
+                Model.SalidasExistentes = Model.FloorExits.Min(f => f.SalidasExistentes);
+                Model.CumplimientoCantidadSalidas = Model.FloorExits.All(f => f.Evaluacion == "Cumple") ? "Cumple" : "No Cumple";
+            }
         }
 
         private void BindModelToUI()
@@ -185,6 +173,7 @@ namespace AutoCAD.SGH.UI
 
             // Rociadores
             ChkSprinklers.IsChecked = Model.HasSprinklers;
+            if (ChkSprinklersSalidas != null) ChkSprinklersSalidas.IsChecked = Model.HasSprinklers;
 
             // Salidas y Evacuación - Construcción dinámica de la tabla de salidas por piso
             BuildFloorExitTableUI();
@@ -195,13 +184,36 @@ namespace AutoCAD.SGH.UI
 
             TxtDistanciaMax.Text = Model.DistanciaRecorridoMaxPermitidaM.ToString("0.0", CultureInfo.InvariantCulture);
             TxtDistanciaExistente.Text = Model.DistanciaRecorridoExistenteM.ToString("0.0", CultureInfo.InvariantCulture);
-            SelectComboBoxItem(CmbCumplimientoDistancia, Model.CumplimientoDistanciaRecorrido);
+            UpdateTravelDistanceEvaluation();
 
             SelectComboBoxItem(CmbCumplimientoDescarga, Model.CumplimientoDescargaSalidas);
             SelectComboBoxItem(CmbCumplimientoCapacidad, Model.CumplimientoCapacidadMedios);
 
             // Conclusiones
             TxtConclusiones.Text = Model.Conclusiones;
+
+            // Plantilla Word y Checklist de Secciones
+            if (Model.UseCustomTemplate && !string.IsNullOrWhiteSpace(Model.CustomTemplatePath))
+            {
+                RbTemplateCustom.IsChecked = true;
+                TxtCustomTemplatePath.Text = Model.CustomTemplatePath;
+                BrdCustomTemplatePicker.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                RbTemplateStandard.IsChecked = true;
+                TxtCustomTemplatePath.Text = string.Empty;
+                BrdCustomTemplatePicker.Visibility = Visibility.Collapsed;
+            }
+
+            ChkReplaceFromSection5Only.IsChecked = Model.ReplaceFromSection5Only;
+            ChkReplaceMetadata.IsChecked = Model.ReplaceMetadata;
+            ChkReplaceClasificacionRiesgo.IsChecked = Model.ReplaceClasificacionRiesgo;
+            ChkReplaceCargasOcupacion.IsChecked = Model.ReplaceCargasOcupacion;
+            ChkReplaceMediosEvacuacion.IsChecked = Model.ReplaceMediosEvacuacion;
+            ChkReplaceProteccionActivaPasiva.IsChecked = Model.ReplaceProteccionActivaPasiva;
+            ChkReplaceConclusiones.IsChecked = Model.ReplaceConclusiones;
+            ChkReplaceImagenesProyecto.IsChecked = Model.ReplaceImagenesProyecto;
 
             UpdateHighRiseText();
             UpdateImagePreviews();
@@ -266,6 +278,8 @@ namespace AutoCAD.SGH.UI
 
             string norm = RbNormNfpa.IsChecked == true ? "NFPA" : "NSR-10";
             PopulateOccupancyGroups(norm, CmbBuildingClassification.SelectedItem as string, TxtSecondaryClassification.Text);
+            UpdateHighRiseText();
+            UpdateLivePreview();
         }
 
         private void CmbBuildingClassification_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -308,8 +322,8 @@ namespace AutoCAD.SGH.UI
 
             if (isR1R2)
             {
-                LblRiskCategoryTitle.Text = "Categoría de Riesgo (Tabla J.3.4-2 - Residencial R-1 / R-2):";
-                TxtRiskTableHint.Text = "ℹ Se incluirá la Tabla J.3.4-2 (Edificaciones Residenciales) en el informe Word.";
+                LblRiskCategoryTitle.Text = "Categoría de Riesgo (J.3.4):";
+                TxtRiskTableHint.Text = "ℹ Se incluirán ambas tablas (J.3.4-3 Excepto R-1/R-2 y J.3.4-4 Residencial R-1/R-2) en el informe Word.";
 
                 CmbRiskCategory.Items.Add(new ComboBoxItem { Content = "Categoría I (Edificaciones de 4 o más pisos)" });
                 CmbRiskCategory.Items.Add(new ComboBoxItem { Content = "Categoría II (Edificaciones de 2 y 3 pisos)" });
@@ -320,8 +334,8 @@ namespace AutoCAD.SGH.UI
             }
             else
             {
-                LblRiskCategoryTitle.Text = "Categoría de Riesgo (Tabla J.3.4-3 - Otros Grupos de Ocupación):";
-                TxtRiskTableHint.Text = "ℹ Se incluirá la Tabla J.3.4-3 (Otros Grupos de Ocupación) en el informe Word.";
+                LblRiskCategoryTitle.Text = "Categoría de Riesgo (J.3.4):";
+                TxtRiskTableHint.Text = "ℹ Se incluirán ambas tablas (J.3.4-3 Excepto R-1/R-2 y J.3.4-4 Residencial R-1/R-2) en el informe Word.";
 
                 CmbRiskCategory.Items.Add(new ComboBoxItem { Content = "Categoría I (Alta amenaza / Gran almacenamiento)" });
                 CmbRiskCategory.Items.Add(new ComboBoxItem { Content = "Categoría II (Riesgo intermedio)" });
@@ -422,14 +436,24 @@ namespace AutoCAD.SGH.UI
         private void SelectComboBoxItem(System.Windows.Controls.ComboBox combo, string text)
         {
             if (combo == null || string.IsNullOrWhiteSpace(text)) return;
+            string t = text.Trim();
+
+            // 1. Coincidencia exacta primero
             for (int i = 0; i < combo.Items.Count; i++)
             {
-                if (combo.Items[i] is ComboBoxItem item && item.Content.ToString().IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
+                string content = (combo.Items[i] is ComboBoxItem item) ? item.Content?.ToString()?.Trim() : combo.Items[i]?.ToString()?.Trim();
+                if (string.Equals(content, t, StringComparison.OrdinalIgnoreCase))
                 {
                     combo.SelectedIndex = i;
                     return;
                 }
-                else if (combo.Items[i] is string str && str.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
+            }
+
+            // 2. Coincidencia parcial si no hubo exacta
+            for (int i = 0; i < combo.Items.Count; i++)
+            {
+                string content = (combo.Items[i] is ComboBoxItem item) ? item.Content?.ToString()?.Trim() : combo.Items[i]?.ToString()?.Trim();
+                if (!string.IsNullOrEmpty(content) && content.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     combo.SelectedIndex = i;
                     return;
@@ -489,6 +513,9 @@ namespace AutoCAD.SGH.UI
             Model.FloorExits.Clear();
             foreach (var r in _floorRowControls)
             {
+                if (r.IsTotal || r.TxtPiso.Text.Trim().Equals("TOTAL EDIFICIO", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 int occVal = int.TryParse(r.TxtOcupacion.Text.Trim(), out int o) ? o : 0;
                 int reqVal = int.TryParse(r.TxtSalidasReq.Text.Trim(), out int rq) ? rq : 1;
                 int existVal = int.TryParse(r.TxtSalidasExist.Text.Trim(), out int ex) ? ex : 2;
@@ -501,17 +528,17 @@ namespace AutoCAD.SGH.UI
                     SalidasRequeridas = reqVal,
                     SalidasExistentes = existVal,
                     Evaluacion = evalStr,
-                    IsTotal = r.IsTotal
+                    IsTotal = false
                 };
                 Model.FloorExits.Add(item);
+            }
 
-                if (r.IsTotal)
-                {
-                    Model.OcupacionTotalPiso = occVal;
-                    Model.SalidasRequeridas = reqVal;
-                    Model.SalidasExistentes = existVal;
-                    Model.CumplimientoCantidadSalidas = evalStr;
-                }
+            if (Model.FloorExits.Count > 0)
+            {
+                Model.OcupacionTotalPiso = Model.FloorExits.Sum(f => f.Ocupacion);
+                Model.SalidasRequeridas = Model.FloorExits.Max(f => f.SalidasRequeridas);
+                Model.SalidasExistentes = Model.FloorExits.Min(f => f.SalidasExistentes);
+                Model.CumplimientoCantidadSalidas = Model.FloorExits.All(f => f.Evaluacion == "Cumple") ? "Cumple" : "No Cumple";
             }
 
             if (double.TryParse(TxtDiagonalEdificio.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal)) Model.DiagonalEdificioM = dVal;
@@ -528,8 +555,87 @@ namespace AutoCAD.SGH.UI
             // Conclusiones
             Model.Conclusiones = TxtConclusiones.Text.Trim();
 
+            // Plantilla Word y Checklist de Secciones
+            Model.UseCustomTemplate = RbTemplateCustom.IsChecked == true;
+            Model.CustomTemplatePath = TxtCustomTemplatePath.Text.Trim();
+            Model.ReplaceFromSection5Only = ChkReplaceFromSection5Only.IsChecked == true;
+
+            Model.ReplaceMetadata = ChkReplaceMetadata.IsChecked == true;
+            Model.ReplaceClasificacionRiesgo = ChkReplaceClasificacionRiesgo.IsChecked == true;
+            Model.ReplaceCargasOcupacion = ChkReplaceCargasOcupacion.IsChecked == true;
+            Model.ReplaceMediosEvacuacion = ChkReplaceMediosEvacuacion.IsChecked == true;
+            Model.ReplaceProteccionActivaPasiva = ChkReplaceProteccionActivaPasiva.IsChecked == true;
+            Model.ReplaceConclusiones = ChkReplaceConclusiones.IsChecked == true;
+            Model.ReplaceImagenesProyecto = ChkReplaceImagenesProyecto.IsChecked == true;
+
             Model.GenerateExcel = true;
             Model.GenerateWord = true;
+        }
+
+        private void RbTemplate_Checked(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing || BrdCustomTemplatePicker == null) return;
+            bool isCustom = RbTemplateCustom.IsChecked == true;
+            BrdCustomTemplatePicker.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+            Model.UseCustomTemplate = isCustom;
+            UpdateLivePreview();
+        }
+
+        private void BtnBrowseCustomTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = "Seleccionar Plantilla Word del Proyecto (.docx)";
+                dlg.Filter = "Documentos de Word (*.docx)|*.docx|Todos los archivos (*.*)|*.*";
+                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK && File.Exists(dlg.FileName))
+                {
+                    TxtCustomTemplatePath.Text = dlg.FileName;
+                    Model.CustomTemplatePath = dlg.FileName;
+                    Model.UseCustomTemplate = true;
+                    RbTemplateCustom.IsChecked = true;
+                    BrdCustomTemplatePicker.Visibility = Visibility.Visible;
+                    UpdateLivePreview();
+                }
+            }
+        }
+
+        private void BtnClearCustomTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            TxtCustomTemplatePath.Text = string.Empty;
+            Model.CustomTemplatePath = string.Empty;
+            Model.UseCustomTemplate = false;
+            RbTemplateStandard.IsChecked = true;
+            BrdCustomTemplatePicker.Visibility = Visibility.Collapsed;
+            UpdateLivePreview();
+        }
+
+        private void ChkReplaceFromSection5Only_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+            Model.ReplaceFromSection5Only = ChkReplaceFromSection5Only.IsChecked == true;
+            UpdateLivePreview();
+        }
+
+        private void BtnCheckAllSections_Click(object sender, RoutedEventArgs e)
+        {
+            SetAllChecklistItems(true);
+        }
+
+        private void BtnUncheckAllSections_Click(object sender, RoutedEventArgs e)
+        {
+            SetAllChecklistItems(false);
+        }
+
+        private void SetAllChecklistItems(bool check)
+        {
+            ChkReplaceMetadata.IsChecked = check;
+            ChkReplaceClasificacionRiesgo.IsChecked = check;
+            ChkReplaceCargasOcupacion.IsChecked = check;
+            ChkReplaceMediosEvacuacion.IsChecked = check;
+            ChkReplaceProteccionActivaPasiva.IsChecked = check;
+            ChkReplaceConclusiones.IsChecked = check;
+            ChkReplaceImagenesProyecto.IsChecked = check;
+            UpdateLivePreview();
         }
 
         public static int CalculateRequiredExits(int occ)
@@ -557,6 +663,8 @@ namespace AutoCAD.SGH.UI
 
             foreach (var item in Model.FloorExits)
             {
+                if (item.IsTotal || item.Piso.Equals("TOTAL EDIFICIO", StringComparison.OrdinalIgnoreCase))
+                    continue;
                 var rowBorder = new Border
                 {
                     Background = item.IsTotal ? totalBg : System.Windows.Media.Brushes.Transparent,
@@ -694,11 +802,6 @@ namespace AutoCAD.SGH.UI
                 int req = CalculateRequiredExits(occ);
                 row.TxtSalidasReq.Text = req.ToString();
                 UpdateRowEvaluation(row);
-
-                if (!row.IsTotal)
-                {
-                    RecalculateTotalFloorRow();
-                }
             }
         }
 
@@ -767,43 +870,116 @@ namespace AutoCAD.SGH.UI
         private void ChkSprinklers_Changed(object sender, RoutedEventArgs e)
         {
             if (_isInitializing) return;
+            if (ChkSprinklersSalidas != null && ChkSprinklersSalidas.IsChecked != ChkSprinklers.IsChecked)
+            {
+                ChkSprinklersSalidas.IsChecked = ChkSprinklers.IsChecked;
+            }
             UpdateSeparationEvaluation();
+            UpdateLivePreview();
+        }
+
+        private void ChkSprinklersSalidas_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
+            if (ChkSprinklers != null && ChkSprinklers.IsChecked != ChkSprinklersSalidas.IsChecked)
+            {
+                ChkSprinklers.IsChecked = ChkSprinklersSalidas.IsChecked;
+            }
+            UpdateSeparationEvaluation();
+            UpdateLivePreview();
         }
 
         private void UpdateSeparationEvaluation()
         {
             if (CmbCumplimientoSeparacion == null || TxtDiagonalEdificio == null || TxtSeparacionSalidas == null) return;
 
+            bool hasSprinklers = ChkSprinklers?.IsChecked == true;
+            if (ChkSprinklersSalidas != null && ChkSprinklersSalidas.IsChecked != hasSprinklers)
+            {
+                ChkSprinklersSalidas.IsChecked = hasSprinklers;
+            }
+
             if (double.TryParse(TxtDiagonalEdificio.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double diag) &&
                 double.TryParse(TxtSeparacionSalidas.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double sep))
             {
-                bool hasSprinklers = ChkSprinklers?.IsChecked == true;
                 double reqSep = hasSprinklers ? (diag / 3.0) : (diag / 2.0);
+                string fractionStr = hasSprinklers ? "1/3 de D" : "1/2 de D (la mitad)";
+
                 if (sep >= reqSep - 0.01)
                 {
                     SelectComboBoxItem(CmbCumplimientoSeparacion, "Cumple");
+                    if (TxtSeparacionFormulaIndicator != null)
+                    {
+                        TxtSeparacionFormulaIndicator.Text = $"✓ Cumple: Separación ({sep:0.00}m) ≥ {fractionStr} ({reqSep:0.00}m)";
+                        TxtSeparacionFormulaIndicator.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xA6, 0xE3, 0xA1));
+                    }
                 }
                 else
                 {
                     SelectComboBoxItem(CmbCumplimientoSeparacion, "No Cumple");
+                    if (TxtSeparacionFormulaIndicator != null)
+                    {
+                        TxtSeparacionFormulaIndicator.Text = $"⚠ No Cumple: Separación ({sep:0.00}m) < {fractionStr} ({reqSep:0.00}m)";
+                        TxtSeparacionFormulaIndicator.Foreground = System.Windows.Media.Brushes.Orange;
+                    }
                 }
             }
+            UpdateLivePreview();
+        }
+
+        private void TxtDistancia_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isInitializing) return;
+            UpdateTravelDistanceEvaluation();
+        }
+
+        private void UpdateTravelDistanceEvaluation()
+        {
+            if (CmbCumplimientoDistancia == null || TxtDistanciaExistente == null || TxtDistanciaMax == null) return;
+
+            if (double.TryParse(TxtDistanciaExistente.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double distExist) &&
+                double.TryParse(TxtDistanciaMax.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double distMax))
+            {
+                if (distExist <= distMax + 0.001)
+                {
+                    SelectComboBoxItem(CmbCumplimientoDistancia, "Cumple");
+                    if (TxtDistanciaFormulaIndicator != null)
+                    {
+                        TxtDistanciaFormulaIndicator.Text = $"✓ Cumple: Distancia Existente ({distExist:0.00}m) ≤ Distancia Máxima Permitida ({distMax:0.00}m)";
+                        TxtDistanciaFormulaIndicator.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xA6, 0xE3, 0xA1));
+                    }
+                }
+                else
+                {
+                    SelectComboBoxItem(CmbCumplimientoDistancia, "No Cumple");
+                    if (TxtDistanciaFormulaIndicator != null)
+                    {
+                        TxtDistanciaFormulaIndicator.Text = $"⚠ No Cumple: Distancia Existente ({distExist:0.00}m) > Distancia Máxima Permitida ({distMax:0.00}m)";
+                        TxtDistanciaFormulaIndicator.Foreground = System.Windows.Media.Brushes.Orange;
+                    }
+                }
+            }
+            UpdateLivePreview();
         }
 
         private void UpdateHighRiseText()
         {
             if (TxtHighRiseIndicator == null || TxtBuildingHeight == null) return;
 
+            bool isNfpa = RbNormNfpa?.IsChecked == true;
+            double threshold = isNfpa ? 23.0 : 28.0;
+            string normRef = isNfpa ? "NFPA 101" : "NSR-10 K.3.1.3";
+
             if (double.TryParse(TxtBuildingHeight.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double h))
             {
-                if (h > 23.0)
+                if (h >= threshold)
                 {
-                    TxtHighRiseIndicator.Text = "⚠ Edificio de Gran Altura (> 23m) - Aplican requisitos especiales NSR-10 K.3.1.3";
+                    TxtHighRiseIndicator.Text = $"⚠ Edificio de Gran Altura (≥ {threshold:0}m) - Aplican requisitos especiales {normRef}";
                     TxtHighRiseIndicator.Foreground = System.Windows.Media.Brushes.Orange;
                 }
                 else
                 {
-                    TxtHighRiseIndicator.Text = "ℹ Edificio de Altura Convencional (≤ 23m)";
+                    TxtHighRiseIndicator.Text = $"ℹ Edificio de Altura Convencional (< {threshold:0}m)";
                     TxtHighRiseIndicator.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xA6, 0xE3, 0xA1));
                 }
             }

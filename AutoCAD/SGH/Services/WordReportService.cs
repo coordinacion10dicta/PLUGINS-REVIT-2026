@@ -24,9 +24,22 @@ namespace AutoCAD.SGH.Services
         private static readonly XNamespace RELS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
         /// <summary>
-        /// Localiza la plantilla Word (.docx) en los directorios del plugin o de desarrollo.
+        /// Localiza la plantilla Word (.docx) estándar o valida la plantilla personalizada.
         /// </summary>
-        public static string LocalizarPlantilla()
+        public static string LocalizarPlantilla(string customTemplatePath = null)
+        {
+            if (!string.IsNullOrWhiteSpace(customTemplatePath) && File.Exists(customTemplatePath))
+            {
+                return customTemplatePath;
+            }
+
+            return LocalizarPlantillaOficial();
+        }
+
+        /// <summary>
+        /// Localiza específicamente la plantilla oficial predeterminada SGH-INF-001.docx
+        /// </summary>
+        public static string LocalizarPlantillaOficial()
         {
             string dllDir = string.Empty;
             try
@@ -72,7 +85,10 @@ namespace AutoCAD.SGH.Services
         {
             if (model == null || string.IsNullOrWhiteSpace(outputPath)) return false;
 
-            string templatePath = LocalizarPlantilla();
+            string templatePath = (model.UseCustomTemplate && !string.IsNullOrWhiteSpace(model.CustomTemplatePath) && File.Exists(model.CustomTemplatePath))
+                ? model.CustomTemplatePath
+                : LocalizarPlantilla();
+
             if (string.IsNullOrEmpty(templatePath) || !File.Exists(templatePath))
             {
                 ed?.WriteMessage($"\n[SGH Error]: No se encontró la plantilla de Word '{TEMPLATE_FILE_NAME}'.\n");
@@ -98,8 +114,8 @@ namespace AutoCAD.SGH.Services
                     long impCx = 5486400, impCy = 3086100;
                     long locCx = 5486400, locCy = 3086100;
 
-                    // 1. Incrustar Imagen de Implantación si fue seleccionada
-                    if (!string.IsNullOrWhiteSpace(model.ImplantacionImagePath) && File.Exists(model.ImplantacionImagePath))
+                    // 1. Incrustar Imagen de Implantación si fue seleccionada y está activa en el checklist
+                    if (model.ReplaceImagenesProyecto && !string.IsNullOrWhiteSpace(model.ImplantacionImagePath) && File.Exists(model.ImplantacionImagePath))
                     {
                         try
                         {
@@ -118,8 +134,8 @@ namespace AutoCAD.SGH.Services
                         catch { }
                     }
 
-                    // 2. Incrustar Imagen de Localización si fue seleccionada
-                    if (!string.IsNullOrWhiteSpace(model.LocalizacionImagePath) && File.Exists(model.LocalizacionImagePath))
+                    // 2. Incrustar Imagen de Localización si fue seleccionada y está activa en el checklist
+                    if (model.ReplaceImagenesProyecto && !string.IsNullOrWhiteSpace(model.LocalizacionImagePath) && File.Exists(model.LocalizacionImagePath))
                     {
                         try
                         {
@@ -198,7 +214,7 @@ namespace AutoCAD.SGH.Services
                         }
 
                         // Reemplazar textos, tablas e imágenes
-                        ProcessDocumentXml(xDoc, model, spaces, rIdImgImplantacion, rIdImgLocalizacion, impCx, impCy, locCx, locCy);
+                        ProcessDocumentXml(xDoc, model, spaces, rIdImgImplantacion, rIdImgLocalizacion, impCx, impCy, locCx, locCy, zip);
 
                         // Eliminar TODOS los resaltados amarillos del documento final
                         xDoc.Descendants(W + "highlight").Remove();
@@ -214,26 +230,29 @@ namespace AutoCAD.SGH.Services
                     }
 
                     // 5. Procesar headers y footers por si contienen el nombre del proyecto o resaltados
-                    foreach (var entry in zip.Entries.ToList())
+                    if (model.ReplaceMetadata)
                     {
-                        if (entry.FullName.StartsWith("word/header") || entry.FullName.StartsWith("word/footer"))
+                        foreach (var entry in zip.Entries.ToList())
                         {
-                            XDocument xHf;
-                            using (var stream = entry.Open())
-                            using (var reader = new StreamReader(stream, Encoding.UTF8))
+                            if (entry.FullName.StartsWith("word/header") || entry.FullName.StartsWith("word/footer"))
                             {
-                                xHf = XDocument.Load(reader);
-                            }
+                                XDocument xHf;
+                                using (var stream = entry.Open())
+                                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                                {
+                                    xHf = XDocument.Load(reader);
+                                }
 
-                            ReplaceSimplePlaceholders(xHf, model);
-                            xHf.Descendants(W + "highlight").Remove();
+                                ReplaceSimplePlaceholders(xHf, model);
+                                xHf.Descendants(W + "highlight").Remove();
 
-                            entry.Delete();
-                            var newHfEntry = zip.CreateEntry(entry.FullName, CompressionLevel.Optimal);
-                            using (var stream = newHfEntry.Open())
-                            using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
-                            {
-                                xHf.Save(writer);
+                                entry.Delete();
+                                var newHfEntry = zip.CreateEntry(entry.FullName, CompressionLevel.Optimal);
+                                using (var stream = newHfEntry.Open())
+                                using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
+                                {
+                                    xHf.Save(writer);
+                                }
                             }
                         }
                     }
@@ -428,59 +447,343 @@ namespace AutoCAD.SGH.Services
             }
         }
 
+        private static void EnsureSection5StructureInDocument(XDocument doc, SghReportModel model, ZipArchive destZip)
+        {
+            if (doc?.Root == null) return;
+            var body = doc.Root.Element(W + "body");
+            if (body == null) return;
+
+            // 1. Verificar si el documento ya cuenta con los marcadores de Seguridad Humana
+            bool hasSghPlaceholders = body.Descendants(W + "p").Any(p =>
+            {
+                string txt = GetParagraphText(p);
+                return txt.Contains("TABLA: OCUPACIÓN") || 
+                       txt.Contains("TABLA: OCUPACION");
+            });
+
+            if (hasSghPlaceholders) return;
+
+            // 2. Extraer la estructura de la Sección 5 desde la plantilla oficial estándar (SGH-INF-001.docx)
+            string standardTemplate = LocalizarPlantillaOficial();
+            if (string.IsNullOrEmpty(standardTemplate) || !File.Exists(standardTemplate)) return;
+
+            List<XElement> sec5Nodes = ExtractSection5NodesFromTemplate(standardTemplate);
+            if (sec5Nodes == null || sec5Nodes.Count == 0) return;
+
+            // 3. Sincronizar y remapear todas las imágenes predeterminadas de la sección 5 en el paquete del documento
+            if (destZip != null)
+            {
+                RemapAndSyncImages(destZip, standardTemplate, sec5Nodes);
+            }
+
+            // 4. Localizar el punto de inserción (Punto 5, DESARROLLO DEL DOCUMENTO, o CONCLUSIONES)
+            XElement targetAnchor = null;
+            bool insertBefore = false;
+            foreach (var p in body.Elements(W + "p"))
+            {
+                string text = GetParagraphText(p).Trim();
+                if (text.Equals("DESARROLLO DEL DOCUMENTO", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("4. DESARROLLO", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("5. DESARROLLO", StringComparison.OrdinalIgnoreCase) ||
+                    text.Equals("ANÁLISIS DE SEGURIDAD HUMANA", StringComparison.OrdinalIgnoreCase) ||
+                    text.Equals("ANALISIS DE SEGURIDAD HUMANA", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("5. ANÁLISIS", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("5. ANALISIS", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetAnchor = p;
+                    insertBefore = false;
+                    break;
+                }
+                else if (text.Equals("CONCLUSIONES", StringComparison.OrdinalIgnoreCase) ||
+                         text.StartsWith("5. CONCLUSIONES", StringComparison.OrdinalIgnoreCase) ||
+                         text.StartsWith("6. CONCLUSIONES", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetAnchor = p;
+                    insertBefore = true;
+                    break;
+                }
+            }
+
+            if (targetAnchor != null)
+            {
+                if (insertBefore)
+                {
+                    targetAnchor.AddBeforeSelf(sec5Nodes);
+                }
+                else
+                {
+                    // Si el ancla tiene párrafos vacíos o placeholder "XXX" inmediatamente posteriores, removerlos
+                    var nextSiblings = targetAnchor.ElementsAfterSelf().Take(3).ToList();
+                    foreach (var sib in nextSiblings)
+                    {
+                        if (sib.Name == W + "p")
+                        {
+                            string sTxt = GetParagraphText(sib).Trim();
+                            if (string.IsNullOrEmpty(sTxt) || sTxt.Equals("XXX", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sib.Remove();
+                            }
+                            else break;
+                        }
+                        else break;
+                    }
+
+                    // Insertar los nodos de la sección 5 a partir del punto indicado
+                    targetAnchor.AddAfterSelf(sec5Nodes);
+                }
+            }
+            else
+            {
+                var lastSectPr = body.Elements(W + "sectPr").LastOrDefault();
+                if (lastSectPr != null)
+                {
+                    lastSectPr.AddBeforeSelf(sec5Nodes);
+                }
+                else
+                {
+                    body.Add(sec5Nodes);
+                }
+            }
+        }
+
+        private static void RemapAndSyncImages(ZipArchive destZip, string standardTemplatePath, List<XElement> sec5Nodes)
+        {
+            if (destZip == null || string.IsNullOrEmpty(standardTemplatePath) || !File.Exists(standardTemplatePath) || sec5Nodes == null || sec5Nodes.Count == 0)
+                return;
+
+            try
+            {
+                var blips = sec5Nodes.Descendants(A + "blip")
+                    .Where(b => b.Attribute(R + "embed") != null)
+                    .ToList();
+
+                if (blips.Count == 0) return;
+
+                var oldIds = blips.Select(b => b.Attribute(R + "embed").Value).Distinct().ToList();
+
+                using (var stdZip = ZipFile.OpenRead(standardTemplatePath))
+                {
+                    var stdRelsEntry = stdZip.GetEntry("word/_rels/document.xml.rels");
+                    if (stdRelsEntry == null) return;
+
+                    XDocument stdRelsDoc;
+                    using (var s = stdRelsEntry.Open())
+                    using (var r = new StreamReader(s, Encoding.UTF8))
+                    {
+                        stdRelsDoc = XDocument.Load(r);
+                    }
+
+                    var destRelsEntry = destZip.GetEntry("word/_rels/document.xml.rels");
+                    XDocument destRelsDoc;
+                    if (destRelsEntry != null)
+                    {
+                        using (var s = destRelsEntry.Open())
+                        using (var r = new StreamReader(s, Encoding.UTF8))
+                        {
+                            destRelsDoc = XDocument.Load(r);
+                        }
+                    }
+                    else
+                    {
+                        destRelsDoc = new XDocument(new XElement(RELS_NS + "Relationships"));
+                    }
+
+                    var idMap = new Dictionary<string, string>();
+
+                    foreach (var oldId in oldIds)
+                    {
+                        var stdRel = stdRelsDoc.Descendants(RELS_NS + "Relationship")
+                            .FirstOrDefault(x => x.Attribute("Id")?.Value == oldId);
+
+                        if (stdRel == null) continue;
+
+                        string target = stdRel.Attribute("Target")?.Value;
+                        string type = stdRel.Attribute("Type")?.Value;
+                        if (string.IsNullOrEmpty(target)) continue;
+
+                        string stdMediaPath = target.StartsWith("media/") ? "word/" + target : "word/media/" + Path.GetFileName(target);
+                        var stdMediaEntry = stdZip.GetEntry(stdMediaPath);
+                        if (stdMediaEntry == null) continue;
+
+                        string filename = Path.GetFileName(target);
+                        string destMediaPath = "word/media/sgh_def_" + filename;
+                        string destRelTarget = "media/sgh_def_" + filename;
+                        string newRelId = "rIdSghDef_" + Path.GetFileNameWithoutExtension(filename);
+
+                        // Copiar imagen al zip destino si aún no existe
+                        if (destZip.GetEntry(destMediaPath) == null)
+                        {
+                            var newMediaEntry = destZip.CreateEntry(destMediaPath, CompressionLevel.Optimal);
+                            using (var src = stdMediaEntry.Open())
+                            using (var dst = newMediaEntry.Open())
+                            {
+                                src.CopyTo(dst);
+                            }
+                        }
+
+                        // Registrar la relación en document.xml.rels del zip destino
+                        if (!destRelsDoc.Descendants(RELS_NS + "Relationship").Any(x => x.Attribute("Id")?.Value == newRelId))
+                        {
+                            destRelsDoc.Root?.Add(new XElement(RELS_NS + "Relationship",
+                                new XAttribute("Id", newRelId),
+                                new XAttribute("Type", type ?? "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"),
+                                new XAttribute("Target", destRelTarget)
+                            ));
+                        }
+
+                        idMap[oldId] = newRelId;
+                    }
+
+                    // Guardar destRelsDoc
+                    destRelsEntry?.Delete();
+                    var newRels = destZip.CreateEntry("word/_rels/document.xml.rels", CompressionLevel.Optimal);
+                    using (var s = newRels.Open())
+                    using (var w = new StreamWriter(s, new UTF8Encoding(false)))
+                    {
+                        destRelsDoc.Save(w);
+                    }
+
+                    // Reemplazar los IDs en los nodos extraídos
+                    foreach (var blip in blips)
+                    {
+                        string oldId = blip.Attribute(R + "embed")?.Value;
+                        if (!string.IsNullOrEmpty(oldId) && idMap.TryGetValue(oldId, out string newId))
+                        {
+                            blip.Attribute(R + "embed").Value = newId;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static List<XElement> ExtractSection5NodesFromTemplate(string templatePath)
+        {
+            var nodes = new List<XElement>();
+            try
+            {
+                using (var zip = ZipFile.OpenRead(templatePath))
+                {
+                    var entry = zip.GetEntry("word/document.xml");
+                    if (entry == null) return nodes;
+
+                    XDocument doc;
+                    using (var s = entry.Open())
+                    using (var r = new StreamReader(s, Encoding.UTF8))
+                    {
+                        doc = XDocument.Load(r);
+                    }
+
+                    var body = doc.Root?.Element(W + "body");
+                    if (body == null) return nodes;
+
+                    bool capturing = false;
+                    foreach (var elem in body.Elements())
+                    {
+                        if (elem.Name == W + "p")
+                        {
+                            string text = GetParagraphText(elem).Trim();
+                            if ((text.Contains("ANÁLISIS DE SEGURIDAD HUMANA") || text.Contains("ANALISIS DE SEGURIDAD HUMANA")) 
+                                && text.Length < 40 && !text.Contains("ESTUDIO") && !text.StartsWith("5."))
+                            {
+                                capturing = true;
+                            }
+                            else if (capturing && (text.Equals("CONCLUSIONES", StringComparison.OrdinalIgnoreCase) || text.StartsWith("6. CONCLUSIONES", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                break;
+                            }
+                        }
+
+                        if (capturing)
+                        {
+                            nodes.Add(new XElement(elem));
+                        }
+                    }
+                }
+            }
+            catch { }
+            return nodes;
+        }
+
         private static void ProcessDocumentXml(XDocument doc, SghReportModel model, List<SghSpace> spaces,
-            string rIdImplantacion, string rIdLocalizacion, long impCx, long impCy, long locCx, long locCy)
+            string rIdImplantacion, string rIdLocalizacion, long impCx, long impCy, long locCx, long locCy, ZipArchive destZip = null)
         {
             if (doc.Root == null) return;
 
+            // Si es plantilla personalizada o se requiere asegurar la sección 5, inyectarla si no existe
+            if (model.UseCustomTemplate || model.ReplaceFromSection5Only)
+            {
+                EnsureSection5StructureInDocument(doc, model, destZip);
+            }
+
             // 0. Eliminar párrafos vacíos residuales antes del salto de página de la portada para evitar páginas en blanco intermedias
-            EliminateExtraCoverBlankPages(doc);
+            if (model.ReplaceMetadata)
+            {
+                EliminateExtraCoverBlankPages(doc);
+            }
 
             // Asegurar que la instrucción TOC soporte niveles 1 a 3 (1-3)
             UpdateTocInstruction(doc);
 
             var paragraphs = doc.Descendants(W + "p").ToList();
+            bool isInOrAfterSection5 = false;
 
             foreach (var p in paragraphs)
             {
                 string text = GetParagraphText(p);
                 if (string.IsNullOrWhiteSpace(text)) continue;
 
+                if (text.Contains("ANÁLISIS DE SEGURIDAD HUMANA") || 
+                    text.Contains("ANALISIS DE SEGURIDAD HUMANA") ||
+                    text.StartsWith("5. ") || text.StartsWith("5.") ||
+                    text.Equals("DESARROLLO DEL DOCUMENTO", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("4. DESARROLLO", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("5. DESARROLLO", StringComparison.OrdinalIgnoreCase))
+                {
+                    isInOrAfterSection5 = true;
+                }
+
                 // --- 1. Portada: Alineación de etiquetas y nombres ---
                 if (text.Contains("Director del proyecto:"))
                 {
-                    FormatCoverItem(p, "Director del proyecto:", model.DirectorName);
+                    if (model.ReplaceMetadata) FormatCoverItem(p, "Director del proyecto:", model.DirectorName);
                     continue;
                 }
 
                 if (text.Contains("Certificado NFPA"))
                 {
-                    FormatDirectorCert(p, model.DirectorCert);
+                    if (model.ReplaceMetadata) FormatDirectorCert(p, model.DirectorCert);
                     continue;
                 }
 
                 if (text.Contains("Coordinador del proyecto:"))
                 {
-                    FormatCoverItem(p, "Coordinador del proyecto:", model.CoordinatorName);
+                    if (model.ReplaceMetadata) FormatCoverItem(p, "Coordinador del proyecto:", model.CoordinatorName);
                     continue;
                 }
 
                 if (text.Contains("Elaborado por:"))
                 {
-                    FormatCoverItem(p, "Elaborado por:", model.AuthorName);
+                    if (model.ReplaceMetadata) FormatCoverItem(p, "Elaborado por:", model.AuthorName);
                     continue;
                 }
 
                 if (text.Contains("Colaborador:"))
                 {
-                    FormatCoverItem(p, "Colaborador:", model.CollaboratorName);
+                    if (model.ReplaceMetadata) FormatCoverItem(p, "Colaborador:", model.CollaboratorName);
                     continue;
                 }
 
                 if (text.StartsWith("Fecha:") || text.Contains("Fecha:            ") || (text.Contains("Fecha:") && text.Contains("XXXX")))
                 {
-                    FormatCoverItem(p, "Fecha:", model.ReportDate);
+                    if (model.ReplaceMetadata) FormatCoverItem(p, "Fecha:", model.ReportDate);
                     continue;
+                }
+
+                // Si estamos antes de la sección 5 y está activo el modo "Preservar secciones iniciales (Puntos 1 al 4)":
+                if (!isInOrAfterSection5 && model.ReplaceFromSection5Only)
+                {
+                    continue; // NO tocar secciones 1 a 4
                 }
 
                 // --- 2. Introducción: Nombre del proyecto y fechas en negrilla ---
@@ -513,11 +816,11 @@ namespace AutoCAD.SGH.Services
                 // --- 5. Imágenes del Proyecto (Implantación y Localización) ---
                 if (text.Contains("IMG: IMPLANTACIÓN") || text.Contains("IMG: IMPLANTACION"))
                 {
-                    if (!string.IsNullOrEmpty(rIdImplantacion))
+                    if (model.ReplaceImagenesProyecto && !string.IsNullOrEmpty(rIdImplantacion))
                     {
                         p.ReplaceWith(BuildImageParagraph(rIdImplantacion, "Implantación Inicial", impCx, impCy));
                     }
-                    else
+                    else if (model.ReplaceImagenesProyecto)
                     {
                         p.Remove();
                     }
@@ -526,11 +829,11 @@ namespace AutoCAD.SGH.Services
 
                 if (text.Contains("IMG: LOCALIZACIÓN") || text.Contains("IMG: LOCALIZACION"))
                 {
-                    if (!string.IsNullOrEmpty(rIdLocalizacion))
+                    if (model.ReplaceImagenesProyecto && !string.IsNullOrEmpty(rIdLocalizacion))
                     {
                         p.ReplaceWith(BuildImageParagraph(rIdLocalizacion, "Localización / Edificio", locCx, locCy));
                     }
-                    else
+                    else if (model.ReplaceImagenesProyecto)
                     {
                         p.Remove();
                     }
@@ -540,121 +843,160 @@ namespace AutoCAD.SGH.Services
                 // --- 6. Clasificación de Edificación (NSR-10 K.2) ---
                 if (text.Contains("De acuerdo con la clasificación de edificaciones estipulada en el capítulo K.2") || text.Contains("De acuerdo con la clasificacion de edificaciones"))
                 {
-                    FormatClassificationIntroParagraph(p, model.BuildingClassification, model.SecondaryClassification);
+                    if (model.ReplaceClasificacionRiesgo)
+                        FormatClassificationIntroParagraph(p, model.BuildingClassification, model.SecondaryClassification);
                     continue;
                 }
 
                 // IMPORTANTE: Eliminar la tabla secundaria primero para que no coincida con "TABLA: CLASIFICACIÓN"
                 if (text.Contains("TABLA: CLASIFICACIÓN SECUNDARIA") || text.Contains("TABLA: CLASIFICACION SECUNDARIA") || text.Contains("TABLA: Almacenamiento") || text.Contains("TABLA: ALMACENAMIENTO"))
                 {
-                    p.Remove();
+                    if (model.ReplaceClasificacionRiesgo || model.UseCustomTemplate)
+                        p.Remove();
                     continue;
                 }
 
                 if ((text.Contains("TABLA: CLASIFICACIÓN") || text.Contains("TABLA: CLASIFICACION") || text.Contains("TABLA:CLASIFICACIÓN")) && !text.Contains("SECUNDARIA"))
                 {
-                    var tblClassification = BuildWordClassificationTable(spaces, model);
-                    p.ReplaceWith(tblClassification);
+                    if (model.ReplaceClasificacionRiesgo || model.UseCustomTemplate)
+                    {
+                        var tblClassification = BuildWordClassificationTable(spaces, model);
+                        p.ReplaceWith(tblClassification);
+                    }
                     continue;
                 }
 
                 // --- 7. Altura y Catalogación de Gran Altura ---
                 if (text.Contains("nivel de calle al") && (text.Contains("último nivel habitable") || text.Contains("ultimo nivel habitable") || text.Contains("K.3.1.3") || text.Contains("ES/NO ES DE GRAN ALTURA") || text.Contains("inferior/superior")))
                 {
-                    FormatBuildingHeightParagraph(p, model.BuildingHeight, model.IsHighRise);
+                    if (model.ReplaceClasificacionRiesgo || model.UseCustomTemplate)
+                        FormatBuildingHeightParagraph(p, model);
                     continue;
                 }
 
-                // --- 8. Resistencia al Fuego (Texto con Negrillas y Tabla J.3.4-3) ---
+                // --- 8. Resistencia al Fuego (Texto con Negrillas y Tablas J.3.4-3 y J.3.4-4) ---
                 if (text.Contains("La clasificación del proyecto corresponde a la") || text.Contains("La clasificacion del proyecto corresponde a la") || text.Contains("CATEGORIA PROYCTO"))
                 {
-                    FormatFireResistanceParagraph(p, model.RiskCategory, model.GeneralFireResistance);
+                    if (model.ReplaceClasificacionRiesgo || model.UseCustomTemplate)
+                        FormatFireResistanceParagraph(p, model.RiskCategory, model.GeneralFireResistance);
                     continue;
                 }
 
                 if (text.Contains("TABLA: RESISTENCIA AL FUEGO DE ELEMENTOS") || text.Contains("TABLA: RESISTENCIA AL FUEGO"))
                 {
-                    var tblFire = model.IsResidentialR1R2
-                        ? BuildWordResidentialFireResistanceTable(model)
-                        : BuildWordFireResistanceTable(model);
-                    p.ReplaceWith(tblFire);
+                    if (model.ReplaceClasificacionRiesgo || model.UseCustomTemplate)
+                    {
+                        var tblExceptR = BuildWordFireResistanceTable(model);
+                        var spacerP = new XElement(W + "p",
+                            new XElement(W + "pPr",
+                                new XElement(W + "spacing", new XAttribute(W + "before", "140"), new XAttribute(W + "after", "140"))
+                            )
+                        );
+                        var tblR = BuildWordResidentialFireResistanceTable(model);
+                        p.ReplaceWith(tblExceptR, spacerP, tblR);
+                    }
                     continue;
                 }
 
                 // --- 9. Ocupación (Sección 5.3): Se inserta la tabla de ocupación calculada de los espacios ---
                 if (text.Contains("TABLA: OCUPACIÓN") || text.Contains("TABLA: OCUPACION") || text.Contains("TABLA:OCUPACIÓN"))
                 {
-                    var tblOcc = BuildWordOccupancyTable(spaces);
-                    p.ReplaceWith(tblOcc);
+                    if (model.ReplaceCargasOcupacion || model.UseCustomTemplate)
+                    {
+                        var tblOcc = BuildWordOccupancyTable(spaces);
+                        p.ReplaceWith(tblOcc);
+                    }
                     continue;
                 }
 
                 // --- 10. Salidas y Evacuación (Sección 5.4) ---
                 if (text.Contains("se debe tener como mínimo") && (text.Contains("#SALIDAS REQUERIDAS") || text.Contains("salidas accesibles desde cualquier punto")))
                 {
-                    FormatExitsQuantityParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatExitsQuantityParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("TABLA: NÚMERO DE SALIDAS") || text.Contains("TABLA: NUMERO DE SALIDAS") || text.Contains("TABLA:NÚMERO DE SALIDAS"))
                 {
-                    var tblExits = BuildWordNumberOfExitsTable(spaces, model);
-                    p.ReplaceWith(tblExits);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                    {
+                        var tblExits = BuildWordNumberOfExitsTable(spaces, model);
+                        p.ReplaceWith(tblExits);
+                    }
                     continue;
                 }
 
                 if (text.Contains("De acuerdo con el cálculo de ocupación y las restricciones de cantidad de salidas") || text.Contains("De acuerdo con el calculo de ocupacion y las restricciones"))
                 {
-                    FormatExitsEvaluationParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatExitsEvaluationParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("TABLA: SEPARACIÓN SALIDAS") || text.Contains("TABLA: SEPARACION SALIDAS") || text.Contains("TABLA:SEPARACIÓN SALIDAS"))
                 {
-                    var tblSep = BuildWordExitSeparationTable(spaces, model);
-                    p.ReplaceWith(tblSep);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                    {
+                        var tblSep = BuildWordExitSeparationTable(spaces, model);
+                        p.ReplaceWith(tblSep);
+                    }
                     continue;
                 }
 
                 if (text.Contains("El proyecto") && (text.Contains("con la separación entre salidas") || text.Contains("con la separacion entre salidas")))
                 {
-                    FormatExitSeparationEvaluationParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatExitSeparationEvaluationParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("El edificio actualmente") && text.Contains("con este requerimiento"))
                 {
-                    FormatExitDischargeEvaluationParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatExitDischargeEvaluationParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("La distancia máxima de recorrido desde el punto más alejado") || text.Contains("La distancia maxima de recorrido desde el punto mas alejado"))
                 {
-                    FormatTravelDistanceParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatTravelDistanceParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("Actualmente el edificio") && (text.Contains("con el requerimiento normativo") || text.Contains("con el requerimiento normativo.")))
                 {
-                    FormatTravelDistanceEvaluationParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatTravelDistanceEvaluationParagraph(p, model);
                     continue;
                 }
 
                 if (text.Contains("Los medios de evacuación del edificio") || text.Contains("Los medios de evacuacion del edificio"))
                 {
-                    FormatEgressCapacityEvaluationParagraph(p, model);
+                    if (model.ReplaceMediosEvacuacion || model.UseCustomTemplate)
+                        FormatEgressCapacityEvaluationParagraph(p, model);
                     continue;
                 }
 
                 // --- 11. Reemplazos generales con texto en negrilla para todos los campos completados ---
-                ReplacePlaceholdersWithBoldRuns(p, model);
+                if (model.ReplaceProteccionActivaPasiva || model.ReplaceClasificacionRiesgo || model.ReplaceMetadata || model.UseCustomTemplate)
+                {
+                    ReplacePlaceholdersWithBoldRuns(p, model);
+                }
             }
 
             // Actualizar tablas de Control/Aprobaciones y de Historial del Documento
-            UpdateDocumentTables(doc, model);
+            if (model.ReplaceMetadata)
+            {
+                UpdateDocumentTables(doc, model);
+            }
 
             // Formatear la sección de CONCLUSIONES con viñetas personalizadas según imagen 1
-            ProcessConclusionsSection(doc, model);
+            if (model.ReplaceConclusiones || model.UseCustomTemplate)
+            {
+                ProcessConclusionsSection(doc, model);
+            }
         }
 
         private static void ProcessConclusionsSection(XDocument doc, SghReportModel model)
@@ -905,7 +1247,7 @@ namespace AutoCAD.SGH.Services
             p.Add(r1, r2, r3);
         }
 
-        private static void FormatBuildingHeightParagraph(XElement p, double height, bool isHighRise)
+        private static void FormatBuildingHeightParagraph(XElement p, SghReportModel model)
         {
             p.Elements().Where(e => e.Name != W + "pPr").Remove();
 
@@ -920,21 +1262,28 @@ namespace AutoCAD.SGH.Services
                 p.AddFirst(pPr);
             }
 
+            double height = model.BuildingHeight;
+            double threshold = model.HighRiseThreshold;
+            bool isHighRise = model.IsHighRise;
+
             string heightStr = isHighRise
                 ? $"aproximada de {height.ToString("0.0", CultureInfo.InvariantCulture).Replace('.', ',')}m"
                 : $"{height.ToString("0.0", CultureInfo.InvariantCulture).Replace('.', ',')} m";
 
             string relationStr = isHighRise
-                ? ", siendo superior de 23m desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que "
-                : ", siendo inferior de 23m desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que ";
+                ? $", siendo superior o igual a {threshold:0}m desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que "
+                : $", siendo inferior a {threshold:0}m desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que ";
 
             string highRiseStatus = isHighRise ? "ES DE GRAN ALTURA" : "NO ES DE GRAN ALTURA";
+            string normCitation = string.Equals(model.SelectedNorm, "NFPA", StringComparison.OrdinalIgnoreCase)
+                ? " de acuerdo con 3.3.37.7 NFPA 101."
+                : " de acuerdo con K.3.1.3 NSR-10.";
 
             var r1 = CreateRun("El edificio tiene una altura de ", false);
             var r2 = CreateRun(heightStr, true);
             var r3 = CreateRun(relationStr, false);
             var r4 = CreateRun(highRiseStatus, true);
-            var r5 = CreateRun(" de acuerdo con K.3.1.3 NSR-10 y 3.3.37.7 NFPA 101.", false);
+            var r5 = CreateRun(normCitation, false);
 
             p.Add(r1, r2, r3, r4, r5);
         }
@@ -1261,47 +1610,48 @@ namespace AutoCAD.SGH.Services
 
             // Fila 1: Título de la tabla (Spans 4 columns)
             var row1 = new XElement(W + "tr",
-                CreateCell("TABLA J.3.4-2", "8400", true, "FFFFFF", "000000", "center", 4)
+                CreateCell("TABLA J.3.4-4", "8400", true, "FFFFFF", "000000", "center", 4)
             );
             table.Add(row1);
 
             // Fila 2: Subtítulo de la tabla (Spans 4 columns)
             var row2 = new XElement(W + "tr",
-                CreateCell("RESISTENCIA REQUERIDA AL FUEGO PARA EDIFICACIONES DEL GRUPO RESIDENCIAL (R-1 Y R-2)", "8400", false, "FFFFFF", "000000", "center", 4)
+                CreateCell("TABLA PARA OCUPACIONES R-1 Y R-2", "8400", false, "FFFFFF", "000000", "center", 4)
             );
             table.Add(row2);
 
             // Fila 3: Encabezado principal (Elementos + Categoría)
             var row3 = new XElement(W + "tr",
                 new XElement(W + "trPr", new XElement(W + "tblHeader")),
-                CreateCell("Elementos de la Construcción", "5100", true, "D9D9D9", "000000", "center"),
-                CreateCell("Categoría según el número de pisos", "3300", true, "D9D9D9", "000000", "center", 3)
+                CreateCell("Elementos de la Construcción", "5100", true, "D9D9D9", "000000", "center", 1, "restart"),
+                CreateCell("Categoría según la clasificación Dada en", "3300", true, "D9D9D9", "000000", "center", 3)
             );
             table.Add(row3);
 
             // Fila 4: Subencabezados de Categoría (I, II, III)
-            string rCat = model.RiskCategory ?? string.Empty;
-            bool isCat1 = rCat.IndexOf(" I", StringComparison.OrdinalIgnoreCase) >= 0 && rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) < 0 && rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) < 0;
-            bool isCat2 = rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool isCat3 = rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) >= 0;
+            string rCat = model?.RiskCategory ?? string.Empty;
+            bool isCat3 = rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.EndsWith("3");
+            bool isCat2 = !isCat3 && (rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.EndsWith("2"));
+            bool isCat1 = !isCat3 && !isCat2 && (rCat.IndexOf(" I", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.Trim().EndsWith("I", StringComparison.OrdinalIgnoreCase) || rCat.EndsWith("1"));
+            if (!isCat1 && !isCat2 && !isCat3) isCat2 = true;
 
             var row4 = new XElement(W + "tr",
                 new XElement(W + "trPr", new XElement(W + "tblHeader")),
-                CreateCell("", "5100", false, "D9D9D9", "000000", "center"),
-                CreateCell("I (≥ 4 pisos)", "1100", true, isCat1 ? "BDD7EE" : "D9D9D9", "000000", "center"),
-                CreateCell("II (2-3 pisos)", "1100", true, isCat2 ? "BDD7EE" : "D9D9D9", "000000", "center"),
-                CreateCell("III (1 piso)", "1100", true, isCat3 ? "BDD7EE" : "D9D9D9", "000000", "center")
+                CreateCell("", "5100", false, "D9D9D9", "000000", "center", 1, "continue"),
+                CreateCell("I", "1100", true, isCat1 ? "BDD7EE" : "D9D9D9", "000000", "center"),
+                CreateCell("II", "1100", true, isCat2 ? "BDD7EE" : "D9D9D9", "000000", "center"),
+                CreateCell("III", "1100", true, isCat3 ? "BDD7EE" : "D9D9D9", "000000", "center")
             );
             table.Add(row4);
 
             var rfRows = new List<(string Element, string C1, string C2, string C3)>
             {
-                ("Muros Cortafuego", "2", "2", "1"),
-                ("Muros de cerramiento de escaleras protegidas, ascensores, buitrones, ductos para basuras y corredores protegidos", "2", "1", "1"),
+                ("Muros Cortafuego", "1", "1", "1"),
+                ("Muros de cerramiento de escaleras protegidas, ascensores, buitrones, ductos para basuras y corredores protegidos", "1", "1", "1"),
                 ("Muros divisorios entre unidades", "1", "1", "1"),
                 ("Muros interiores no portantes", "1/2", "1/4", "-"),
-                ("Elementos estructurales de los materiales cubiertos por los títulos C a G del reglamento NSR-10", "2", "1", "1"),
-                ("Cubiertas", "1", "1/2", "1/4"),
+                ("Elementos estructurales de los materiales cubiertos por los títulos C a G del reglamento NSR-10", "1", "1", "1"),
+                ("Cubiertas", "1", "1", "1/2"),
                 ("Escaleras interiores no encerradas con muros corta fuego", "1", "1", "1")
             };
 
@@ -1351,20 +1701,21 @@ namespace AutoCAD.SGH.Services
             // Fila 3: Encabezado principal (Elementos + Categoría)
             var row3 = new XElement(W + "tr",
                 new XElement(W + "trPr", new XElement(W + "tblHeader")),
-                CreateCell("Elementos de la Construcción", "5100", true, "D9D9D9", "000000", "center"),
+                CreateCell("Elementos de la Construcción", "5100", true, "D9D9D9", "000000", "center", 1, "restart"),
                 CreateCell("Categoría según la clasificación Dada en", "3300", true, "D9D9D9", "000000", "center", 3)
             );
             table.Add(row3);
 
             // Fila 4: Subencabezados de Categoría (I, II, III)
-            string rCat = model.RiskCategory ?? string.Empty;
-            bool isCat1 = rCat.IndexOf(" I", StringComparison.OrdinalIgnoreCase) >= 0 && rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) < 0 && rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) < 0;
-            bool isCat2 = rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool isCat3 = rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) >= 0;
+            string rCat = model?.RiskCategory ?? string.Empty;
+            bool isCat3 = rCat.IndexOf("III", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.EndsWith("3");
+            bool isCat2 = !isCat3 && (rCat.IndexOf("II", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.EndsWith("2"));
+            bool isCat1 = !isCat3 && !isCat2 && (rCat.IndexOf(" I", StringComparison.OrdinalIgnoreCase) >= 0 || rCat.Trim().EndsWith("I", StringComparison.OrdinalIgnoreCase) || rCat.EndsWith("1"));
+            if (!isCat1 && !isCat2 && !isCat3) isCat2 = true;
 
             var row4 = new XElement(W + "tr",
                 new XElement(W + "trPr", new XElement(W + "tblHeader")),
-                CreateCell("", "5100", false, "D9D9D9", "000000", "center"),
+                CreateCell("", "5100", false, "D9D9D9", "000000", "center", 1, "continue"),
                 CreateCell("I", "1100", true, isCat1 ? "BDD7EE" : "D9D9D9", "000000", "center"),
                 CreateCell("II", "1100", true, isCat2 ? "BDD7EE" : "D9D9D9", "000000", "center"),
                 CreateCell("III", "1100", true, isCat3 ? "BDD7EE" : "D9D9D9", "000000", "center")
@@ -1401,24 +1752,34 @@ namespace AutoCAD.SGH.Services
             string text = GetParagraphText(p);
             if (string.IsNullOrWhiteSpace(text)) return;
 
-            var replacements = new List<(string Key, string Val)>
+            var replacements = new List<(string Key, string Val)>();
+
+            if (model.ReplaceMetadata)
             {
-                ("NOMBRE DE PROYECTO", model.ProjectName),
-                ("FECHA BASE ARQ", model.ArchBaseDate),
-                ("CLASIFICACIÓN EDIFICIO", model.BuildingClassification),
-                ("CLASIFICACION EDIFICIO", model.BuildingClassification),
-                ("CLASIFICACIÓN SECUNDARIA", model.SecondaryClassification),
-                ("CLASIFICACION SECUNDARIA", model.SecondaryClassification),
-                ("CATEGORIA PROYCTO", model.RiskCategory),
-                ("CATEGORIA PROYECTO", model.RiskCategory),
-                ("RESISTENCIA AL FUEGO GENERAL", model.GeneralFireResistance),
-                ("REQUERIMIENTOS SISTEMA DE DETECCIÓN Y ALARMA", "contar con un sistema de detección y alarma en cumplimiento del capítulo J.4.2 y NFPA 72"),
-                ("REQUERIMIENTOS SISTEMA DE DETECCION Y ALARMA", "contar con un sistema de detección y alarma en cumplimiento del capítulo J.4.2 y NFPA 72"),
-                ("REQUERIMIENTOS SISTEMA DE EXTINCIÓN AUTOMÁTICA", model.HasSprinklers ? "contar con sistema de rociadores automáticos según J.4.3 y NFPA 13" : "evaluarse según área de construcción y uso bajo el capítulo J.4.3"),
-                ("REQUERIMIENTOS SISTEMA DE EXTINCION AUTOMATICA", model.HasSprinklers ? "contar con sistema de rociadores automáticos según J.4.3 y NFPA 13" : "evaluarse según área de construcción y uso bajo el capítulo J.4.3"),
-                ("REQUERIMIENTOS TOMAS FIJAS PARA BOMBEROS", "tomas fijas para bomberos y mangueras para extinción de incendios según J.4.4 y NFPA 14"),
-                ("REQUERIMIENTOS EXTINTORES", "contar con extintores portátiles de fuego distribuidos según J.4.5 y NFPA 10")
-            };
+                replacements.Add(("NOMBRE DE PROYECTO", model.ProjectName));
+                replacements.Add(("FECHA BASE ARQ", model.ArchBaseDate));
+            }
+
+            if (model.ReplaceClasificacionRiesgo)
+            {
+                replacements.Add(("CLASIFICACIÓN EDIFICIO", model.BuildingClassification));
+                replacements.Add(("CLASIFICACION EDIFICIO", model.BuildingClassification));
+                replacements.Add(("CLASIFICACIÓN SECUNDARIA", model.SecondaryClassification));
+                replacements.Add(("CLASIFICACION SECUNDARIA", model.SecondaryClassification));
+                replacements.Add(("CATEGORIA PROYCTO", model.RiskCategory));
+                replacements.Add(("CATEGORIA PROYECTO", model.RiskCategory));
+                replacements.Add(("RESISTENCIA AL FUEGO GENERAL", model.GeneralFireResistance));
+            }
+
+            if (model.ReplaceProteccionActivaPasiva)
+            {
+                replacements.Add(("REQUERIMIENTOS SISTEMA DE DETECCIÓN Y ALARMA", "contar con un sistema de detección y alarma en cumplimiento del capítulo J.4.2 y NFPA 72"));
+                replacements.Add(("REQUERIMIENTOS SISTEMA DE DETECCION Y ALARMA", "contar con un sistema de detección y alarma en cumplimiento del capítulo J.4.2 y NFPA 72"));
+                replacements.Add(("REQUERIMIENTOS SISTEMA DE EXTINCIÓN AUTOMÁTICA", model.HasSprinklers ? "contar con sistema de rociadores automáticos según J.4.3 y NFPA 13" : "evaluarse según área de construcción y uso bajo el capítulo J.4.3"));
+                replacements.Add(("REQUERIMIENTOS SISTEMA DE EXTINCION AUTOMATICA", model.HasSprinklers ? "contar con sistema de rociadores automáticos según J.4.3 y NFPA 13" : "evaluarse según área de construcción y uso bajo el capítulo J.4.3"));
+                replacements.Add(("REQUERIMIENTOS TOMAS FIJAS PARA BOMBEROS", "tomas fijas para bomberos y mangueras para extinción de incendios según J.4.4 y NFPA 14"));
+                replacements.Add(("REQUERIMIENTOS EXTINTORES", "contar con extintores portátiles de fuego distribuidos según J.4.5 y NFPA 10"));
+            }
 
             bool hasMatches = replacements.Any(r => text.Contains(r.Key));
             if (!hasMatches) return;
@@ -1534,23 +1895,10 @@ namespace AutoCAD.SGH.Services
                     );
                     table.Add(dataRow);
                 }
-
-                if (totalItem != null)
-                {
-                    var totalRow = new XElement(W + "tr",
-                        CreateCell(totalItem.Piso, "2400", true, "D9D9D9", "000000", "left"),
-                        CreateCell(totalItem.Ocupacion.ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                        CreateCell(totalItem.SalidasRequeridas.ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                        CreateCell(totalItem.SalidasExistentes.ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                        CreateCell(totalItem.Evaluacion ?? "Cumple", "1800", true, "D9D9D9", "000000", "center")
-                    );
-                    table.Add(totalRow);
-                }
             }
             else
             {
                 var grouped = (spaces ?? new List<SghSpace>()).GroupBy(s => OccupancyService.GetCanonicalPisoKey(s.Piso)).ToList();
-                int grandTotalOcc = 0;
 
                 foreach (var group in grouped)
                 {
@@ -1565,7 +1913,6 @@ namespace AutoCAD.SGH.Services
                         pisoOcc += occ;
                     }
 
-                    grandTotalOcc += pisoOcc;
                     int reqExits = pisoOcc <= 100 ? 1 : (pisoOcc <= 500 ? 2 : (pisoOcc <= 1000 ? 3 : 4));
                     int existExits = model?.SalidasExistentes > 0 ? model.SalidasExistentes : 2;
                     string eval = existExits >= reqExits ? "Cumple" : "No Cumple";
@@ -1579,17 +1926,6 @@ namespace AutoCAD.SGH.Services
                     );
                     table.Add(dataRow);
                 }
-
-                // Fila Total General
-                int totalReqExits = (model != null && model.SalidasRequeridas > 0) ? model.SalidasRequeridas : (grandTotalOcc <= 100 ? 1 : (grandTotalOcc <= 500 ? 2 : (grandTotalOcc <= 1000 ? 3 : 4)));
-                var totalRow = new XElement(W + "tr",
-                    CreateCell("TOTAL EDIFICIO", "2400", true, "D9D9D9", "000000", "left"),
-                    CreateCell(grandTotalOcc.ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                    CreateCell(totalReqExits.ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                    CreateCell((model?.SalidasExistentes ?? 2).ToString(), "1800", true, "D9D9D9", "000000", "center"),
-                    CreateCell(model?.CumplimientoCantidadSalidas ?? "Cumple", "1800", true, "D9D9D9", "000000", "center")
-                );
-                table.Add(totalRow);
             }
 
             return table;
@@ -1945,6 +2281,7 @@ namespace AutoCAD.SGH.Services
         /// </summary>
         private static XElement BuildWordOccupancyTable(List<SghSpace> spaces)
         {
+            if (spaces == null) spaces = new List<SghSpace>();
             var table = new XElement(W + "tbl",
                 new XElement(W + "tblPr",
                     new XElement(W + "tblW", new XAttribute(W + "w", "9600"), new XAttribute(W + "type", "dxa")),
@@ -2030,22 +2367,30 @@ namespace AutoCAD.SGH.Services
             return table;
         }
 
-        private static XElement CreateCell(string text, string widthDxa, bool isBold = false, string fillColorHex = null, string textColorHex = "000000", string align = "left", int gridSpan = 1)
+        private static XElement CreateCell(string text, string widthDxa, bool isBold = false, string fillColorHex = null, string textColorHex = "000000", string align = "left", int gridSpan = 1, string vMerge = null)
         {
             var tcPr = new XElement(W + "tcPr",
-                new XElement(W + "tcW", new XAttribute(W + "w", widthDxa), new XAttribute(W + "type", "dxa")),
-                new XElement(W + "vAlign", new XAttribute(W + "val", "center"))
+                new XElement(W + "tcW", new XAttribute(W + "w", widthDxa), new XAttribute(W + "type", "dxa"))
             );
+
+            if (gridSpan > 1)
+            {
+                tcPr.Add(new XElement(W + "gridSpan", new XAttribute(W + "val", gridSpan.ToString())));
+            }
+
+            if (!string.IsNullOrEmpty(vMerge))
+            {
+                tcPr.Add(vMerge == "restart"
+                    ? new XElement(W + "vMerge", new XAttribute(W + "val", "restart"))
+                    : new XElement(W + "vMerge"));
+            }
 
             if (!string.IsNullOrEmpty(fillColorHex))
             {
                 tcPr.Add(new XElement(W + "shd", new XAttribute(W + "val", "clear"), new XAttribute(W + "color", "auto"), new XAttribute(W + "fill", fillColorHex)));
             }
 
-            if (gridSpan > 1)
-            {
-                tcPr.Add(new XElement(W + "gridSpan", new XAttribute(W + "val", gridSpan.ToString())));
-            }
+            tcPr.Add(new XElement(W + "vAlign", new XAttribute(W + "val", "center")));
 
             var pPr = new XElement(W + "pPr");
             if (align != "left")
