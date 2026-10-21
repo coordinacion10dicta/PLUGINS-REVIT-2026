@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AutoCAD.SGH.Models;
@@ -12,10 +14,104 @@ namespace AutoCAD.SGH.UI
 {
     public partial class SghWordPreviewControl : UserControl
     {
+        private double _currentZoom = 1.0;
+        private BitmapImage _cachedLogo;
+        private BitmapImage _cachedFooterBar;
+
         public SghWordPreviewControl()
         {
             InitializeComponent();
+            Loaded += (s, e) => LoadInstitutionalAssets();
         }
+
+        private void LoadInstitutionalAssets()
+        {
+            try
+            {
+                if (_cachedLogo == null)
+                {
+                    _cachedLogo = LoadBitmapAsset("dicta_logo.png");
+                }
+
+                if (_cachedLogo != null)
+                {
+                    if (ImgLogoHeader1 != null) ImgLogoHeader1.Source = _cachedLogo;
+                    if (ImgLogoHeader2 != null) ImgLogoHeader2.Source = _cachedLogo;
+                    if (ImgLogoHeader3 != null) ImgLogoHeader3.Source = _cachedLogo;
+                    if (ImgLogoHeader4 != null) ImgLogoHeader4.Source = _cachedLogo;
+                    if (ImgLogoHeader5 != null) ImgLogoHeader5.Source = _cachedLogo;
+                }
+                else
+                {
+                    // Fallback a texto si no se encuentra el logo
+                    if (TxtFallbackLogo1 != null) TxtFallbackLogo1.Visibility = Visibility.Visible;
+                    if (TxtFallbackLogo2 != null) TxtFallbackLogo2.Visibility = Visibility.Visible;
+                    if (TxtFallbackLogo3 != null) TxtFallbackLogo3.Visibility = Visibility.Visible;
+                    if (TxtFallbackLogo4 != null) TxtFallbackLogo4.Visibility = Visibility.Visible;
+                    if (TxtFallbackLogo5 != null) TxtFallbackLogo5.Visibility = Visibility.Visible;
+                }
+
+                if (_cachedFooterBar == null)
+                {
+                    _cachedFooterBar = LoadBitmapAsset("dicta_footer_bar.png");
+                }
+
+                if (_cachedFooterBar != null)
+                {
+                    if (ImgFooterBar1 != null) ImgFooterBar1.Source = _cachedFooterBar;
+                    if (ImgFooterBar2 != null) ImgFooterBar2.Source = _cachedFooterBar;
+                    if (ImgFooterBar3 != null) ImgFooterBar3.Source = _cachedFooterBar;
+                    if (ImgFooterBar4 != null) ImgFooterBar4.Source = _cachedFooterBar;
+                    if (ImgFooterBar5 != null) ImgFooterBar5.Source = _cachedFooterBar;
+                }
+            }
+            catch { }
+        }
+
+        private BitmapImage LoadBitmapAsset(string fileName)
+        {
+            try
+            {
+                string dllDir = string.Empty;
+                try
+                {
+                    dllDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                }
+                catch { }
+
+                var candidates = new List<string>();
+                if (!string.IsNullOrEmpty(dllDir))
+                {
+                    candidates.Add(Path.Combine(dllDir, "Images", fileName));
+                    candidates.Add(Path.Combine(dllDir, "Resources", fileName));
+                    candidates.Add(Path.Combine(dllDir, fileName));
+                    candidates.Add(Path.Combine(dllDir, @"..\..\Images", fileName));
+                    candidates.Add(Path.Combine(dllDir, @"..\..\Resources", fileName));
+                }
+
+                candidates.Add(Path.Combine(@"C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\AutoCAD\Images", fileName));
+                candidates.Add(Path.Combine(@"C:\Users\dicta\Desktop\Proyecto_AC\Proyectos\Proyectos_v2.3\AutoCAD\Resources", fileName));
+                candidates.Add(Path.Combine(@"C:\ProgramData\Autodesk\ApplicationPlugins\DICTA.bundle\Contents\Images", fileName));
+                candidates.Add(Path.Combine(@"C:\ProgramData\Autodesk\ApplicationPlugins\DICTA.bundle\Contents\Resources", fileName));
+
+                foreach (var path in candidates)
+                {
+                    if (File.Exists(path))
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
+                        bmp.UriSource = new Uri(path);
+                        bmp.EndInit();
+                        return bmp;
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        #region Navegación entre Hojas
 
         private void BtnJumpSection_Click(object sender, RoutedEventArgs e)
         {
@@ -73,58 +169,117 @@ namespace AutoCAD.SGH.UI
         {
             if (btn == null) return;
             btn.Background = isActive 
-                ? new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB)) 
-                : new SolidColorBrush(Color.FromRgb(0x31, 0x32, 0x44));
+                ? new SolidColorBrush(Color.FromRgb(0x2B, 0x57, 0x9A)) 
+                : Brushes.White;
             btn.Foreground = isActive 
                 ? Brushes.White 
-                : new SolidColorBrush(Color.FromRgb(0xCD, 0xD6, 0xF4));
+                : new SolidColorBrush(Color.FromRgb(0x1F, 0x29, 0x37));
             btn.BorderBrush = isActive 
-                ? new SolidColorBrush(Color.FromRgb(0x60, 0xA5, 0xFA)) 
-                : new SolidColorBrush(Color.FromRgb(0x45, 0x47, 0x5A));
+                ? new SolidColorBrush(Color.FromRgb(0x1E, 0x40, 0xAF)) 
+                : new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
         }
+
+        #endregion
+
+        #region Controles de Zoom
+
+        private void BtnZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyZoom(_currentZoom + 0.1);
+        }
+
+        private void BtnZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyZoom(_currentZoom - 0.1);
+        }
+
+        private void BtnZoomReset_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyZoom(1.0);
+        }
+
+        private void DocScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                e.Handled = true;
+                double delta = e.Delta > 0 ? 0.08 : -0.08;
+                ApplyZoom(_currentZoom + delta);
+            }
+        }
+
+        private void ApplyZoom(double newZoom)
+        {
+            _currentZoom = Math.Max(0.5, Math.Min(2.0, newZoom));
+            if (DocScaleTransform != null)
+            {
+                DocScaleTransform.ScaleX = _currentZoom;
+                DocScaleTransform.ScaleY = _currentZoom;
+            }
+            if (TxtZoomLevel != null)
+            {
+                TxtZoomLevel.Text = $"{Math.Round(_currentZoom * 100)}%";
+            }
+        }
+
+        #endregion
 
         public void RefreshPreview(SghReportModel model)
         {
             if (model == null) return;
 
-            string versionText = $"Versión {model.Version ?? "01"}";
+            LoadInstitutionalAssets();
+
+            string versionText = $"Versión: {model.Version ?? "01"}";
+            string dateText = $"Fecha: {model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd")}";
+
             if (TxtHeaderVersion1 != null) TxtHeaderVersion1.Text = versionText;
             if (TxtHeaderVersion2 != null) TxtHeaderVersion2.Text = versionText;
             if (TxtHeaderVersion3 != null) TxtHeaderVersion3.Text = versionText;
             if (TxtHeaderVersion4 != null) TxtHeaderVersion4.Text = versionText;
             if (TxtHeaderVersion5 != null) TxtHeaderVersion5.Text = versionText;
 
+            if (TxtHeaderDate1 != null) TxtHeaderDate1.Text = dateText;
+            if (TxtHeaderDate2 != null) TxtHeaderDate2.Text = dateText;
+            if (TxtHeaderDate3 != null) TxtHeaderDate3.Text = dateText;
+            if (TxtHeaderDate4 != null) TxtHeaderDate4.Text = dateText;
+            if (TxtHeaderDate5 != null) TxtHeaderDate5.Text = dateText;
+
             // ========================================================
             // HOJA 1: PORTADA & APROBACIONES
             // ========================================================
-            TxtPrevProjectName.Text = !string.IsNullOrWhiteSpace(model.ProjectName) ? model.ProjectName.ToUpperInvariant() : "NOMBRE DEL PROYECTO";
+            TxtPrevProjectName.Text = !string.IsNullOrWhiteSpace(model.ProjectName) ? model.ProjectName.ToUpperInvariant() : "NOMBRE DE PROYECTO";
             TxtPrevProjectDesc.Text = !string.IsNullOrWhiteSpace(model.ProjectDescription) ? model.ProjectDescription : "Edificación destinada a diferentes usos y servicios bajo normativa NSR-10 y NFPA 101.";
 
-            TxtPrevDirector.Text = model.DirectorName ?? string.Empty;
-            TxtPrevCert.Text = model.DirectorCert ?? string.Empty;
+            TxtPrevDirector.Text = model.DirectorName ?? "Ing. Pedro Diaz";
+            TxtPrevCert.Text = model.DirectorCert ?? "Certificado NFPA 1 & 101 & 72";
             TxtPrevCoordinator.Text = model.CoordinatorName ?? string.Empty;
             TxtPrevAuthor.Text = model.AuthorName ?? string.Empty;
             TxtPrevCollaborator.Text = model.CollaboratorName ?? string.Empty;
-            TxtPrevDate.Text = model.ReportDate ?? string.Empty;
+            TxtPrevDate.Text = model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd");
 
             TxtPrevElabCargo.Text = model.ElaboroCargo ?? "Coordinadora Senior";
             TxtPrevElabNombre.Text = model.ElaboroNombre ?? "Alejandra Velandia";
-            TxtPrevElabFecha.Text = model.ElaboroFecha ?? model.ReportDate ?? string.Empty;
+            TxtPrevElabFecha.Text = model.ElaboroFecha ?? model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd");
 
             TxtPrevRevCargo.Text = model.RevisoCargo ?? "Responsable de SGC";
             TxtPrevRevNombre.Text = model.RevisoNombre ?? "Catherin Zamora";
-            TxtPrevRevFecha.Text = model.RevisoFecha ?? model.ReportDate ?? string.Empty;
+            TxtPrevRevFecha.Text = model.RevisoFecha ?? model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd");
 
             TxtPrevAproCargo.Text = model.AproboCargo ?? "Responsable de SGC";
             TxtPrevAproNombre.Text = model.AproboNombre ?? "Catherin Zamora";
-            TxtPrevAproFecha.Text = model.AproboFecha ?? model.ReportDate ?? string.Empty;
+            TxtPrevAproFecha.Text = model.AproboFecha ?? model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd");
+
+            if (TxtHistVersion != null) TxtHistVersion.Text = model.Version ?? "01";
+            if (TxtHistDate != null) TxtHistDate.Text = model.ReportDate ?? DateTime.Now.ToString("yyyy/MM/dd");
+            if (TxtHistApproved != null) TxtHistApproved.Text = model.AproboNombre ?? "Catherin Zamora";
 
             // ========================================================
             // HOJA 2: INTRODUCCIÓN & IMAGEN 1
             // ========================================================
             RunIntroProjName.Text = !string.IsNullOrWhiteSpace(model.ProjectName) ? model.ProjectName : "PROYECTO";
 
-            // Imagen 1 (Implantación)
+            // Imagen 1 (Implantación Inicial)
             if (!string.IsNullOrWhiteSpace(model.ImplantacionImagePath) && File.Exists(model.ImplantacionImagePath))
             {
                 try
@@ -156,7 +311,7 @@ namespace AutoCAD.SGH.UI
             string secClass = !string.IsNullOrWhiteSpace(model.SecondaryClassification) ? model.SecondaryClassification : "Almacenamiento (A)";
             TxtPrevClassifText.Text = $"De acuerdo con la clasificación de edificaciones estipulada en el capítulo K.2 se determina que el edificio se clasifica en {mainClass}, con espacios secundarios clasificados como {secClass}.";
 
-            // Construir tabla visual de clasificación
+            // Construir tabla visual de clasificación (Diseño oficial Word con bordes negros y encabezado #D9D9D9)
             PnlPrevClassificationTable.Children.Clear();
             AddClassificationRow("Grupos y subgrupos de ocupación", "Clasificación", isHeader: true);
             AddClassificationRow("C", "COMERCIAL", isHeader: false, isGroup: true);
@@ -167,28 +322,23 @@ namespace AutoCAD.SGH.UI
                 AddClassificationRow("(A-1)", "Riesgo moderado", isHeader: false);
             }
 
-            // Altura y Gran Altura
+            // Altura y Gran Altura (Formato de párrafo oficial continuo de Word)
             bool isHigh = model.IsHighRise;
             double threshold = model.HighRiseThreshold;
             string relation = isHigh ? $"superior o igual a {threshold:0}m" : $"inferior a {threshold:0}m";
             string highText = isHigh ? "ES DE GRAN ALTURA" : "NO ES DE GRAN ALTURA";
             string normCitation = string.Equals(model.SelectedNorm, "NFPA", StringComparison.OrdinalIgnoreCase) ? "NFPA 101" : "NSR-10 K.3.1.3";
-            TxtPrevHeightParagraph.Text = $"El edificio tiene una altura de {model.BuildingHeight.ToString("0.0", CultureInfo.InvariantCulture)} m, siendo {relation} desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que {highText} de acuerdo con {normCitation}.";
-
-            if (isHigh)
-            {
-                BadgePrevHighRise.Background = new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2));
-                BadgePrevHighRise.BorderBrush = new SolidColorBrush(Color.FromRgb(0xFC, 0xA5, 0xA5));
-                TxtPrevHighRiseBadge.Text = $"⚠ Edificio de Gran Altura (≥ {threshold:0}m)";
-                TxtPrevHighRiseBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
-            }
-            else
-            {
-                BadgePrevHighRise.Background = new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7));
-                BadgePrevHighRise.BorderBrush = new SolidColorBrush(Color.FromRgb(0x86, 0xEF, 0xAC));
-                TxtPrevHighRiseBadge.Text = $"✓ Edificio de Altura Convencional (< {threshold:0}m)";
-                TxtPrevHighRiseBadge.Foreground = new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34));
-            }
+            
+            TxtPrevHeightParagraph.Inlines.Clear();
+            TxtPrevHeightParagraph.Inlines.Add("El edificio tiene una altura de ");
+            TxtPrevHeightParagraph.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{model.BuildingHeight.ToString("0.0", CultureInfo.InvariantCulture)} m")));
+            TxtPrevHeightParagraph.Inlines.Add(", siendo ");
+            TxtPrevHeightParagraph.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run(relation)));
+            TxtPrevHeightParagraph.Inlines.Add(" desde el nivel de calle al último nivel habitable, por lo que se cataloga como edificio que ");
+            TxtPrevHeightParagraph.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run(highText)));
+            TxtPrevHeightParagraph.Inlines.Add(" de acuerdo con ");
+            TxtPrevHeightParagraph.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run(normCitation)));
+            TxtPrevHeightParagraph.Inlines.Add(".");
 
             TxtPrevFireText.Text = $"La clasificación del proyecto corresponde a la {model.RiskCategory ?? "Categoría II"}. Según el reglamento NSR-10 J.3.4 el proyecto deberá contemplar una resistencia general de {model.GeneralFireResistance ?? "2 Horas"} para sus elementos estructurales principales.";
 
@@ -200,14 +350,18 @@ namespace AutoCAD.SGH.UI
             var floorList = model.FloorExits ?? new List<SghFloorExitItem>();
             foreach (var f in floorList)
             {
-                var rowGrid = new Grid
+                var rowBorder = new Border
                 {
+                    BorderBrush = Brushes.Black,
+                    BorderThickness = new Thickness(0, 0, 0, 1),
                     Background = f.IsTotal ? new SolidColorBrush(Color.FromRgb(0xF1, 0xF5, 0xF9)) : Brushes.Transparent
                 };
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
+
+                var rowGrid = new Grid();
+                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(85) });
+                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(85) });
+                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(85) });
                 rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 // Piso
@@ -262,41 +416,53 @@ namespace AutoCAD.SGH.UI
                 Grid.SetColumn(tbExist, 3);
                 rowGrid.Children.Add(tbExist);
 
-                // Evaluación
+                // Evaluación (En Word es texto negrita limpio sin píldoras web)
                 bool cumple = (f.Evaluacion ?? "Cumple").IndexOf("Cumple", StringComparison.OrdinalIgnoreCase) >= 0 && (f.Evaluacion ?? "").IndexOf("No", StringComparison.OrdinalIgnoreCase) < 0;
-                var badgeEval = new Border
-                {
-                    Background = cumple ? new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7)) : new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2)),
-                    CornerRadius = new CornerRadius(2),
-                    Padding = new Thickness(6, 1, 6, 1),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                badgeEval.Child = new TextBlock
+                var tbEval = new TextBlock
                 {
                     Text = cumple ? "Cumple" : "No Cumple",
-                    FontSize = 8,
+                    FontSize = 8.5,
                     FontWeight = FontWeights.Bold,
-                    Foreground = cumple ? new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34)) : new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B))
+                    Foreground = Brushes.Black,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(2, 3, 2, 3)
                 };
-                Grid.SetColumn(badgeEval, 4);
-                rowGrid.Children.Add(badgeEval);
+                Grid.SetColumn(tbEval, 4);
+                rowGrid.Children.Add(tbEval);
 
-                PnlPrevFloorRows.Children.Add(rowGrid);
+                rowBorder.Child = rowGrid;
+                PnlPrevFloorRows.Children.Add(rowBorder);
             }
 
-            // Separación
+            // Separación entre salidas (Párrafo formal Word)
             double diag = model.DiagonalEdificioM;
             double reqSep = model.HasSprinklers ? (diag / 3.0) : (diag / 2.0);
             double actSep = model.SeparacionSalidasExistenteM;
             bool sepCumple = (model.CumplimientoSeparacionSalidas ?? "Cumple").IndexOf("No", StringComparison.OrdinalIgnoreCase) < 0;
+            string sepEvalText = sepCumple ? "CUMPLE" : "NO CUMPLE";
 
-            TxtPrevSeparationCalc.Text = $"Diagonal edificio: {diag:0.0}m. Separación mínima requerida: {reqSep:0.0}m {(model.HasSprinklers ? "(1/3 con rociadores)" : "(1/2 sin rociadores)")}. Existente: {actSep:0.0}m.";
-            TxtPrevSeparationResult.Text = sepCumple ? "Cumple" : "No Cumple";
-            BadgePrevSeparation.Background = sepCumple ? new SolidColorBrush(Color.FromRgb(0xDC, 0xFC, 0xE7)) : new SolidColorBrush(Color.FromRgb(0xFE, 0xE2, 0xE2));
-            TxtPrevSeparationResult.Foreground = sepCumple ? new SolidColorBrush(Color.FromRgb(0x16, 0x65, 0x34)) : new SolidColorBrush(Color.FromRgb(0x99, 0x1B, 0x1B));
+            TxtPrevSeparationCalc.Inlines.Clear();
+            TxtPrevSeparationCalc.Inlines.Add("La diagonal máxima del edificio es de ");
+            TxtPrevSeparationCalc.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{diag:0.0}m")));
+            TxtPrevSeparationCalc.Inlines.Add($". La separación mínima requerida entre salidas {(model.HasSprinklers ? "(1/3 con rociadores)" : "(1/2 sin rociadores)")} es de ");
+            TxtPrevSeparationCalc.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{reqSep:0.0}m")));
+            TxtPrevSeparationCalc.Inlines.Add(". La distancia existente entre salidas en el proyecto es de ");
+            TxtPrevSeparationCalc.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{actSep:0.0}m")));
+            TxtPrevSeparationCalc.Inlines.Add(", por lo que ");
+            TxtPrevSeparationCalc.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run(sepEvalText)));
+            TxtPrevSeparationCalc.Inlines.Add(" con el requerimiento normativo.");
 
-            TxtPrevDistanceText.Text = $"Distancia máxima de recorrido permitida: {model.DistanciaRecorridoMaxPermitidaM:0.0}m. Distancia existente en el proyecto: {model.DistanciaRecorridoExistenteM:0.0}m. Evaluación: {model.CumplimientoDistanciaRecorrido ?? "Cumple"}.";
+            // Distancia máxima de recorrido
+            string distEval = model.CumplimientoDistanciaRecorrido ?? "Cumple";
+            TxtPrevDistanceText.Inlines.Clear();
+            TxtPrevDistanceText.Inlines.Add("La distancia máxima de recorrido permitida hasta una salida es de ");
+            TxtPrevDistanceText.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{model.DistanciaRecorridoMaxPermitidaM:0.0}m")));
+            TxtPrevDistanceText.Inlines.Add(". La distancia máxima existente calculada en el proyecto es de ");
+            TxtPrevDistanceText.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run($"{model.DistanciaRecorridoExistenteM:0.0}m")));
+            TxtPrevDistanceText.Inlines.Add($", con lo cual la edificación ");
+            TxtPrevDistanceText.Inlines.Add(new System.Windows.Documents.Bold(new System.Windows.Documents.Run(distEval.ToUpperInvariant())));
+            TxtPrevDistanceText.Inlines.Add(" con los parámetros de evacuación.");
 
             // ========================================================
             // HOJA 5: CONCLUSIONES & IMAGEN 2
@@ -314,16 +480,17 @@ namespace AutoCAD.SGH.UI
                     tr = tr.Substring(1).Trim();
                 }
 
-                var bulletGrid = new Grid { Margin = new Thickness(0, 2, 0, 3) };
-                bulletGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16) });
+                // Viñeta Word oficial con sangría francesa
+                var bulletGrid = new Grid { Margin = new Thickness(0, 1.5, 0, 3) };
+                bulletGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(14) });
                 bulletGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 var dot = new TextBlock
                 {
                     Text = "•",
                     FontWeight = FontWeights.Bold,
-                    FontSize = 12,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x1B, 0x36, 0x5D)),
+                    FontSize = 10,
+                    Foreground = Brushes.Black,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 Grid.SetColumn(dot, 0);
@@ -332,8 +499,9 @@ namespace AutoCAD.SGH.UI
                 var tb = new TextBlock
                 {
                     Text = tr,
-                    FontSize = 9.5,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x1E, 0x29, 0x3B)),
+                    FontSize = 9,
+                    Foreground = Brushes.Black,
+                    TextAlignment = TextAlignment.Justify,
                     TextWrapping = TextWrapping.Wrap,
                     LineHeight = 13.5
                 };
@@ -343,7 +511,7 @@ namespace AutoCAD.SGH.UI
                 PnlPrevConclusionsList.Children.Add(bulletGrid);
             }
 
-            // Imagen 2 (Localización)
+            // Imagen 2 (Localización / Edificio)
             if (!string.IsNullOrWhiteSpace(model.LocalizacionImagePath) && File.Exists(model.LocalizacionImagePath))
             {
                 try
@@ -371,12 +539,16 @@ namespace AutoCAD.SGH.UI
 
         private void AddClassificationRow(string col1, string col2, bool isHeader = false, bool isGroup = false)
         {
-            var grid = new Grid
+            var border = new Border
             {
+                BorderBrush = Brushes.Black,
+                BorderThickness = new Thickness(0, 0, 0, 1),
                 Background = isHeader || isGroup 
                     ? new SolidColorBrush(Color.FromRgb(0xD9, 0xD9, 0xD9)) 
                     : Brushes.Transparent
             };
+
+            var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
@@ -387,7 +559,7 @@ namespace AutoCAD.SGH.UI
                 FontSize = 8.5,
                 Foreground = Brushes.Black,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4, 2, 4, 2)
+                Margin = new Thickness(4, 2.5, 4, 2.5)
             };
             Grid.SetColumn(tb1, 0);
             grid.Children.Add(tb1);
@@ -399,12 +571,13 @@ namespace AutoCAD.SGH.UI
                 FontSize = 8.5,
                 Foreground = Brushes.Black,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(4, 2, 4, 2)
+                Margin = new Thickness(4, 2.5, 4, 2.5)
             };
             Grid.SetColumn(tb2, 1);
             grid.Children.Add(tb2);
 
-            PnlPrevClassificationTable.Children.Add(grid);
+            border.Child = grid;
+            PnlPrevClassificationTable.Children.Add(border);
         }
     }
 }

@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AutoCAD.SGH.UI"
         Title="DICTA - Asistente de Exportación e Informe SGH" 
-        Height="840" Width="1080"
-        MinHeight="700" MinWidth="940"
+        Height="840" Width="1560"
+        MinHeight="700" MinWidth="1080"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
         Background="#1E1E2E"
@@ -186,7 +186,7 @@
             </Setter>
         </Style>
 
-        <!-- Estilo con alto contraste para el botón de Vista Dividida -->
+        <!-- Estilo con alto contraste para el botón de Vista Previa -->
         <Style x:Key="SidePreviewToggleButtonStyle" TargetType="ToggleButton">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -206,8 +206,8 @@
                                 Padding="{TemplateBinding Padding}" 
                                 SnapsToDevicePixels="True">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock x:Name="IconText" Text="◫" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="#89B4FA"/>
-                                <TextBlock x:Name="LabelText" Text="Vista Dividida" FontWeight="SemiBold" FontSize="11.5" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                                <TextBlock x:Name="IconText" Text="👁" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="#89B4FA"/>
+                                <TextBlock x:Name="LabelText" Text="Vista Previa" FontWeight="SemiBold" FontSize="11.5" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -273,9 +273,10 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <ToggleButton x:Name="BtnToggleSidePreview" 
                               Style="{StaticResource SidePreviewToggleButtonStyle}"
+                              IsChecked="True"
                               Margin="0,0,12,0" 
                               Click="BtnToggleSidePreview_Click"
-                              ToolTip="Activar o desactivar panel lateral de Vista Previa en Vivo de Hoja Word"/>
+                              ToolTip="Mostrar u ocultar panel lateral de Vista Previa"/>
 
                 <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,0,10,0">
                     <StackPanel HorizontalAlignment="Center">
@@ -943,10 +944,10 @@
         </TabControl>
 
             <!-- Divisor GridSplitter (Columna 1) -->
-            <GridSplitter Grid.Column="1" x:Name="PreviewSplitter" Width="6" Background="#313244" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="Collapsed" Margin="6,0"/>
+            <GridSplitter Grid.Column="1" x:Name="PreviewSplitter" Width="6" Background="#313244" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="Visible" Margin="6,0"/>
 
             <!-- Panel de Vista Previa Lateral en Vivo (Columna 2) -->
-            <Border Grid.Column="2" x:Name="PnlSidePreview" Width="580" Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Visibility="Collapsed" Margin="4,0,0,0">
+            <Border Grid.Column="2" x:Name="PnlSidePreview" Width="660" Background="#E5E7EB" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Visibility="Visible" Margin="4,0,0,0">
                 <local:SghWordPreviewControl x:Name="SideWordPreview"/>
             </Border>
         </Grid>

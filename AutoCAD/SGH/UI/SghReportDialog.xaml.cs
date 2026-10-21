@@ -65,7 +65,13 @@ namespace AutoCAD.SGH.UI
             BindModelToUI();
             _isInitializing = false;
             HookLivePreviewEvents();
+
+            // La vista previa se abre predeterminadamente
+            BtnToggleSidePreview.IsChecked = true;
+            PnlSidePreview.Visibility = Visibility.Visible;
+            PreviewSplitter.Visibility = Visibility.Visible;
             UpdateLivePreview();
+            SideWordPreview?.ScrollToSection(MainTabControl.SelectedIndex);
         }
 
         private void InitializeFloorExitsData(List<SghSpace> spaces)
@@ -1219,9 +1225,9 @@ namespace AutoCAD.SGH.UI
             {
                 PnlSidePreview.Visibility = Visibility.Visible;
                 PreviewSplitter.Visibility = Visibility.Visible;
-                if (this.Width < 1440)
+                if (this.Width < 1520)
                 {
-                    this.Width = 1480;
+                    this.Width = 1560;
                 }
                 UpdateLivePreview();
                 SideWordPreview?.ScrollToSection(MainTabControl.SelectedIndex);
