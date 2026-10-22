@@ -73,6 +73,8 @@ namespace MiNamespace
         private Label _lblFooterDesc;
         private string _activeCategoryFilter = "TODAS";
 
+        private bool _isAdjustingLayout = false;
+
         public TagsCoorWindow() : this(null)
         {
         }
@@ -86,7 +88,7 @@ namespace MiNamespace
         private void InitializeComponent()
         {
             this.Text = "DICTA - Tags de Coordinación";
-            this.Size = new Size(1020, 730);
+            this.Size = new Size(1040, 760);
             this.MinimumSize = new Size(880, 580);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.Sizable;
@@ -104,8 +106,6 @@ namespace MiNamespace
                 ShowAlways = true
             };
 
-            // =========================================================================
-            // 1. HEADER MODERNO CON GRADIENTE, TÍTULO Y BUSCADOR
             // =========================================================================
             // 1. HEADER MODERNO CON GRADIENTE DICTA Y TÍTULO CENTRADO RESPONSIVO
             // =========================================================================
@@ -305,12 +305,12 @@ namespace MiNamespace
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                Padding = new Padding(16, 14, 16, 14),
+                Padding = new Padding(20, 12, 20, 12),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true
             };
 
-            // Construir las 17 tarjetas de herramientas con volteo y descripción en la tarjeta
+            // Construir las 17 tarjetas de herramientas con volteo y paleta pastel por tema
             BuildFlipCards(toolTip);
 
             // Montar la interfaz
@@ -319,6 +319,59 @@ namespace MiNamespace
             this.Controls.Add(pnlHeader);
             this.Controls.Add(pnlFooter);
             this.CancelButton = btnCerrar;
+
+            // Ajuste responsivo para que las tarjetas queden exactamente a par con la margen del cuadro
+            _pnlGrid.Resize += (s, e) => AdjustGridCardSizes();
+            this.Shown += (s, e) => AdjustGridCardSizes();
+            AdjustGridCardSizes();
+        }
+
+        /// <summary>
+        /// Ajusta dinámicamente el ancho de las tarjetas y el padding del mosaico para que las columnas
+        /// queden perfectamente balanceadas y a par con la margen del cuadro (sin espacios muertos a la derecha).
+        /// </summary>
+        private void AdjustGridCardSizes()
+        {
+            if (_isAdjustingLayout || _pnlGrid == null || _pnlGrid.ClientSize.Width <= 0) return;
+            try
+            {
+                _isAdjustingLayout = true;
+                _pnlGrid.SuspendLayout();
+
+                int clientWidth = _pnlGrid.ClientSize.Width;
+                int targetCols = 5;
+                if (clientWidth < 760) targetCols = 4;
+                if (clientWidth < 600) targetCols = 3;
+                if (clientWidth > 1450) targetCols = 6;
+
+                int horizontalGap = 12;
+                int baseSideMargin = 20; // Margen lateral uniforme que alinea con el header, filtros y footer (20px)
+
+                int totalGaps = (targetCols - 1) * horizontalGap;
+                int availableForCards = clientWidth - (baseSideMargin * 2) - totalGaps;
+                if (availableForCards <= 0) return;
+
+                int cardWidth = availableForCards / targetCols;
+                int remainder = availableForCards % targetCols;
+                int actualSideMargin = baseSideMargin + (remainder / 2);
+
+                int cardMarginH = horizontalGap / 2;
+                int padH = Math.Max(0, actualSideMargin - cardMarginH);
+
+                _pnlGrid.Padding = new Padding(padH, 12, padH, 12);
+
+                int cardHeight = 194;
+                foreach (var card in _cards)
+                {
+                    card.SetCardSize(cardWidth, cardHeight);
+                    card.Margin = new Padding(cardMarginH, 7, cardMarginH, 7);
+                }
+            }
+            finally
+            {
+                _pnlGrid.ResumeLayout();
+                _isAdjustingLayout = false;
+            }
         }
 
         private static void UpdateChipVisual(Button btn, bool isSelected, Color themeColor)
@@ -342,143 +395,151 @@ namespace MiNamespace
             _cards.Clear();
             _pnlGrid.Controls.Clear();
 
-            // -------------------------------------------------------------
-            // REDES SECAS (7 Herramientas) - Azul Real (#1D4ED8 / #2563EB)
-            // -------------------------------------------------------------
-            Color secasTheme = Color.FromArgb(29, 78, 216);
-            Color secasSoft = Color.FromArgb(239, 246, 255);
+            // -------------------------------------------------------------------------
+            // REDES SECAS (7 Herramientas) - AZUL PASTEL
+            // -------------------------------------------------------------------------
+            Color secasTheme = Color.FromArgb(29, 78, 216);      // Azul real para acento y texto activo
+            Color secasPastel = Color.FromArgb(235, 244, 255);    // Azul pastel suave (#EBF4FF)
+            Color secasHover = Color.FromArgb(220, 236, 254);     // Azul pastel al hover (#DCECFE)
+            Color secasBorder = Color.FromArgb(191, 219, 254);    // Borde azul pastel (#BFDBFE)
 
-            AddCard("Cotas Nivel", "SECAS", "📏", secasTheme, secasSoft,
+            AddCard("Cotas Nivel", "SECAS", "📏", secasTheme, secasPastel, secasHover, secasBorder,
                 "Cotas de nivel en bandejas y conduits.",
                 "Coloca cotas de nivel en elementos de redes secas (Bandejas portacables, Conduits, etc.).",
                 "Por Selección Múltiple", TagsCoorAction.NivelesPorSeleccion,
                 "Cotas Automático", TagsCoorAction.NivelesTodaLaVista,
                 toolTip);
 
-            AddCard("Tags \"C.N\"", "SECAS", "⚡", secasTheme, secasSoft,
+            AddCard("Tags \"C.N\"", "SECAS", "⚡", secasTheme, secasPastel, secasHover, secasBorder,
                 "Cambios de nivel con tags 'C.N'.",
                 "Etiqueta cambios de nivel en bandejas y conduits con Tags 'C.N'.",
                 "Por Selección Múltiple", TagsCoorAction.CambioDeNivelPorSeleccion,
                 "Tag Automático", TagsCoorAction.CambioDeNivelAuto,
                 toolTip);
 
-            AddCard("Cotas Alineadas", "SECAS", "📐", secasTheme, secasSoft,
+            AddCard("Cotas Alineadas", "SECAS", "📐", secasTheme, secasPastel, secasHover, secasBorder,
                 "Cadenas de cotas entre ejes y referencias.",
                 "Coloca cotas alineadas en cadenas entre referencias paralelas (ejes en instalaciones, caras en arquitectura).",
                 "Por Selección Múltiple", TagsCoorAction.CotasAlineadasPorSeleccion,
                 "Cotas Automático", TagsCoorAction.CotasAlineadasAuto,
                 toolTip);
 
-            AddCard("Camas Conduits", "SECAS", "⚎", secasTheme, secasSoft,
+            AddCard("Camas Conduits", "SECAS", "⚎", secasTheme, secasPastel, secasHover, secasBorder,
                 "Camas de conduits (N)-Size-Material.",
                 "Etiqueta camas de conduits en planta indicando cantidad por nivel: (N)- Size - Material/Tipo.",
                 "Por Selección Múltiple", TagsCoorAction.CamasConduitsPorSeleccion,
                 "Camas Automático", TagsCoorAction.CamasConduitsAuto,
                 toolTip);
 
-            AddCard("Camas Tuberías", "SECAS", "🔀", secasTheme, secasSoft,
+            AddCard("Camas Tuberías", "SECAS", "🔀", secasTheme, secasPastel, secasHover, secasBorder,
                 "Salidas en tableros y cortes técnicos.",
                 "Etiqueta y acota camas de tuberías/salidas de tablero en detalles y cortes.",
                 "Por Selección Múltiple", TagsCoorAction.CamasTubosPorSeleccion,
                 "Camas Automático", TagsCoorAction.CamasTubosAuto,
                 toolTip);
 
-            AddCard("Cotas Bandejas", "SECAS", "▤", secasTheme, secasSoft,
+            AddCard("Cotas Bandejas", "SECAS", "▤", secasTheme, secasPastel, secasHover, secasBorder,
                 "Acota bandejas a la estructura más cercana.",
                 "Acota bandejas portacables a la estructura más cercana (muros, vigas, columnas) sin repetir ancho.",
                 "Por Selección Múltiple", TagsCoorAction.CotasBandejasPorSeleccion,
                 "Bandejas Automático", TagsCoorAction.CotasBandejasAuto,
                 toolTip);
 
-            AddCard("Conduit Tags", "SECAS", "🏷️", secasTheme, secasSoft,
+            AddCard("Conduit Tags", "SECAS", "🏷️", secasTheme, secasPastel, secasHover, secasBorder,
                 "Etiqueta conduits Type Name + Size.",
                 "Etiqueta conduits de Eléctrico, Electrónico y HVAC (Control) con el formato Type Name + Size.",
                 "Por Selección Múltiple", TagsCoorAction.ConduitTagsPorSeleccion,
                 "Tag Automático", TagsCoorAction.ConduitTagsAuto,
                 toolTip);
 
-            // -------------------------------------------------------------
-            // REDES HÚMEDAS (6 Herramientas) - Teal (#0D9488)
-            // -------------------------------------------------------------
-            Color humedasTheme = Color.FromArgb(13, 148, 136);
-            Color humedasSoft = Color.FromArgb(240, 253, 250);
+            // -------------------------------------------------------------------------
+            // REDES HÚMEDAS (6 Herramientas) - VERDE PASTEL
+            // -------------------------------------------------------------------------
+            Color humedasTheme = Color.FromArgb(13, 148, 136);    // Teal / verde acento
+            Color humedasPastel = Color.FromArgb(234, 250, 242);  // Verde pastel suave (#EAFAF2)
+            Color humedasHover = Color.FromArgb(214, 246, 233);   // Verde pastel al hover (#D6F6E9)
+            Color humedasBorder = Color.FromArgb(167, 243, 208);  // Borde verde pastel (#A7F3D0)
 
-            AddCard("Tag Pendientes", "HUMEDAS", "∠%", humedasTheme, humedasSoft,
+            AddCard("Tag Pendientes", "HUMEDAS", "∠%", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Pendientes (%) con flecha de flujo.",
                 "Etiqueta pendientes (%) por clic con flecha de flujo en tuberías de desagüe.",
                 "Por Clic", TagsCoorAction.PendientesPorClic,
-                "Automático en Vista", TagsCoorAction.PendientesTodoEnVista,
+                null, TagsCoorAction.Cancelar,
                 toolTip);
 
-            AddCard("Tag Material", "HUMEDAS", "💧", humedasTheme, humedasSoft,
+            AddCard("Tag Material", "HUMEDAS", "💧", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Material en tuberías y accesorios.",
                 "Etiqueta el material en tuberías y accesorios hidrosanitarios.",
                 "Por Selección Múltiple", TagsCoorAction.MaterialPorSeleccion,
                 "Tag Automático", TagsCoorAction.MaterialTodoEnVista,
                 toolTip);
 
-            AddCard("Embebidas Placa", "HUMEDAS", "▰", humedasTheme, humedasSoft,
+            AddCard("Embebidas Placa", "HUMEDAS", "▰", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Tuberías en placa con ajuste de rango.",
                 "Acota tuberías embebidas en placa a elementos estructurales y ajusta el rango de vista (-15 cm).",
                 "Por Selección Múltiple", TagsCoorAction.EmbebidasPlacaPorSeleccion,
                 "Placa Automático", TagsCoorAction.EmbebidasPlacaAuto,
                 toolTip);
 
-            AddCard("Embebidas Piso", "HUMEDAS", "▬", humedasTheme, humedasSoft,
+            AddCard("Embebidas Piso", "HUMEDAS", "▬", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Tuberías en afinado a muros o estructura.",
                 "Acota tuberías en afinado de piso a muros arquitectónicos o estructura.",
                 "Por Selección Múltiple", TagsCoorAction.EmbebidasPisoPorSeleccion,
                 "Piso Automático", TagsCoorAction.EmbebidasPisoAuto,
                 toolTip);
 
-            AddCard("Tub. Elevadas", "HUMEDAS", "↥", humedasTheme, humedasSoft,
+            AddCard("Tub. Elevadas", "HUMEDAS", "↥", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Tuberías elevadas a estructura superior.",
                 "Acota tuberías elevadas o sobre cielo raso a la estructura inmediatamente superior.",
                 "Por Selección Múltiple", TagsCoorAction.ElevadasPorSeleccion,
                 "Elevadas Automático", TagsCoorAction.ElevadasAuto,
                 toolTip);
 
-            AddCard("Pases en Viga", "HUMEDAS", "▣", humedasTheme, humedasSoft,
+            AddCard("Pases en Viga", "HUMEDAS", "▣", humedasTheme, humedasPastel, humedasHover, humedasBorder,
                 "Dimensión de pases en vigas estructurales.",
                 "Etiqueta pases de tuberías en vigas mostrando únicamente la dimensión (Size / Diámetro).",
                 "Por Selección Múltiple", TagsCoorAction.PasesVigaPorSeleccion,
                 "Pases Automático", TagsCoorAction.PasesVigaAuto,
                 toolTip);
 
-            // -------------------------------------------------------------
-            // HVAC (2 Herramientas) - Coral / Rosa Carmín (#E11D48)
-            // -------------------------------------------------------------
-            Color hvacTheme = Color.FromArgb(225, 29, 72);
-            Color hvacSoft = Color.FromArgb(255, 241, 242);
+            // -------------------------------------------------------------------------
+            // HVAC (2 Herramientas) - ROJO PASTEL
+            // -------------------------------------------------------------------------
+            Color hvacTheme = Color.FromArgb(225, 29, 72);        // Rojo carmín acento
+            Color hvacPastel = Color.FromArgb(254, 242, 242);     // Rojo pastel suave (#FEF2F2)
+            Color hvacHover = Color.FromArgb(254, 226, 226);      // Rojo pastel al hover (#FEE2E2)
+            Color hvacBorder = Color.FromArgb(254, 202, 202);     // Borde rojo pastel (#FECACA)
 
-            AddCard("Tags Ductos", "HVAC", "▭", hvacTheme, hvacSoft,
+            AddCard("Tags Ductos", "HVAC", "▭", hvacTheme, hvacPastel, hvacHover, hvacBorder,
                 "Ductos de climatización (WxH + Mat).",
                 "Etiqueta ductos de climatización y ventilación con dimensiones (ancho x alto) y materialidad.",
                 "Solo Dimensiones", TagsCoorAction.TagDuctosSoloDimensionesSel,
                 "Dimensiones + Material", TagsCoorAction.TagDuctosDimensionesMaterialSel,
                 toolTip);
 
-            AddCard("Tags Exostos", "HVAC", "🌀", hvacTheme, hvacSoft,
+            AddCard("Tags Exostos", "HVAC", "🌀", hvacTheme, hvacPastel, hvacHover, hvacBorder,
                 "Ductos y tuberías de exostos.",
                 "Etiqueta ductos y tuberías de exostos indicando diámetro y materialidad.",
                 "Por Selección Múltiple", TagsCoorAction.ExostosPorSeleccion,
                 "Tag Automático", TagsCoorAction.ExostosAuto,
                 toolTip);
 
-            // -------------------------------------------------------------
-            // GENERALES (2 Herramientas) - Púrpura Imperial (#7C3AED)
-            // -------------------------------------------------------------
-            Color genTheme = Color.FromArgb(124, 58, 237);
-            Color genSoft = Color.FromArgb(245, 243, 255);
+            // -------------------------------------------------------------------------
+            // GENERALES (2 Herramientas) - MORADO PASTEL
+            // -------------------------------------------------------------------------
+            Color genTheme = Color.FromArgb(124, 58, 237);        // Morado / púrpura acento
+            Color genPastel = Color.FromArgb(245, 243, 255);      // Morado pastel suave (#F5F3FF)
+            Color genHover = Color.FromArgb(237, 233, 254);       // Morado pastel al hover (#EDE9FE)
+            Color genBorder = Color.FromArgb(221, 214, 254);      // Borde morado pastel (#DDD6FE)
 
-            AddCard("Sube / Baja", "GENERALES", "⇅", genTheme, genSoft,
+            AddCard("Sube / Baja", "GENERALES", "⇅", genTheme, genPastel, genHover, genBorder,
                 "Etiquetas SUBE o BAJA en verticales.",
                 "Coloca etiquetas 'SUBE' o 'BAJA' en accesorios y tuberías verticales.",
                 "Tag SUBE", TagsCoorAction.TagSubePorSeleccion,
                 "Tag BAJA", TagsCoorAction.TagBajaPorSeleccion,
                 toolTip);
 
-            AddCard("Tag Room", "GENERALES", "🚪", genTheme, genSoft,
+            AddCard("Tag Room", "GENERALES", "🚪", genTheme, genPastel, genHover, genBorder,
                 "Buitrones y cuartos técnicos con tags.",
                 "Etiqueta habitaciones y buitrones técnicos (HID, ELE, HVAC, RCI y cuartos técnicos).",
                 "Por Selección Múltiple", TagsCoorAction.TagRoomPorSeleccion,
@@ -486,12 +547,14 @@ namespace MiNamespace
                 toolTip);
         }
 
-        private void AddCard(string title, string category, string iconSymbol, Color themeColor, Color softBg,
+        private void AddCard(string title, string category, string iconSymbol,
+            Color themeColor, Color pastelBg, Color pastelHoverBg, Color pastelBorder,
             string shortDescription, string fullDescription,
             string opt1Text, TagsCoorAction opt1Action, string opt2Text, TagsCoorAction opt2Action,
             ToolTip toolTip)
         {
-            var card = new FlipCardControl(title, category, iconSymbol, themeColor, softBg,
+            var card = new FlipCardControl(title, category, iconSymbol,
+                themeColor, pastelBg, pastelHoverBg, pastelBorder,
                 shortDescription, fullDescription, opt1Text, opt1Action, opt2Text, opt2Action);
 
             card.ActionTriggered += (act) =>
@@ -531,7 +594,10 @@ namespace MiNamespace
                 }
             };
 
-            toolTip.SetToolTip(card, $"{title}\n\n{fullDescription}\n\n👉 Clic para girar y seleccionar modo.");
+            string tipHint = card.HasSecondOption 
+                ? "👉 Clic para girar y seleccionar modo." 
+                : $"👉 Clic para girar y ejecutar {opt1Text.ToLower()}.";
+            toolTip.SetToolTip(card, $"{title}\n\n{fullDescription}\n\n{tipHint}");
 
             _cards.Add(card);
             _pnlGrid.Controls.Add(card);
@@ -550,6 +616,7 @@ namespace MiNamespace
                 }
             }
             _pnlGrid.ResumeLayout();
+            AdjustGridCardSizes();
         }
 
         public static void ApplyRoundedStyle(Control control, int radius, Color? borderColor)
@@ -659,7 +726,7 @@ namespace MiNamespace
     }
 
     /// <summary>
-    /// Tarjeta Flotante con Relieve 3D y Efecto Flip (Giro):
+    /// Tarjeta Flotante con Relieve 3D, Efecto Flip (Giro) y paleta de color pastel temática:
     /// Muestra ícono, nombre y descripción visible directamente en la tarjeta frontal.
     /// Al hacer clic, gira revelando los modos de ejecución en el reverso.
     /// </summary>
@@ -669,7 +736,10 @@ namespace MiNamespace
         public string Category { get; }
         public string IconSymbol { get; }
         public Color ThemeColor { get; }
-        public Color SoftBg { get; }
+        public Color PastelBg { get; }
+        public Color PastelHoverBg { get; }
+        public Color PastelBorder { get; }
+        public Color SoftBg => PastelBg;
         public string ShortDescription { get; }
         public string FullDescription { get; }
 
@@ -677,6 +747,7 @@ namespace MiNamespace
         public TagsCoorAction Opt1Action { get; }
         public string Opt2Text { get; }
         public TagsCoorAction Opt2Action { get; }
+        public bool HasSecondOption => !string.IsNullOrWhiteSpace(Opt2Text) && Opt2Action != TagsCoorAction.Cancelar;
 
         public bool IsFlipped { get; private set; } = false;
 
@@ -687,16 +758,22 @@ namespace MiNamespace
 
         private CardFacePanel _pnlFront;
         private CardFacePanel _pnlBack;
+        private Panel _pnlIconCircle;
+        private Label _lblTitle;
         private Label _lblShortDesc;
         private BorderLabel _lblFlipHint;
+        private Panel _pnlBackHeader;
+        private Label _lblBackTitle;
+        private Button _btnOpt1;
+        private Button _btnOpt2;
+        private Label _lblBackHint;
         private System.Windows.Forms.Timer _flipTimer;
         private int _flipStep = 0;
         private const int TOTAL_FLIP_STEPS = 16;
         private bool _isFlippingToBack = true;
-        private const int TARGET_WIDTH = 168;
-        private const int TARGET_HEIGHT = 196;
 
-        public FlipCardControl(string title, string category, string iconSymbol, Color themeColor, Color softBg,
+        public FlipCardControl(string title, string category, string iconSymbol,
+            Color themeColor, Color pastelBg, Color pastelHoverBg, Color pastelBorder,
             string shortDescription, string fullDescription,
             string opt1Text, TagsCoorAction opt1Action, string opt2Text, TagsCoorAction opt2Action)
         {
@@ -704,7 +781,9 @@ namespace MiNamespace
             Category = category;
             IconSymbol = iconSymbol;
             ThemeColor = themeColor;
-            SoftBg = softBg;
+            PastelBg = pastelBg;
+            PastelHoverBg = pastelHoverBg;
+            PastelBorder = pastelBorder;
             ShortDescription = shortDescription;
             FullDescription = fullDescription;
             Opt1Text = opt1Text;
@@ -712,8 +791,8 @@ namespace MiNamespace
             Opt2Text = opt2Text;
             Opt2Action = opt2Action;
 
-            this.Size = new Size(TARGET_WIDTH, TARGET_HEIGHT);
-            this.Margin = new Padding(5, 7, 5, 7);
+            this.Size = new Size(180, 194);
+            this.Margin = new Padding(6, 7, 6, 7);
             this.BackColor = Color.Transparent;
             this.DoubleBuffered = true;
 
@@ -728,25 +807,113 @@ namespace MiNamespace
 
             _flipTimer = new System.Windows.Forms.Timer { Interval = 10 };
             _flipTimer.Tick += FlipTimer_Tick;
+
+            LayoutControls();
+        }
+
+        public void SetCardSize(int w, int h)
+        {
+            if (this.Width != w || this.Height != h)
+            {
+                this.Size = new Size(w, h);
+                LayoutControls();
+            }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            LayoutControls();
+        }
+
+        private void LayoutControls()
+        {
+            int w = this.Width;
+            int h = this.Height;
+            if (w <= 0 || h <= 0) return;
+
+            if (_pnlFront != null)
+            {
+                if (!IsFlipped && !_flipTimer.Enabled)
+                {
+                    _pnlFront.Bounds = new Rectangle(0, 0, w, h);
+                }
+                if (_pnlIconCircle != null)
+                {
+                    _pnlIconCircle.Location = new Point((w - _pnlIconCircle.Width) / 2, 12);
+                }
+                if (_lblTitle != null)
+                {
+                    _lblTitle.Location = new Point(4, 58);
+                    _lblTitle.Size = new Size(w - 8, 20);
+                }
+                if (_lblShortDesc != null)
+                {
+                    _lblShortDesc.Location = new Point(6, 80);
+                    _lblShortDesc.Size = new Size(w - 12, 38);
+                }
+                if (_lblFlipHint != null)
+                {
+                    int hintW = Math.Min(116, w - 24);
+                    _lblFlipHint.Size = new Size(hintW, 24);
+                    _lblFlipHint.Location = new Point((w - hintW) / 2, h - 34);
+                }
+            }
+
+            if (_pnlBack != null)
+            {
+                if (IsFlipped && !_flipTimer.Enabled)
+                {
+                    _pnlBack.Bounds = new Rectangle(0, 0, w, h);
+                }
+                int btnW = Math.Max(110, w - 20);
+                int btnLeft = (w - btnW) / 2;
+                if (_btnOpt1 != null)
+                {
+                    if (HasSecondOption)
+                    {
+                        _btnOpt1.Size = new Size(btnW, 44);
+                        _btnOpt1.Location = new Point(btnLeft, 42);
+                    }
+                    else
+                    {
+                        // Centrado vertical armónico cuando solo hay 1 modo (ej. Por Clic)
+                        _btnOpt1.Size = new Size(btnW, 50);
+                        _btnOpt1.Location = new Point(btnLeft, (h - 50) / 2);
+                    }
+                }
+                if (_btnOpt2 != null)
+                {
+                    _btnOpt2.Visible = HasSecondOption;
+                    if (HasSecondOption)
+                    {
+                        _btnOpt2.Size = new Size(btnW, 44);
+                        _btnOpt2.Location = new Point(btnLeft, 92);
+                    }
+                }
+                if (_lblBackHint != null)
+                {
+                    _lblBackHint.Size = new Size(btnW, 20);
+                    _lblBackHint.Location = new Point(btnLeft, h - 26);
+                }
+            }
         }
 
         private void BuildFrontPanel()
         {
-            _pnlFront = new CardFacePanel(ThemeColor, isBackFace: false)
+            _pnlFront = new CardFacePanel(ThemeColor, PastelBg, PastelHoverBg, PastelBorder, isBackFace: false)
             {
-                Dock = DockStyle.Fill,
                 Cursor = Cursors.Hand
             };
 
-            // Círculo de ícono superior con sombra y borde suave
-            Panel pnlIconCircle = new Panel
+            // Círculo de ícono superior con fondo blanco que resalta sobre el color pastel
+            _pnlIconCircle = new Panel
             {
                 Size = new Size(42, 42),
-                Location = new Point((TARGET_WIDTH - 42) / 2, 12),
-                BackColor = SoftBg,
+                BackColor = Color.White,
                 Cursor = Cursors.Hand
             };
-            TagsCoorWindow.ApplyRoundedStyle(pnlIconCircle, 21, Color.FromArgb(226, 232, 240));
+            TagsCoorWindow.ApplyRoundedStyle(_pnlIconCircle, 21, PastelBorder);
 
             Label lblIcon = new Label
             {
@@ -758,29 +925,25 @@ namespace MiNamespace
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
-            pnlIconCircle.Controls.Add(lblIcon);
+            _pnlIconCircle.Controls.Add(lblIcon);
 
-            // Título de la herramienta en negrita
-            Label lblTitle = new Label
+            // Título de la herramienta en negrita y máxima legibilidad
+            _lblTitle = new Label
             {
                 Text = Title,
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(15, 23, 42), // Slate 900
-                Location = new Point(4, 58),
-                Size = new Size(TARGET_WIDTH - 8, 20),
                 TextAlign = ContentAlignment.MiddleCenter,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
 
-            // DESCRIPCIÓN VISIBLE EN LA TARJETA (2 líneas elegantes y legibles)
+            // DESCRIPCIÓN VISIBLE EN LA TARJETA
             _lblShortDesc = new Label
             {
                 Text = ShortDescription,
                 Font = new Font("Segoe UI", 7.75F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(100, 116, 139), // Slate 500
-                Location = new Point(6, 80),
-                Size = new Size(TARGET_WIDTH - 12, 36),
+                ForeColor = Color.FromArgb(51, 65, 85), // Slate 700 con buen contraste
                 TextAlign = ContentAlignment.TopCenter,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
@@ -789,20 +952,18 @@ namespace MiNamespace
             // Botón / Pista inferior de giro
             _lblFlipHint = new BorderLabel
             {
-                Text = "↻ Elegir modo",
+                Text = HasSecondOption ? "↻ Elegir modo" : "↻ " + Opt1Text,
                 Font = new Font("Segoe UI", 8F, FontStyle.Bold),
                 ForeColor = ThemeColor,
-                BackColor = SoftBg,
-                BorderColor = Color.FromArgb(203, 213, 225),
+                BackColor = Color.White,
+                BorderColor = PastelBorder,
                 BorderRadius = 5,
-                Size = new Size(106, 24),
-                Location = new Point((TARGET_WIDTH - 106) / 2, 128),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Cursor = Cursors.Hand
             };
 
-            _pnlFront.Controls.Add(pnlIconCircle);
-            _pnlFront.Controls.Add(lblTitle);
+            _pnlFront.Controls.Add(_pnlIconCircle);
+            _pnlFront.Controls.Add(_lblTitle);
             _pnlFront.Controls.Add(_lblShortDesc);
             _pnlFront.Controls.Add(_lblFlipHint);
 
@@ -813,7 +974,7 @@ namespace MiNamespace
                 {
                     _pnlFront.IsHovered = true;
                     _pnlFront.Invalidate();
-                    _lblShortDesc.ForeColor = Color.FromArgb(30, 41, 59);
+                    _lblShortDesc.ForeColor = Color.FromArgb(15, 23, 42);
                     _lblFlipHint.BackColor = ThemeColor;
                     _lblFlipHint.ForeColor = Color.White;
                     _lblFlipHint.BorderColor = ThemeColor;
@@ -828,10 +989,10 @@ namespace MiNamespace
                 {
                     _pnlFront.IsHovered = false;
                     _pnlFront.Invalidate();
-                    _lblShortDesc.ForeColor = Color.FromArgb(100, 116, 139);
-                    _lblFlipHint.BackColor = SoftBg;
+                    _lblShortDesc.ForeColor = Color.FromArgb(51, 65, 85);
+                    _lblFlipHint.BackColor = Color.White;
                     _lblFlipHint.ForeColor = ThemeColor;
-                    _lblFlipHint.BorderColor = Color.FromArgb(203, 213, 225);
+                    _lblFlipHint.BorderColor = PastelBorder;
                     _lblFlipHint.Invalidate();
                     CardUnhovered?.Invoke();
                 }
@@ -847,23 +1008,22 @@ namespace MiNamespace
 
         private void BuildBackPanel()
         {
-            _pnlBack = new CardFacePanel(ThemeColor, isBackFace: true)
+            _pnlBack = new CardFacePanel(ThemeColor, PastelBg, PastelHoverBg, PastelBorder, isBackFace: true)
             {
-                Dock = DockStyle.Fill,
                 Cursor = Cursors.Hand
             };
 
-            // Barra superior del reverso (sin la cruz '✕' - hacer clic en cualquier parte de la tarjeta la gira)
-            Panel pnlBackHeader = new Panel
+            // Barra superior del reverso con fondo blanco y título temático
+            _pnlBackHeader = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 34,
-                BackColor = SoftBg,
+                BackColor = Color.White,
                 Padding = new Padding(4, 0, 4, 0),
                 Cursor = Cursors.Hand
             };
 
-            Label lblBackTitle = new Label
+            _lblBackTitle = new Label
             {
                 Text = Title,
                 Font = new Font("Segoe UI", 8.75F, FontStyle.Bold),
@@ -873,50 +1033,49 @@ namespace MiNamespace
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
-            pnlBackHeader.Controls.Add(lblBackTitle);
+            _pnlBackHeader.Controls.Add(_lblBackTitle);
 
-            // Botón Opción 1 (Por Selección / Por Clic)
-            Button btnOpt1 = new Button
+            bool hasSecond = HasSecondOption;
+
+            // Botón Opción 1 (Por Selección / Por Clic) con fondo temático si es único o blanco si hay 2
+            _btnOpt1 = new Button
             {
-                Text = "👆  " + Opt1Text,
-                Size = new Size(TARGET_WIDTH - 20, 46),
-                Location = new Point(10, 44),
+                Text = "▶  " + Opt1Text,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = SoftBg,
-                ForeColor = ThemeColor,
+                BackColor = hasSecond ? Color.White : ThemeColor,
+                ForeColor = hasSecond ? ThemeColor : Color.White,
                 Font = new Font("Segoe UI", 8.25F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            btnOpt1.FlatAppearance.BorderSize = 0;
-            TagsCoorWindow.ApplyRoundedStyle(btnOpt1, 7, ThemeColor);
-            btnOpt1.Click += (s, e) => ActionTriggered?.Invoke(Opt1Action);
+            _btnOpt1.FlatAppearance.BorderSize = 0;
+            TagsCoorWindow.ApplyRoundedStyle(_btnOpt1, 7, hasSecond ? ThemeColor : (Color?)null);
+            _btnOpt1.Click += (s, e) => ActionTriggered?.Invoke(Opt1Action);
 
-            // Botón Opción 2 (Automático en Vista)
-            Button btnOpt2 = new Button
+            if (hasSecond)
             {
-                Text = "⚡  " + Opt2Text,
-                Size = new Size(TARGET_WIDTH - 20, 46),
-                Location = new Point(10, 98),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = ThemeColor,
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 8.25F, FontStyle.Bold),
-                Cursor = Cursors.Hand,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            btnOpt2.FlatAppearance.BorderSize = 0;
-            TagsCoorWindow.ApplyRoundedStyle(btnOpt2, 7, null);
-            btnOpt2.Click += (s, e) => ActionTriggered?.Invoke(Opt2Action);
+                // Botón Opción 2 (Automático en Vista) con color temático vivo
+                _btnOpt2 = new Button
+                {
+                    Text = "⚡  " + Opt2Text,
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = ThemeColor,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 8.25F, FontStyle.Bold),
+                    Cursor = Cursors.Hand,
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+                _btnOpt2.FlatAppearance.BorderSize = 0;
+                TagsCoorWindow.ApplyRoundedStyle(_btnOpt2, 7, null);
+                _btnOpt2.Click += (s, e) => ActionTriggered?.Invoke(Opt2Action);
+            }
 
             // Pista inferior para volver
-            Label lblBackHint = new Label
+            _lblBackHint = new Label
             {
                 Text = "↺ Clic para volver",
                 Font = new Font("Segoe UI", 7.5F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(148, 163, 184),
-                Size = new Size(TARGET_WIDTH - 20, 20),
-                Location = new Point(10, 150),
+                ForeColor = Color.FromArgb(71, 85, 105),
                 TextAlign = ContentAlignment.MiddleCenter,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
@@ -925,14 +1084,17 @@ namespace MiNamespace
             // Al hacer clic sobre cualquier área de la tarjeta reversa (excepto los botones), se desvoltea
             Action flipBackAction = () => FlipBack();
             _pnlBack.Click += (s, e) => flipBackAction();
-            pnlBackHeader.Click += (s, e) => flipBackAction();
-            lblBackTitle.Click += (s, e) => flipBackAction();
-            lblBackHint.Click += (s, e) => flipBackAction();
+            _pnlBackHeader.Click += (s, e) => flipBackAction();
+            _lblBackTitle.Click += (s, e) => flipBackAction();
+            _lblBackHint.Click += (s, e) => flipBackAction();
 
-            _pnlBack.Controls.Add(lblBackHint);
-            _pnlBack.Controls.Add(btnOpt2);
-            _pnlBack.Controls.Add(btnOpt1);
-            _pnlBack.Controls.Add(pnlBackHeader);
+            _pnlBack.Controls.Add(_lblBackHint);
+            if (hasSecond && _btnOpt2 != null)
+            {
+                _pnlBack.Controls.Add(_btnOpt2);
+            }
+            _pnlBack.Controls.Add(_btnOpt1);
+            _pnlBack.Controls.Add(_pnlBackHeader);
         }
 
         private static void BindEventsRecursive(Control parent, Action onEnter, Action onLeave, Action onClick)
@@ -1021,11 +1183,14 @@ namespace MiNamespace
             float scaleX = (float)Math.Abs(Math.Cos(angle));
             scaleX = Math.Max(0.04f, scaleX);
 
+            int currentW = this.Width;
+            int currentH = this.Height;
+
             // Reducción sutil de altura para perspectiva óptica 3D
             int heightContract = (int)((1.0f - scaleX) * 10);
-            int newW = Math.Max(4, (int)(TARGET_WIDTH * scaleX));
-            int newH = TARGET_HEIGHT - heightContract;
-            int newLeft = (TARGET_WIDTH - newW) / 2;
+            int newW = Math.Max(4, (int)(currentW * scaleX));
+            int newH = currentH - heightContract;
+            int newLeft = (currentW - newW) / 2;
             int newTop = heightContract / 2;
 
             // Sombra dinámica que oscurece elegantemente durante el giro simulando iluminación real
@@ -1062,18 +1227,25 @@ namespace MiNamespace
     }
 
     /// <summary>
-    /// Panel de la cara de la tarjeta con sombra de elevación 3D, iluminación dinámica en giro y barra de acento superior
+    /// Panel de la cara de la tarjeta con fondo pastel según su tema, sombra de elevación 3D,
+    /// iluminación dinámica en giro y barra de acento superior
     /// </summary>
     public class CardFacePanel : Panel
     {
         public Color ThemeColor { get; }
+        public Color PastelBg { get; }
+        public Color PastelHoverBg { get; }
+        public Color PastelBorder { get; }
         public bool IsBackFace { get; }
         public bool IsHovered { get; set; } = false;
         public int FlipShadeAlpha { get; set; } = 0;
 
-        public CardFacePanel(Color themeColor, bool isBackFace)
+        public CardFacePanel(Color themeColor, Color pastelBg, Color pastelHoverBg, Color pastelBorder, bool isBackFace)
         {
             ThemeColor = themeColor;
+            PastelBg = pastelBg;
+            PastelHoverBg = pastelHoverBg;
+            PastelBorder = pastelBorder;
             IsBackFace = isBackFace;
             this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
@@ -1089,23 +1261,24 @@ namespace MiNamespace
 
             // 1. Sombra de elevación flotante (Drop Shadow suave multicapa)
             int shadowDepth = IsHovered ? 4 : 2;
-            int shadowAlpha = IsHovered ? 26 : 14;
+            int shadowAlpha = IsHovered ? 24 : 12;
 
             for (int i = 0; i < shadowDepth; i++)
             {
                 Rectangle shadowRect = new Rectangle(2 + i, 2 + i * 2, w - 4 - i * 2, h - 3 - i);
                 using (GraphicsPath shadowPath = TagsCoorWindow.GetRoundedRectanglePath(shadowRect, 10))
-                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(shadowAlpha - (i * 3), 0, 0, 0)))
+                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(Math.Max(0, shadowAlpha - (i * 3)), 0, 0, 0)))
                 {
                     e.Graphics.FillPath(shadowBrush, shadowPath);
                 }
             }
 
-            // 2. Fondo blanco puro de la tarjeta
+            // 2. Fondo de la tarjeta con color pastel según su tema
             Rectangle cardRect = new Rectangle(1, 1, w - 3, h - 4);
             using (GraphicsPath cardPath = TagsCoorWindow.GetRoundedRectanglePath(cardRect, 10))
             {
-                using (SolidBrush bgBrush = new SolidBrush(IsHovered ? Color.FromArgb(255, 255, 255) : Color.White))
+                Color currentBg = IsHovered ? PastelHoverBg : PastelBg;
+                using (SolidBrush bgBrush = new SolidBrush(currentBg))
                 {
                     e.Graphics.FillPath(bgBrush, cardPath);
                 }
@@ -1122,11 +1295,9 @@ namespace MiNamespace
                     e.Graphics.ResetClip();
                 }
 
-                // 4. Borde activo al hover o borde sutil en reposo
-                Color borderColor = IsHovered 
-                    ? ThemeColor 
-                    : Color.FromArgb(226, 232, 240); // Slate 200
-                float penWidth = IsHovered ? 1.6f : 1.1f;
+                // 4. Borde activo al hover o borde pastel en reposo
+                Color borderColor = IsHovered ? ThemeColor : PastelBorder;
+                float penWidth = IsHovered ? 1.6f : 1.2f;
 
                 using (Pen pen = new Pen(borderColor, penWidth))
                 {

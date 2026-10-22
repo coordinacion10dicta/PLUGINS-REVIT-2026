@@ -120,6 +120,9 @@
     <Compile Include="..\SharedCode\*.cs">
       <Link>SharedCode\%(Filename)%(Extension)</Link>
     </Compile>
+    <Compile Include="..\SharedCode\TagsCoor\*.cs">
+      <Link>SharedCode\TagsCoor\%(Filename)%(Extension)</Link>
+    </Compile>
     <EmbeddedResource Include="..\SharedCode\*.resx">
       <Link>SharedCode\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
